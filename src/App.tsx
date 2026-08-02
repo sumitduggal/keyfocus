@@ -1,6 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { KeyboardEvent, RefCallback } from 'react'
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
+import { EditorState } from '@codemirror/state'
+import { markdown } from '@codemirror/lang-markdown'
+import { Decoration, EditorView, ViewPlugin, type DecorationSet } from '@codemirror/view'
 import './App.css'
 
 type Feature = 'habits' | 'reminders' | 'focus music' | 'notes' | 'todo list' | 'pomodoro'
@@ -20,20 +23,119 @@ const featureMeta: Record<Feature, { glyph: string; description: string; frame: 
 const commandNames = [...Object.keys(featureMeta), 'Search'] as Command[]
 const initialFrame: WorkspaceFrame = { id: 'main', feature: 'notes', eyebrow: 'NOTES', title: 'Notes', description: 'A lightweight place for thoughts, references, and ideas.', details: ['Launch idea', 'Research reference', 'Things to explore'] }
 
-function FrameCard({ frame, active, frameRef }: { frame: WorkspaceFrame; active: boolean; frameRef: RefCallback<HTMLElement> }) {
+const inlineMarkdownPreview = ViewPlugin.fromClass(class {
+  decorations: DecorationSet
+  constructor(view: EditorView) { this.decorations = this.build(view) }
+  update(update: { docChanged: boolean; viewportChanged: boolean; view: EditorView }) { if (update.docChanged || update.viewportChanged) this.decorations = this.build(update.view) }
+  build(view: EditorView) {
+    const marks = []
+    for (const range of view.visibleRanges) {
+      let line = view.state.doc.lineAt(range.from)
+      while (line.from <= range.to) {
+        const text = line.text
+        const heading = text.match(/^(#{1,3})\s+/)
+        if (heading) {
+          marks.push(Decoration.mark({ class: `cm-inline-heading cm-inline-heading-${heading[1].length}` }).range(line.from, line.to))
+          marks.push(Decoration.mark({ class: 'cm-inline-marker' }).range(line.from, line.from + heading[0].length))
+        }
+        for (const match of text.matchAll(/(\*\*|__)(.+?)\1/g)) {
+          const start = line.from + (match.index ?? 0)
+          marks.push(Decoration.mark({ class: 'cm-inline-bold' }).range(start, start + match[0].length))
+        }
+        for (const match of text.matchAll(/~~(.+?)~~/g)) {
+          const start = line.from + (match.index ?? 0)
+          marks.push(Decoration.mark({ class: 'cm-inline-strike' }).range(start, start + match[0].length))
+        }
+        if (line.to >= range.to) break
+        line = view.state.doc.line(line.number + 1)
+      }
+    }
+    return Decoration.set(marks, true)
+  }
+}, { decorations: (value) => value.decorations })
+
+function FrameCard({ frame, active, frameRef, noteBody, onNoteChange }: { frame: WorkspaceFrame; active: boolean; frameRef: RefCallback<HTMLElement>; noteBody?: string; onNoteChange?: (value: string) => void }) {
+  const note = noteBody ?? ''
+  const editorHost = useRef<HTMLDivElement | null>(null)
+  const editorView = useRef<EditorView | null>(null)
+  const imageInput = useRef<HTMLInputElement | null>(null)
+  const initialNote = useRef(note).current
+  const changeHandler = useRef(onNoteChange)
+  changeHandler.current = onNoteChange
+  useEffect(() => {
+    if (frame.feature !== 'notes' || !editorHost.current) return
+    const view = new EditorView({
+      state: EditorState.create({
+        doc: initialNote,
+        extensions: [markdown(), inlineMarkdownPreview, EditorView.lineWrapping, EditorView.updateListener.of((update) => {
+          if (update.docChanged) changeHandler.current?.(update.state.doc.toString())
+        })],
+      }),
+      parent: editorHost.current,
+    })
+    editorView.current = view
+    return () => { view.destroy(); editorView.current = null }
+  }, [frame.feature, initialNote])
+  useEffect(() => {
+    const view = editorView.current
+    if (view && view.state.doc.toString() !== note) view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: note } })
+  }, [note])
+  const insertMarkdown = (snippet: string) => {
+    onNoteChange?.(`${note}${note && !note.endsWith('\n') ? '\n' : ''}${snippet}`)
+  }
+  const uploadImage = (file: File) => {
+    const reader = new FileReader()
+    reader.onload = () => insertMarkdown(`![${file.name}](${String(reader.result)})`)
+    reader.readAsDataURL(file)
+  }
   return (
-    <section ref={frameRef} className={active ? 'workspace-frame active' : 'workspace-frame'} aria-label={frame.title} aria-current={active ? 'page' : undefined} tabIndex={-1}>
+    <section ref={frameRef} className={`${active ? 'workspace-frame active' : 'workspace-frame'} ${frame.feature === 'notes' ? 'note-frame' : ''}`} aria-label={frame.title} aria-current={active ? 'page' : undefined} tabIndex={-1}>
       <p className="frame-eyebrow">{frame.eyebrow}</p>
       <h1>{frame.title}</h1>
+      {frame.feature === 'notes' ? <>
+        <div className="markdown-toolbar" aria-label="Markdown formatting">
+          <button type="button" onClick={() => insertMarkdown('# Heading')}>H</button>
+          <button type="button" onClick={() => insertMarkdown('**bold**')}><b>B</b></button>
+          <button type="button" onClick={() => insertMarkdown('*italic*')}><i>I</i></button>
+          <button type="button" onClick={() => insertMarkdown('~~strikethrough~~')}><s>S</s></button>
+          <button type="button" onClick={() => insertMarkdown('- List item')}>•</button>
+          <button type="button" onClick={() => insertMarkdown('1. List item')}>1.</button>
+          <button type="button" onClick={() => insertMarkdown('- [ ] Task')}>☐</button>
+          <button type="button" onClick={() => insertMarkdown('> Quote')}>❝</button>
+          <button type="button" onClick={() => insertMarkdown('`code`')}>{'<>'}</button>
+          <button type="button" onClick={() => insertMarkdown('[link text](https://example.com)')}>↗</button>
+          <button type="button" onClick={() => imageInput.current?.click()}>▧</button>
+          <input ref={imageInput} className="image-upload" type="file" accept="image/*" onChange={(event) => { const file = event.target.files?.[0]; if (file) uploadImage(file); event.target.value = '' }} />
+        </div>
+        <div ref={editorHost} className="note-editor" aria-label="Note Markdown editor" />
+        <MarkdownPreview value={note} />
+        <small className="markdown-hint">Markdown is saved automatically on this device.</small>
+      </> : <>
       <p className="frame-description">{frame.description}</p>
       <ul>{frame.details.map((detail) => <li key={detail}><span aria-hidden="true">•</span>{detail}</li>)}</ul>
       <p className="frame-foot">Use the frame stack to revisit earlier contexts</p>
+      </>}
     </section>
   )
 }
 
 function StackPreview({ frame }: { frame: WorkspaceFrame }) {
   return <div className="stack-preview" aria-hidden="true"><p>{frame.eyebrow}</p><h2>{frame.title}</h2><span>{frame.description}</span></div>
+}
+
+function MarkdownPreview({ value }: { value: string }) {
+  return <div className="markdown-preview" aria-label="Formatted Markdown">{value.split('\n').map((line, index) => {
+    const key = `${index}-${line}`
+    if (line.startsWith('# ')) return <h2 key={key}>{line.slice(2)}</h2>
+    if (line.startsWith('## ')) return <h3 key={key}>{line.slice(3)}</h3>
+    if (line.startsWith('> ')) return <blockquote key={key}>{line.slice(2)}</blockquote>
+    const image = line.match(/^!\[([^\]]*)\]\((.+)\)$/)
+    if (image) return <img key={key} className="markdown-image" src={image[2]} alt={image[1]} />
+    if (line.startsWith('- [ ] ')) return <p key={key}>☐ {line.slice(6)}</p>
+    if (line.startsWith('- [x] ')) return <p key={key}>☑ {line.slice(6)}</p>
+    if (line.startsWith('- ')) return <p key={key}>• {line.slice(2)}</p>
+    return <p key={key}>{line || '\u00a0'}</p>
+  })}</div>
 }
 
 function App() {
@@ -55,6 +157,10 @@ function App() {
   const [featurePanel, setFeaturePanel] = useState<Feature | null>(null)
   const [featureAnchorY, setFeatureAnchorY] = useState<number | null>(null)
   const [entryFocusIndex, setEntryFocusIndex] = useState(0)
+  const [noteBodies, setNoteBodies] = useState<Record<string, string>>(() => {
+    const saved = localStorage.getItem('focus-space-note-bodies')
+    return saved ? JSON.parse(saved) as Record<string, string> : { main: '# Notes\n\nStart writing in Markdown…\n\n- [ ] Capture the next idea' }
+  })
   const frameRefs = useRef<Record<string, HTMLElement | null>>({})
   const stackRefs = useRef<Record<string, HTMLElement | null>>({})
   const sideRefs = useRef<Record<Side, HTMLElement | null>>({ left: null, main: null, right: null })
@@ -73,6 +179,7 @@ function App() {
   const activeMenuId = searchMode ? searchResults[menuFocusIndex]?.id : visibleCommands[menuFocusIndex]
 
   useEffect(() => localStorage.setItem('focus-space-frames', JSON.stringify(frames)), [frames])
+  useEffect(() => localStorage.setItem('focus-space-note-bodies', JSON.stringify(noteBodies)), [noteBodies])
   useEffect(() => {
     if (focusedSide !== 'left' || !withinSide || stackFocusIndex < 0) return
     stackRefs.current[stackedFrames[stackFocusIndex]?.id]?.focus()
@@ -297,8 +404,8 @@ function App() {
             </div>
           </aside>
           <section ref={(node) => { sideRefs.current.main = node }} className={`side-region main-side ${focusedSide === 'main' ? 'side-focused' : ''} ${focusedSide === 'main' && withinSide ? 'within-focused' : ''}`} aria-label="Main frame" tabIndex={0}>
-            <div className="main-frame-position">
-              <FrameCard frame={activeFrame} active frameRef={(node) => { frameRefs.current[activeFrame.id] = node }} />
+            <div className={activeFrame.feature === 'notes' ? 'main-frame-position note-position' : 'main-frame-position'}>
+              <FrameCard frame={activeFrame} active noteBody={noteBodies[activeFrame.id]} onNoteChange={(value) => setNoteBodies((current) => ({ ...current, [activeFrame.id]: value }))} frameRef={(node) => { frameRefs.current[activeFrame.id] = node }} />
             </div>
           </section>
           <aside ref={(node) => { sideRefs.current.right = node }} className={`side-region right-side ${focusedSide === 'right' ? 'side-focused' : ''} ${focusedSide === 'right' && withinSide ? 'within-focused' : ''}`} aria-label="Settings and utilities" tabIndex={0}>
