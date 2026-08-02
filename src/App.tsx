@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { KeyboardEvent, RefCallback } from 'react'
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 import { EditorState } from '@codemirror/state'
@@ -56,6 +56,21 @@ const inlineMarkdownPreview = ViewPlugin.fromClass(class {
 
 function FrameCard({ frame, active, frameRef, noteBody, onNoteChange }: { frame: WorkspaceFrame; active: boolean; frameRef: RefCallback<HTMLElement>; noteBody?: string; onNoteChange?: (value: string) => void }) {
   const note = noteBody ?? ''
+  const [pomodoroDuration, setPomodoroDuration] = useState(() => Number(localStorage.getItem('focus-space-pomodoro-duration')) || 25)
+  const [pomodoroSeconds, setPomodoroSeconds] = useState(() => (Number(localStorage.getItem('focus-space-pomodoro-duration')) || 25) * 60)
+  const [pomodoroRunning, setPomodoroRunning] = useState(false)
+  const startButton = useRef<HTMLButtonElement | null>(null)
+  const playCompletionAlert = () => {
+    const context = new AudioContext()
+    const oscillator = context.createOscillator()
+    const gain = context.createGain()
+    oscillator.frequency.setValueAtTime(660, context.currentTime)
+    oscillator.frequency.setValueAtTime(880, context.currentTime + 0.16)
+    gain.gain.setValueAtTime(0.18, context.currentTime)
+    gain.gain.exponentialRampToValueAtTime(0.001, context.currentTime + 0.5)
+    oscillator.connect(gain).connect(context.destination)
+    oscillator.start(); oscillator.stop(context.currentTime + 0.5)
+  }
   const editorHost = useRef<HTMLDivElement | null>(null)
   const editorView = useRef<EditorView | null>(null)
   const imageInput = useRef<HTMLInputElement | null>(null)
@@ -80,6 +95,16 @@ function FrameCard({ frame, active, frameRef, noteBody, onNoteChange }: { frame:
     const view = editorView.current
     if (view && view.state.doc.toString() !== note) view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: note } })
   }, [note])
+  useEffect(() => {
+    if (frame.feature !== 'pomodoro' || !pomodoroRunning) return
+    const timer = window.setInterval(() => setPomodoroSeconds((current) => {
+      if (current <= 1) { setPomodoroRunning(false); playCompletionAlert(); return 0 }
+      return current - 1
+    }), 1000)
+    return () => window.clearInterval(timer)
+  }, [frame.feature, pomodoroRunning])
+  useEffect(() => { localStorage.setItem('focus-space-pomodoro-duration', String(pomodoroDuration)) }, [pomodoroDuration])
+  const chooseTimer = (minutes: number) => { setPomodoroDuration(minutes); setPomodoroRunning(false); setPomodoroSeconds(minutes * 60); requestAnimationFrame(() => startButton.current?.focus()) }
   const insertMarkdown = (snippet: string) => {
     onNoteChange?.(`${note}${note && !note.endsWith('\n') ? '\n' : ''}${snippet}`)
   }
@@ -92,7 +117,14 @@ function FrameCard({ frame, active, frameRef, noteBody, onNoteChange }: { frame:
     <section ref={frameRef} className={`${active ? 'workspace-frame active' : 'workspace-frame'} ${frame.feature === 'notes' ? 'note-frame' : ''}`} aria-label={frame.title} aria-current={active ? 'page' : undefined} tabIndex={-1}>
       <p className="frame-eyebrow">{frame.eyebrow}</p>
       <h1>{frame.title}</h1>
-      {frame.feature === 'notes' ? <>
+      {frame.feature === 'pomodoro' ? <div className="pomodoro-view">
+        <p className="frame-description">A focused 25-minute work interval with a short reset afterward.</p>
+        <div className="pomodoro-presets" aria-label="Timer duration"><button type="button" className={pomodoroDuration === 15 ? 'selected' : ''} onClick={() => chooseTimer(15)}>15 min</button><button type="button" className={pomodoroDuration === 25 ? 'selected' : ''} onClick={() => chooseTimer(25)}>25 min</button><label className={pomodoroDuration !== 15 && pomodoroDuration !== 25 ? 'selected' : ''}>Custom <input type="number" min="1" max="180" value={pomodoroDuration !== 15 && pomodoroDuration !== 25 ? pomodoroDuration : ''} placeholder="min" onChange={(event) => chooseTimer(Math.max(1, Math.min(180, Number(event.target.value) || 1)))} /></label></div>
+        <div className="pomodoro-clock" aria-live="polite">{String(Math.floor(pomodoroSeconds / 60)).padStart(2, '0')}:{String(pomodoroSeconds % 60).padStart(2, '0')}</div>
+        <p className="pomodoro-status">{pomodoroSeconds === 0 ? 'Interval complete' : pomodoroRunning ? 'Focus session running' : 'Ready when you are'}</p>
+        <div className="pomodoro-actions"><button ref={startButton} type="button" onClick={() => setPomodoroRunning((current) => !current)}>{pomodoroRunning ? 'Pause' : 'Start focus'}</button><button type="button" onClick={() => { setPomodoroRunning(false); setPomodoroSeconds(pomodoroDuration * 60) }}>Reset</button></div>
+        <p className="frame-foot">Take a five-minute break when the interval ends</p>
+      </div> : frame.feature === 'notes' ? <>
         <div className="markdown-toolbar" aria-label="Markdown formatting">
           <button type="button" onClick={() => insertMarkdown('# Heading')}>H</button>
           <button type="button" onClick={() => insertMarkdown('**bold**')}><b>B</b></button>
@@ -177,6 +209,16 @@ function App() {
   const searchResults = useMemo(() => frames.filter((frame) => `${frame.title} ${frame.feature} ${frame.description}`.toLowerCase().includes(query.toLowerCase())), [frames, query])
   const featureEntries = useMemo(() => featurePanel ? frames.filter((frame) => frame.feature === featurePanel) : [], [featurePanel, frames])
   const activeMenuId = searchMode ? searchResults[menuFocusIndex]?.id : visibleCommands[menuFocusIndex]
+  const openFeatureDirectly = useCallback((feature: Feature) => {
+    const existing = frames.find((frame) => frame.feature === feature)
+    if (existing) setActiveFrameId(existing.id)
+    else {
+      const created = { ...featureMeta[feature].frame, feature, id: crypto.randomUUID() }
+      setFrames((current) => [created, ...current])
+      setActiveFrameId(created.id)
+    }
+    setFocusedSide('main'); setWithinSide(true)
+  }, [frames])
 
   useEffect(() => localStorage.setItem('focus-space-frames', JSON.stringify(frames)), [frames])
   useEffect(() => localStorage.setItem('focus-space-note-bodies', JSON.stringify(noteBodies)), [noteBodies])
@@ -312,12 +354,13 @@ function App() {
       }
       if (focusedSide === 'right' && rightFocusIndex >= 1 && rightFocusIndex <= Object.keys(featureMeta).length) {
         const feature = (Object.keys(featureMeta) as Feature[])[rightFocusIndex - 1]
-        openFeaturePanel(feature)
+        if (feature === 'pomodoro') openFeatureDirectly(feature)
+        else openFeaturePanel(feature)
       }
     }
     window.addEventListener('keydown', navigate)
     return () => window.removeEventListener('keydown', navigate)
-  }, [activeFrame, activeFrameId, featurePanel, focusedSide, menuOpen, rightFocusIndex, stackFocusIndex, stackedFrames, withinSide])
+  }, [activeFrame, activeFrameId, featurePanel, focusedSide, menuOpen, openFeatureDirectly, rightFocusIndex, stackFocusIndex, stackedFrames, withinSide])
 
   const runCommand = (command: Command) => {
     if (command === 'Search') {
@@ -411,7 +454,7 @@ function App() {
           <aside ref={(node) => { sideRefs.current.right = node }} className={`side-region right-side ${focusedSide === 'right' ? 'side-focused' : ''} ${focusedSide === 'right' && withinSide ? 'within-focused' : ''}`} aria-label="Settings and utilities" tabIndex={0}>
             <div className="right-group profile-group"><button ref={(node) => { profileRef.current = node; rightItemRefs.current.profile = node }} type="button" className="setting" onFocus={() => { setFocusedSide('right'); setWithinSide(true); setRightFocusIndex(0) }} onClick={() => setRightFocusIndex(0)}><span>◉</span><span><b>Profile</b><small>Personal space</small></span></button></div>
             <div className="right-group feature-group">
-              <div className="feature-links">{(Object.keys(featureMeta) as Feature[]).map((feature, index) => <button key={feature} ref={(node) => { rightItemRefs.current[`feature-${feature}`] = node }} type="button" className="setting" onFocus={() => { setFocusedSide('right'); setWithinSide(true); setRightFocusIndex(index + 1) }} onKeyDown={(event) => { if (event.key === 'Enter') { event.preventDefault(); event.stopPropagation(); openFeaturePanel(feature); setRightFocusIndex(index + 1) } }} onClick={() => { openFeaturePanel(feature); setRightFocusIndex(index + 1) }}><span>{featureMeta[feature].glyph}</span><span><b>{featureMeta[feature].frame.title}</b><small>{frames.filter((frame) => frame.feature === feature).length} entries</small></span></button>)}</div>
+              <div className="feature-links">{(Object.keys(featureMeta) as Feature[]).map((feature, index) => <button key={feature} ref={(node) => { rightItemRefs.current[`feature-${feature}`] = node }} type="button" className="setting" onFocus={() => { setFocusedSide('right'); setWithinSide(true); setRightFocusIndex(index + 1) }} onKeyDown={(event) => { if (event.key === 'Enter') { event.preventDefault(); event.stopPropagation(); if (feature === 'pomodoro') openFeatureDirectly(feature); else openFeaturePanel(feature); setRightFocusIndex(index + 1) } }} onClick={() => { if (feature === 'pomodoro') openFeatureDirectly(feature); else openFeaturePanel(feature); setRightFocusIndex(index + 1) }}><span>{featureMeta[feature].glyph}</span><span><b>{featureMeta[feature].frame.title}</b><small>{feature === 'pomodoro' ? 'Open timer' : `${frames.filter((frame) => frame.feature === feature).length} entries`}</small></span></button>)}</div>
             </div>
             <div className="right-group settings-group"><button ref={(node) => { settingRef.current = node; rightItemRefs.current.settings = node }} type="button" className="setting" onFocus={() => { setFocusedSide('right'); setWithinSide(true); setRightFocusIndex(Object.keys(featureMeta).length + 1) }} onClick={() => { setCompactMode((current) => !current); setRightFocusIndex(Object.keys(featureMeta).length + 1) }}><span>⚙</span><span><b>Settings</b><small>{compactMode ? 'Compact on' : 'Preferences'}</small></span></button></div>
             <div className="right-group logout-group"><button ref={(node) => { rightItemRefs.current.logout = node }} type="button" className="setting" onFocus={() => { setFocusedSide('right'); setWithinSide(true); setRightFocusIndex(Object.keys(featureMeta).length + 2) }} onClick={() => setRightFocusIndex(Object.keys(featureMeta).length + 2)}><span>↪</span><span><b>Log out</b><small>End session</small></span></button></div>
