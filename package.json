@@ -10,9 +10,16 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@codemirror/lang-markdown": "^6.5.1",
-    "@codemirror/state": "^6.7.1",
-    "@codemirror/view": "^6.43.7",
+    "@editorjs/checklist": "^1.6.0",
+    "@editorjs/code": "^2.9.4",
+    "@editorjs/editorjs": "^2.31.6",
+    "@editorjs/header": "^2.8.9",
+    "@editorjs/image": "^2.10.3",
+    "@editorjs/inline-code": "^1.5.2",
+    "@editorjs/link": "^2.6.2",
+    "@editorjs/list": "^2.0.9",
+    "@editorjs/marker": "^1.4.0",
+    "@editorjs/quote": "^2.7.6",
     "motion": "^12.43.0",
     "react": "^19.2.8",
     "react-dom": "^19.2.8"

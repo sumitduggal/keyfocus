@@ -1,0 +1,1627 @@
+{
+  "version": "2.15",
+  "children": [
+    {
+      "type": "frame",
+      "id": "OQ4b0",
+      "x": 0,
+      "y": 0,
+      "name": "Focus Workspace Shell",
+      "clip": true,
+      "width": 1886,
+      "height": 1560,
+      "fill": "#ECEDEF",
+      "layout": "none",
+      "children": [
+        {
+          "type": "frame",
+          "id": "iZ58G",
+          "x": 550,
+          "y": 18,
+          "name": "Main Notes Frame",
+          "clip": true,
+          "width": 800,
+          "height": 600,
+          "fill": "#FFFFFF",
+          "cornerRadius": 12,
+          "stroke": "#E5E5E5",
+          "strokeWidth": 1,
+          "effect": [
+            {
+              "type": "shadow",
+              "shadowType": "outer",
+              "color": "#00000008",
+              "offset": {
+                "x": 0,
+                "y": 1
+              },
+              "blur": 3
+            },
+            {
+              "type": "shadow",
+              "shadowType": "outer",
+              "color": "#0000000A",
+              "offset": {
+                "x": 0,
+                "y": 8
+              },
+              "blur": 24
+            }
+          ],
+          "layout": "vertical",
+          "gap": 10,
+          "padding": [
+            28,
+            30
+          ],
+          "children": [
+            {
+              "type": "group",
+              "id": "AZMOK",
+              "layout": "horizontal",
+              "justifyContent": "space_between",
+              "width": "fill_container",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "gBefc",
+                  "name": "Notes Title",
+                  "fill": "#1A1A1A",
+                  "textGrowth": "fixed-width",
+                  "width": 715.1583270720967,
+                  "content": "Notes",
+                  "fontFamily": "Geist",
+                  "fontSize": 28,
+                  "fontWeight": "700",
+                  "letterSpacing": -1.1
+                },
+                {
+                  "id": "QF3TJ",
+                  "type": "ref",
+                  "ref": "D:YKnjc",
+                  "x": 652.0385155224196,
+                  "y": 0,
+                  "flipX": false,
+                  "flipY": false,
+                  "width": 87.96148447758043,
+                  "height": "fit_content",
+                  "descendants": {
+                    "D:PqjlB": {
+                      "enabled": false
+                    },
+                    "D:NDadS": {
+                      "name": "Delete",
+                      "context": "",
+                      "content": "Delete"
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "KsoVF",
+              "name": "Markdown Editor",
+              "width": "fill_container",
+              "height": 450,
+              "fill": "#FAFAFA",
+              "cornerRadius": 8,
+              "stroke": "#E5E5E5",
+              "strokeWidth": 1,
+              "layout": "vertical",
+              "gap": 10,
+              "padding": 10,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "J3okFe",
+                  "name": "Editor Toolbar",
+                  "width": "fill_container",
+                  "height": 40,
+                  "fill": "#F5F5F5",
+                  "cornerRadius": 8,
+                  "stroke": "#E5E5E5",
+                  "strokeWidth": 1,
+                  "gap": 6,
+                  "padding": 4,
+                  "justifyContent": "space_between",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "dstkp",
+                      "name": "History Tools Group",
+                      "height": 32,
+                      "fill": "#FFFFFF",
+                      "cornerRadius": 6,
+                      "stroke": "#E5E5E5",
+                      "strokeWidth": 1,
+                      "gap": 2,
+                      "padding": 2,
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "Cqjet",
+                          "name": "Undo Tool",
+                          "width": 28,
+                          "height": 28,
+                          "fill": "#FFFFFF",
+                          "cornerRadius": 4,
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "kX9qF",
+                              "name": "Undo Icon",
+                              "width": 16,
+                              "height": 16,
+                              "icon": "undo-2",
+                              "library": "lucide",
+                              "fill": "#666666"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "D8bxpD",
+                          "name": "Redo Tool",
+                          "width": 28,
+                          "height": 28,
+                          "fill": "#FFFFFF",
+                          "cornerRadius": 4,
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "FiAhI",
+                              "name": "Redo Icon",
+                              "width": 16,
+                              "height": 16,
+                              "icon": "redo-2",
+                              "library": "lucide",
+                              "fill": "#666666"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "NYZee",
+                      "name": "Text Format Group",
+                      "height": 32,
+                      "fill": "#FFFFFF",
+                      "cornerRadius": 6,
+                      "stroke": "#E5E5E5",
+                      "strokeWidth": 1,
+                      "gap": 2,
+                      "padding": 2,
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "j7weIA",
+                          "name": "Bold Tool",
+                          "width": 28,
+                          "height": 28,
+                          "fill": "#1A1A1A",
+                          "cornerRadius": 4,
+                          "stroke": "#1A1A1A",
+                          "strokeWidth": 1,
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "mcwmg",
+                              "name": "Bold Icon",
+                              "width": 16,
+                              "height": 16,
+                              "icon": "bold",
+                              "library": "lucide",
+                              "fill": "#FFFFFF"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "otYdJ",
+                          "name": "Italic Tool",
+                          "width": 28,
+                          "height": 28,
+                          "fill": "#FFFFFF",
+                          "cornerRadius": 4,
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "eArgn",
+                              "name": "Italic Icon",
+                              "width": 16,
+                              "height": 16,
+                              "icon": "italic",
+                              "library": "lucide",
+                              "fill": "#1A1A1A"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "pek5U",
+                          "name": "Underline Tool",
+                          "width": 28,
+                          "height": 28,
+                          "fill": "#FFFFFF",
+                          "cornerRadius": 4,
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "U46ad8",
+                              "name": "Underline Icon",
+                              "width": 16,
+                              "height": 16,
+                              "icon": "underline",
+                              "library": "lucide",
+                              "fill": "#1A1A1A"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "iGRk0",
+                      "name": "Insert Tools Group",
+                      "height": 32,
+                      "fill": "#FFFFFF",
+                      "cornerRadius": 6,
+                      "stroke": "#E5E5E5",
+                      "strokeWidth": 1,
+                      "gap": 2,
+                      "padding": 2,
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "DFqME",
+                          "name": "Link Tool",
+                          "width": 28,
+                          "height": 28,
+                          "fill": "#FFFFFF",
+                          "cornerRadius": 4,
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "zLiE7",
+                              "name": "Link Icon",
+                              "width": 16,
+                              "height": 16,
+                              "icon": "link-2",
+                              "library": "lucide",
+                              "fill": "#666666"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "B6LfE9",
+                          "name": "Image Tool",
+                          "width": 28,
+                          "height": 28,
+                          "fill": "#FFFFFF",
+                          "cornerRadius": 4,
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "ytmh5",
+                              "name": "Image Icon",
+                              "width": 16,
+                              "height": 16,
+                              "icon": "image",
+                              "library": "lucide",
+                              "fill": "#666666"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "i3lF4J",
+                      "name": "Editor Status Group",
+                      "height": 32,
+                      "gap": 6,
+                      "padding": [
+                        0,
+                        6
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "j2Gwa",
+                          "name": "Editor Focus Status",
+                          "fill": "#0066FF",
+                          "content": "● FOCUSED",
+                          "fontFamily": "Geist Mono",
+                          "fontSize": 10,
+                          "fontWeight": "600",
+                          "letterSpacing": 0.6
+                        },
+                        {
+                          "type": "text",
+                          "id": "V06c9O",
+                          "name": "Editor Shortcut Hint",
+                          "fill": "#999999",
+                          "content": "⌘↵",
+                          "fontFamily": "Geist Mono",
+                          "fontSize": 11,
+                          "fontWeight": "500"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "VVbhO",
+                  "name": "Editor Body",
+                  "width": "fill_container",
+                  "height": "fill_container",
+                  "fill": "#FFFFFF",
+                  "cornerRadius": 6,
+                  "stroke": "#0066FF",
+                  "strokeWidth": 1,
+                  "effect": {
+                    "type": "shadow",
+                    "shadowType": "outer",
+                    "color": "#0066FF26",
+                    "spread": 2
+                  },
+                  "layout": "vertical",
+                  "gap": 14,
+                  "padding": [
+                    16,
+                    18
+                  ],
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "MjAeH",
+                      "name": "Body Heading",
+                      "fill": "#1A1A1A",
+                      "content": "Notes",
+                      "fontFamily": "Geist",
+                      "fontSize": 22,
+                      "fontWeight": "650",
+                      "letterSpacing": -0.5
+                    },
+                    {
+                      "type": "text",
+                      "id": "SFrJo",
+                      "name": "Body Prompt",
+                      "fill": "#666666",
+                      "content": "Start writing in Markdown…",
+                      "lineHeight": 1.45,
+                      "fontFamily": "Inter",
+                      "fontSize": 14,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "priZE",
+                      "name": "Checklist Row",
+                      "gap": 8,
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "rectangle",
+                          "cornerRadius": 2,
+                          "id": "uswmh",
+                          "name": "Checklist Box",
+                          "fill": "#FFFFFF",
+                          "width": 16,
+                          "height": 16,
+                          "stroke": "#D5D5D5",
+                          "strokeWidth": 1
+                        },
+                        {
+                          "type": "text",
+                          "id": "SIQfF",
+                          "name": "Checklist Label",
+                          "fill": "#6E5AC6",
+                          "content": "Capture the next idea",
+                          "fontFamily": "Geist Mono",
+                          "fontSize": 14,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "id": "YyFSV",
+              "name": "Autosave Note",
+              "fill": "#999999",
+              "content": "Markdown is saved automatically on this device.",
+              "fontFamily": "Inter",
+              "fontSize": 11,
+              "fontWeight": "500"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "K1zhtO",
+          "x": 823,
+          "y": 1470,
+          "name": "Command Palette",
+          "width": 240,
+          "height": 48,
+          "fill": "#FFFFFF",
+          "cornerRadius": 8,
+          "stroke": "#B8B9C2",
+          "strokeWidth": 1,
+          "effect": {
+            "type": "shadow",
+            "shadowType": "outer",
+            "color": "#00000014",
+            "offset": {
+              "x": 0,
+              "y": 3
+            },
+            "blur": 12
+          },
+          "gap": 8,
+          "padding": [
+            0,
+            12,
+            0,
+            16
+          ],
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "text",
+              "id": "G7UOI",
+              "name": "Command Placeholder",
+              "fill": "#6C6E78",
+              "content": "Search actions and notes…",
+              "fontFamily": "Inter",
+              "fontSize": 14,
+              "fontWeight": "normal"
+            },
+            {
+              "type": "frame",
+              "id": "UEtXp",
+              "name": "Command Shortcut",
+              "fill": "#F4F4F6",
+              "cornerRadius": 5,
+              "stroke": "#C9CAD2",
+              "strokeWidth": 1,
+              "padding": [
+                3,
+                5
+              ],
+              "justifyContent": "center",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "RgN1C",
+                  "name": "Shortcut Label",
+                  "fill": "#555866",
+                  "content": "⌘ K",
+                  "fontFamily": "Geist Mono",
+                  "fontSize": 11,
+                  "fontWeight": "600"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "j1Dpw",
+          "x": 0,
+          "y": 0,
+          "name": "Latest Frames Rail",
+          "width": 156,
+          "height": 1560,
+          "fill": "#F5F5F3",
+          "stroke": "#E5E5E5",
+          "layout": "none",
+          "children": [
+            {
+              "type": "text",
+              "id": "W30HW",
+              "x": 18,
+              "y": 22,
+              "name": "Latest Frames Label",
+              "fill": "#666666",
+              "content": "LATEST FRAMES",
+              "fontFamily": "Geist Mono",
+              "fontSize": 10,
+              "fontWeight": "700",
+              "letterSpacing": 1.2
+            },
+            {
+              "type": "frame",
+              "id": "Ez188",
+              "x": 20,
+              "y": 60,
+              "name": "Latest Frame Thumbnails",
+              "width": 105,
+              "height": 370,
+              "layout": "none",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "k2Yoj",
+                  "x": 0,
+                  "y": 0,
+                  "name": "Notes Thumbnail",
+                  "width": 105,
+                  "height": 128,
+                  "fill": "#FFFFFF",
+                  "cornerRadius": 8,
+                  "stroke": "#0066FF",
+                  "strokeWidth": 2,
+                  "effect": {
+                    "type": "shadow",
+                    "shadowType": "outer",
+                    "color": "#00000012",
+                    "offset": {
+                      "x": 0,
+                      "y": 3
+                    },
+                    "blur": 10
+                  },
+                  "layout": "vertical",
+                  "gap": 7,
+                  "padding": 9,
+                  "children": [
+                    {
+                      "type": "rectangle",
+                      "cornerRadius": 3,
+                      "id": "yF72J",
+                      "name": "Notes Thumbnail Accent",
+                      "fill": "#0066FF",
+                      "width": "fill_container",
+                      "height": 5
+                    },
+                    {
+                      "type": "text",
+                      "id": "GOaKN",
+                      "name": "Notes Thumbnail Title",
+                      "fill": "#1A1A1A",
+                      "content": "Notes",
+                      "fontFamily": "Geist",
+                      "fontSize": 13,
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "rectangle",
+                      "cornerRadius": 2,
+                      "id": "G2KdZ",
+                      "name": "Notes Thumbnail Line One",
+                      "fill": "#E8E8E8",
+                      "width": "fill_container",
+                      "height": 4
+                    },
+                    {
+                      "type": "rectangle",
+                      "cornerRadius": 2,
+                      "id": "OIcNu",
+                      "name": "Notes Thumbnail Line Two",
+                      "fill": "#E8E8E8",
+                      "width": 56,
+                      "height": 4
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "uDyky",
+                  "x": 12,
+                  "y": 57,
+                  "name": "Focus Thumbnail",
+                  "width": 105,
+                  "height": 128,
+                  "fill": "#FFFFFF",
+                  "cornerRadius": 8,
+                  "stroke": "#DCDCDC",
+                  "strokeWidth": 1,
+                  "effect": {
+                    "type": "shadow",
+                    "shadowType": "outer",
+                    "color": "#0000000A",
+                    "offset": {
+                      "x": 0,
+                      "y": 2
+                    },
+                    "blur": 7
+                  },
+                  "layout": "vertical",
+                  "gap": 7,
+                  "padding": 9,
+                  "children": [
+                    {
+                      "type": "rectangle",
+                      "cornerRadius": 3,
+                      "id": "vpytQ",
+                      "name": "Focus Thumbnail Accent",
+                      "fill": "#C8C8C8",
+                      "width": "fill_container",
+                      "height": 5
+                    },
+                    {
+                      "type": "text",
+                      "id": "Dn2qZ",
+                      "name": "Focus Thumbnail Title",
+                      "fill": "#1A1A1A",
+                      "content": "Focus",
+                      "fontFamily": "Geist",
+                      "fontSize": 13,
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "rectangle",
+                      "cornerRadius": 2,
+                      "id": "E8dHh",
+                      "name": "Focus Thumbnail Line One",
+                      "fill": "#E8E8E8",
+                      "width": "fill_container",
+                      "height": 4
+                    },
+                    {
+                      "type": "rectangle",
+                      "cornerRadius": 2,
+                      "id": "Mpx4f",
+                      "name": "Focus Thumbnail Line Two",
+                      "fill": "#E8E8E8",
+                      "width": 56,
+                      "height": 4
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "EZBt1",
+                  "x": -12,
+                  "y": 103,
+                  "name": "Todo Thumbnail",
+                  "width": 105,
+                  "height": 128,
+                  "fill": "#FFFFFF",
+                  "cornerRadius": 8,
+                  "stroke": "#DCDCDC",
+                  "strokeWidth": 1,
+                  "effect": {
+                    "type": "shadow",
+                    "shadowType": "outer",
+                    "color": "#0000000A",
+                    "offset": {
+                      "x": 0,
+                      "y": 2
+                    },
+                    "blur": 7
+                  },
+                  "layout": "vertical",
+                  "gap": 7,
+                  "padding": 9,
+                  "children": [
+                    {
+                      "type": "rectangle",
+                      "cornerRadius": 3,
+                      "id": "b4RL4p",
+                      "name": "Todo Thumbnail Accent",
+                      "fill": "#C8C8C8",
+                      "width": "fill_container",
+                      "height": 5
+                    },
+                    {
+                      "type": "text",
+                      "id": "F6bgQQ",
+                      "name": "Todo Thumbnail Title",
+                      "fill": "#1A1A1A",
+                      "content": "Todo",
+                      "fontFamily": "Geist",
+                      "fontSize": 13,
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "rectangle",
+                      "cornerRadius": 2,
+                      "id": "A1JQeb",
+                      "name": "Todo Thumbnail Line One",
+                      "fill": "#E8E8E8",
+                      "width": "fill_container",
+                      "height": 4
+                    },
+                    {
+                      "type": "rectangle",
+                      "cornerRadius": 2,
+                      "id": "eliHB",
+                      "name": "Todo Thumbnail Line Two",
+                      "fill": "#E8E8E8",
+                      "width": 56,
+                      "height": 4
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "mTaOi",
+                  "x": 12,
+                  "y": 156,
+                  "name": "Focus Thumbnail",
+                  "width": 105,
+                  "height": 128,
+                  "fill": "#FFFFFF",
+                  "cornerRadius": 8,
+                  "stroke": "#DCDCDC",
+                  "strokeWidth": 1,
+                  "effect": {
+                    "type": "shadow",
+                    "shadowType": "outer",
+                    "color": "#0000000A",
+                    "offset": {
+                      "x": 0,
+                      "y": 2
+                    },
+                    "blur": 7
+                  },
+                  "layout": "vertical",
+                  "gap": 7,
+                  "padding": 9,
+                  "children": [
+                    {
+                      "type": "rectangle",
+                      "cornerRadius": 3,
+                      "id": "JZcVF",
+                      "name": "Focus Thumbnail Accent",
+                      "fill": "#C8C8C8",
+                      "width": "fill_container",
+                      "height": 5
+                    },
+                    {
+                      "type": "text",
+                      "id": "WApp9",
+                      "name": "Focus Thumbnail Title",
+                      "fill": "#1A1A1A",
+                      "content": "Focus",
+                      "fontFamily": "Geist",
+                      "fontSize": 13,
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "rectangle",
+                      "cornerRadius": 2,
+                      "id": "N3uIQ",
+                      "name": "Focus Thumbnail Line One",
+                      "fill": "#E8E8E8",
+                      "width": "fill_container",
+                      "height": 4
+                    },
+                    {
+                      "type": "rectangle",
+                      "cornerRadius": 2,
+                      "id": "twEDz",
+                      "name": "Focus Thumbnail Line Two",
+                      "fill": "#E8E8E8",
+                      "width": 56,
+                      "height": 4
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "tTLvZ",
+                  "x": -12,
+                  "y": 212,
+                  "name": "Todo Thumbnail",
+                  "width": 105,
+                  "height": 128,
+                  "fill": "#FFFFFF",
+                  "cornerRadius": 8,
+                  "stroke": "#DCDCDC",
+                  "strokeWidth": 1,
+                  "effect": {
+                    "type": "shadow",
+                    "shadowType": "outer",
+                    "color": "#0000000A",
+                    "offset": {
+                      "x": 0,
+                      "y": 2
+                    },
+                    "blur": 7
+                  },
+                  "layout": "vertical",
+                  "gap": 7,
+                  "padding": 9,
+                  "children": [
+                    {
+                      "type": "rectangle",
+                      "cornerRadius": 3,
+                      "id": "MUTk7",
+                      "name": "Todo Thumbnail Accent",
+                      "fill": "#C8C8C8",
+                      "width": "fill_container",
+                      "height": 5
+                    },
+                    {
+                      "type": "text",
+                      "id": "vurCN",
+                      "name": "Todo Thumbnail Title",
+                      "fill": "#1A1A1A",
+                      "content": "Todo",
+                      "fontFamily": "Geist",
+                      "fontSize": 13,
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "rectangle",
+                      "cornerRadius": 2,
+                      "id": "dTQVi",
+                      "name": "Todo Thumbnail Line One",
+                      "fill": "#E8E8E8",
+                      "width": "fill_container",
+                      "height": 4
+                    },
+                    {
+                      "type": "rectangle",
+                      "cornerRadius": 2,
+                      "id": "aKmmL",
+                      "name": "Todo Thumbnail Line Two",
+                      "fill": "#E8E8E8",
+                      "width": 56,
+                      "height": 4
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "id": "j4XDE",
+              "x": 12,
+              "y": 37,
+              "name": "Latest Frames Shortcut Hint",
+              "fill": "#777777",
+              "content": "⌘1–3  SWITCH FRAMES",
+              "fontFamily": "Geist Mono",
+              "fontSize": 10,
+              "fontWeight": "normal"
+            },
+            {
+              "type": "rectangle",
+              "id": "C0ivuC",
+              "x": 141,
+              "y": 0,
+              "name": "Rail Edge Fade Strong",
+              "enabled": false,
+              "fill": "#D2D3D566",
+              "width": 1,
+              "height": 1560
+            },
+            {
+              "type": "rectangle",
+              "id": "c7kcC",
+              "x": 142,
+              "y": 0,
+              "name": "Rail Edge Fade Mid",
+              "enabled": false,
+              "fill": "#D2D3D533",
+              "width": 1,
+              "height": 1560
+            },
+            {
+              "type": "rectangle",
+              "id": "DfoCF",
+              "x": 143,
+              "y": 0,
+              "name": "Rail Edge Fade Soft",
+              "enabled": false,
+              "fill": "#D2D3D01A",
+              "width": 2,
+              "height": 1560
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "KjySI",
+          "x": 788,
+          "y": 1418,
+          "name": "Keyboard Status Strip",
+          "width": 310,
+          "height": 28,
+          "fill": "#F7F7F8",
+          "cornerRadius": 14,
+          "stroke": "#D8D9DE",
+          "strokeWidth": 1,
+          "gap": 10,
+          "padding": [
+            6,
+            12
+          ],
+          "justifyContent": "center",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "text",
+              "id": "HDZmJ",
+              "name": "Status Label",
+              "fill": "#565963",
+              "content": "Keyboard ready",
+              "fontFamily": "Inter",
+              "fontSize": 11,
+              "fontWeight": "600"
+            },
+            {
+              "type": "text",
+              "id": "ubSL0",
+              "name": "Status Shortcut",
+              "fill": "#777A86",
+              "content": "Tab navigate  •  ⌘K actions",
+              "fontFamily": "Geist Mono",
+              "fontSize": 11,
+              "fontWeight": "normal"
+            }
+          ]
+        },
+        {
+          "type": "group",
+          "id": "IDF2s",
+          "x": 12,
+          "y": 12,
+          "name": "Dock",
+          "children": [
+            {
+              "type": "group",
+              "id": "OtZZV",
+              "x": 1623.4142062687142,
+              "y": 1338,
+              "rotation": -0.14470912363542293,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "VgX4x",
+                  "x": 4.547473508864641e-13,
+                  "y": 88,
+                  "name": "Logout Group",
+                  "width": "fill_container(220.00000000000006)",
+                  "height": 76,
+                  "fill": "#FAFAFA",
+                  "cornerRadius": 8,
+                  "gap": 10,
+                  "padding": 10,
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon",
+                      "id": "b1Sy45",
+                      "name": "Logout Icon",
+                      "width": 20,
+                      "height": 20,
+                      "icon": "log-out",
+                      "library": "lucide",
+                      "fill": "#1E1E1E"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "aGDmw",
+                      "name": "Logout Text",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": 2,
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "twGxf",
+                          "name": "Logout Label",
+                          "fill": "#1A1A1A",
+                          "content": "Log out",
+                          "fontFamily": "Geist",
+                          "fontSize": 15,
+                          "fontWeight": "600"
+                        },
+                        {
+                          "type": "text",
+                          "id": "p8NQlW",
+                          "name": "Logout Caption",
+                          "fill": "#777777",
+                          "content": "⇧⌘Q  sign out",
+                          "fontFamily": "Inter",
+                          "fontSize": 11,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "ZmH2i",
+                  "x": 0,
+                  "y": 0,
+                  "name": "Settings Group",
+                  "width": "fill_container(220.00000000000006)",
+                  "height": 76,
+                  "fill": "#FAFAFA",
+                  "cornerRadius": 8,
+                  "gap": 10,
+                  "padding": 10,
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon",
+                      "id": "SLTAU",
+                      "name": "Settings Icon",
+                      "width": 20,
+                      "height": 20,
+                      "icon": "settings-2",
+                      "library": "lucide",
+                      "fill": "#1E1E1E"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "r3qK4h",
+                      "name": "Settings Text",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": 2,
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "ZdMyR",
+                          "name": "Settings Label",
+                          "fill": "#1A1A1A",
+                          "content": "Settings",
+                          "fontFamily": "Geist",
+                          "fontSize": 15,
+                          "fontWeight": "600"
+                        },
+                        {
+                          "type": "text",
+                          "id": "EGsRl",
+                          "name": "Settings Caption",
+                          "fill": "#777777",
+                          "content": "⌘,  preferences",
+                          "fontFamily": "Inter",
+                          "fontSize": 11,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "K3PQ7",
+              "x": 1626,
+              "y": 10,
+              "name": "Profile Group",
+              "width": "fill_container(227)",
+              "height": 76,
+              "fill": "#FAFAFA",
+              "cornerRadius": 8,
+              "gap": 10,
+              "padding": 10,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon",
+                  "id": "denrP",
+                  "name": "Profile Icon",
+                  "width": 22,
+                  "height": 22,
+                  "icon": "circle-user-round",
+                  "library": "lucide",
+                  "fill": "#1A1A1A"
+                },
+                {
+                  "type": "frame",
+                  "id": "pKJyt",
+                  "name": "Profile Text",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 2,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "aqbtR",
+                      "name": "Profile Title",
+                      "fill": "#1A1A1A",
+                      "content": "Profile",
+                      "fontFamily": "Geist",
+                      "fontSize": 15,
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "text",
+                      "id": "O3bW5q",
+                      "name": "Profile Caption",
+                      "fill": "#777777",
+                      "content": "Keyboard-first workspace",
+                      "fontFamily": "Inter",
+                      "fontSize": 11,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "gyqkQ",
+              "x": 1626,
+              "y": 107,
+              "name": "Profile and Navigation Rail",
+              "width": 227,
+              "height": 397,
+              "fill": "#FFFFFF",
+              "cornerRadius": 12,
+              "stroke": "#E5E5E5",
+              "strokeWidth": 1,
+              "effect": {
+                "type": "shadow",
+                "shadowType": "outer",
+                "color": "#0000000A",
+                "offset": {
+                  "x": 0,
+                  "y": 2
+                },
+                "blur": 8
+              },
+              "layout": "vertical",
+              "gap": 12,
+              "padding": 12
+            },
+            {
+              "type": "frame",
+              "id": "BLmpS",
+              "x": 1638,
+              "y": 119,
+              "name": "Feature Navigation Group",
+              "width": "fill_container(203)",
+              "height": "fill_container(373)",
+              "fill": "#FAFAFA",
+              "cornerRadius": 8,
+              "layout": "vertical",
+              "padding": 10,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "JveVy",
+                  "name": "Feature Links",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 4,
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "S9l4oT",
+                      "name": "Habits Navigation Item",
+                      "width": "fill_container",
+                      "height": 56,
+                      "fill": "#FFFFFF",
+                      "cornerRadius": 8,
+                      "gap": 10,
+                      "padding": [
+                        8,
+                        10
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "P20tq",
+                          "name": "Habits Icon",
+                          "width": 20,
+                          "height": 20,
+                          "icon": "rotate-ccw",
+                          "library": "lucide",
+                          "fill": "#1E1E1E"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "OjHQd",
+                          "name": "Habits Text",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "gap": 2,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "toM44",
+                              "name": "Habits Label",
+                              "fill": "#1A1A1A",
+                              "content": "Habits",
+                              "fontFamily": "Geist",
+                              "fontSize": 15,
+                              "fontWeight": "600"
+                            },
+                            {
+                              "type": "text",
+                              "id": "uFXOq",
+                              "name": "Habits Caption",
+                              "fill": "#757575",
+                              "content": "0 entries",
+                              "fontFamily": "Inter",
+                              "fontSize": 11,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "text",
+                          "id": "BMOrn",
+                          "name": "Habits Shortcut",
+                          "fill": "#888888",
+                          "content": "⌘1",
+                          "fontFamily": "Geist Mono",
+                          "fontSize": 10,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "iavZa",
+                      "name": "Reminders Navigation Item",
+                      "width": "fill_container",
+                      "height": 56,
+                      "fill": "#FFFFFF",
+                      "cornerRadius": 8,
+                      "gap": 10,
+                      "padding": [
+                        8,
+                        10
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "tcjpc",
+                          "name": "Reminders Icon",
+                          "width": 20,
+                          "height": 20,
+                          "icon": "clock-3",
+                          "library": "lucide",
+                          "fill": "#1E1E1E"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "o4yiAy",
+                          "name": "Reminders Text",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "gap": 2,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "TkfsG",
+                              "name": "Reminders Label",
+                              "fill": "#1A1A1A",
+                              "content": "Reminders",
+                              "fontFamily": "Geist",
+                              "fontSize": 15,
+                              "fontWeight": "600"
+                            },
+                            {
+                              "type": "text",
+                              "id": "Rkbi7",
+                              "name": "Reminders Caption",
+                              "fill": "#757575",
+                              "content": "0 entries",
+                              "fontFamily": "Inter",
+                              "fontSize": 11,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "text",
+                          "id": "sUCre",
+                          "name": "Reminders Shortcut",
+                          "fill": "#888888",
+                          "content": "⌘2",
+                          "fontFamily": "Geist Mono",
+                          "fontSize": 10,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "yMOi4",
+                      "name": "Focus Music Navigation Item",
+                      "width": "fill_container",
+                      "height": 56,
+                      "fill": "#FFFFFF",
+                      "cornerRadius": 8,
+                      "gap": 10,
+                      "padding": [
+                        8,
+                        10
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "qen3T",
+                          "name": "Focus Music Icon",
+                          "width": 20,
+                          "height": 20,
+                          "icon": "music-2",
+                          "library": "lucide",
+                          "fill": "#1E1E1E"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "wwhfk",
+                          "name": "Focus Music Text",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "gap": 2,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "u3UAT",
+                              "name": "Focus Music Label",
+                              "fill": "#1A1A1A",
+                              "content": "Focus Music",
+                              "fontFamily": "Geist",
+                              "fontSize": 15,
+                              "fontWeight": "600"
+                            },
+                            {
+                              "type": "text",
+                              "id": "oPxB4",
+                              "name": "Focus Music Caption",
+                              "fill": "#757575",
+                              "content": "0 entries",
+                              "fontFamily": "Inter",
+                              "fontSize": 11,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "text",
+                          "id": "oPFe1",
+                          "name": "Focus Music Shortcut",
+                          "fill": "#888888",
+                          "content": "⌘3",
+                          "fontFamily": "Geist Mono",
+                          "fontSize": 10,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "Y0xcWq",
+                      "name": "Notes Navigation Item",
+                      "width": "fill_container",
+                      "height": 56,
+                      "fill": "#EAF2FF",
+                      "cornerRadius": 8,
+                      "stroke": "#0066FF",
+                      "strokeWidth": {
+                        "left": 2
+                      },
+                      "gap": 10,
+                      "padding": [
+                        8,
+                        10
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "vSxT0",
+                          "name": "Notes Icon",
+                          "width": 20,
+                          "height": 20,
+                          "icon": "pencil",
+                          "library": "lucide",
+                          "fill": "#0066FF"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "ZIO6t",
+                          "name": "Notes Text",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "gap": 2,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "zHq59",
+                              "name": "Notes Label",
+                              "fill": "#1A1A1A",
+                              "content": "Notes",
+                              "fontFamily": "Geist",
+                              "fontSize": 15,
+                              "fontWeight": "700"
+                            },
+                            {
+                              "type": "text",
+                              "id": "dDxeE",
+                              "name": "Notes Caption",
+                              "fill": "#4B6FA8",
+                              "content": "⌘4  current",
+                              "fontFamily": "Inter",
+                              "fontSize": 11,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "RBrfv",
+                      "name": "Todo List Navigation Item",
+                      "width": "fill_container",
+                      "height": 56,
+                      "fill": "#FFFFFF",
+                      "cornerRadius": 8,
+                      "gap": 10,
+                      "padding": [
+                        8,
+                        10
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "vsglm",
+                          "name": "Todo List Icon",
+                          "width": 20,
+                          "height": 20,
+                          "icon": "square-check",
+                          "library": "lucide",
+                          "fill": "#1E1E1E"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "S8DOpi",
+                          "name": "Todo List Text",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "gap": 2,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "CiYiM",
+                              "name": "Todo List Label",
+                              "fill": "#1A1A1A",
+                              "content": "Todo List",
+                              "fontFamily": "Geist",
+                              "fontSize": 15,
+                              "fontWeight": "600"
+                            },
+                            {
+                              "type": "text",
+                              "id": "gcGip",
+                              "name": "Todo List Caption",
+                              "fill": "#757575",
+                              "content": "0 entries",
+                              "fontFamily": "Inter",
+                              "fontSize": 11,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "text",
+                          "id": "k8R6s",
+                          "name": "Todo Shortcut",
+                          "fill": "#888888",
+                          "content": "⌘5",
+                          "fontFamily": "Geist Mono",
+                          "fontSize": 10,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "axpqa",
+                      "name": "Pomodoro Navigation Item",
+                      "width": "fill_container",
+                      "height": 56,
+                      "fill": "#FFFFFF",
+                      "cornerRadius": 8,
+                      "gap": 10,
+                      "padding": [
+                        8,
+                        10
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "N03sS",
+                          "name": "Pomodoro Icon",
+                          "width": 20,
+                          "height": 20,
+                          "icon": "circle-dot",
+                          "library": "lucide",
+                          "fill": "#1E1E1E"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "Xron6",
+                          "name": "Pomodoro Text",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "gap": 2,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "EidU8",
+                              "name": "Pomodoro Label",
+                              "fill": "#1A1A1A",
+                              "content": "Pomodoro",
+                              "fontFamily": "Geist",
+                              "fontSize": 15,
+                              "fontWeight": "600"
+                            },
+                            {
+                              "type": "text",
+                              "id": "iEHwx",
+                              "name": "Pomodoro Caption",
+                              "fill": "#757575",
+                              "content": "Open timer",
+                              "fontFamily": "Inter",
+                              "fontSize": 11,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "text",
+                          "id": "TNoPj",
+                          "name": "Pomodoro Shortcut",
+                          "fill": "#888888",
+                          "content": "⌘6",
+                          "fontFamily": "Geist Mono",
+                          "fontSize": 10,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "imports": {
+    "D": "pencil:shadcn.lib.pen"
+  },
+  "fileToken": "672fba09-ae3a-4cd3-86dc-743b2edcf6b6"
+}

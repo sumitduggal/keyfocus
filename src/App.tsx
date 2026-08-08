@@ -1,9 +1,16 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { KeyboardEvent, RefCallback } from 'react'
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
-import { EditorState } from '@codemirror/state'
-import { markdown } from '@codemirror/lang-markdown'
-import { Decoration, EditorView, ViewPlugin, type DecorationSet } from '@codemirror/view'
+import EditorJS, { type OutputData } from '@editorjs/editorjs'
+import Header from '@editorjs/header'
+import List from '@editorjs/list'
+import Quote from '@editorjs/quote'
+import Checklist from '@editorjs/checklist'
+import ImageTool from '@editorjs/image'
+import InlineCode from '@editorjs/inline-code'
+import CodeTool from '@editorjs/code'
+import LinkTool from '@editorjs/link'
+import Marker from '@editorjs/marker'
 import './App.css'
 
 type Feature = 'habits' | 'reminders' | 'focus music' | 'notes' | 'todo list' | 'pomodoro'
@@ -23,39 +30,37 @@ const featureMeta: Record<Feature, { glyph: string; description: string; frame: 
 const commandNames = [...Object.keys(featureMeta), 'Search'] as Command[]
 const initialFrame: WorkspaceFrame = { id: 'main', feature: 'notes', eyebrow: 'NOTES', title: 'Notes', description: 'A lightweight place for thoughts, references, and ideas.', details: ['Launch idea', 'Research reference', 'Things to explore'] }
 
-const inlineMarkdownPreview = ViewPlugin.fromClass(class {
-  decorations: DecorationSet
-  constructor(view: EditorView) { this.decorations = this.build(view) }
-  update(update: { docChanged: boolean; viewportChanged: boolean; view: EditorView }) { if (update.docChanged || update.viewportChanged) this.decorations = this.build(update.view) }
-  build(view: EditorView) {
-    const marks = []
-    for (const range of view.visibleRanges) {
-      let line = view.state.doc.lineAt(range.from)
-      while (line.from <= range.to) {
-        const text = line.text
-        const heading = text.match(/^(#{1,3})\s+/)
-        if (heading) {
-          marks.push(Decoration.mark({ class: `cm-inline-heading cm-inline-heading-${heading[1].length}` }).range(line.from, line.to))
-          marks.push(Decoration.mark({ class: 'cm-inline-marker' }).range(line.from, line.from + heading[0].length))
-        }
-        for (const match of text.matchAll(/(\*\*|__)(.+?)\1/g)) {
-          const start = line.from + (match.index ?? 0)
-          marks.push(Decoration.mark({ class: 'cm-inline-bold' }).range(start, start + match[0].length))
-        }
-        for (const match of text.matchAll(/~~(.+?)~~/g)) {
-          const start = line.from + (match.index ?? 0)
-          marks.push(Decoration.mark({ class: 'cm-inline-strike' }).range(start, start + match[0].length))
-        }
-        if (line.to >= range.to) break
-        line = view.state.doc.line(line.number + 1)
-      }
-    }
-    return Decoration.set(marks, true)
-  }
-}, { decorations: (value) => value.decorations })
-
 function FrameCard({ frame, active, frameRef, noteBody, onNoteChange }: { frame: WorkspaceFrame; active: boolean; frameRef: RefCallback<HTMLElement>; noteBody?: string; onNoteChange?: (value: string) => void }) {
   const note = noteBody ?? ''
+  const editorHost = useRef<HTMLDivElement | null>(null)
+  const editorInstance = useRef<EditorJS | null>(null)
+  const initialNote = useRef(note).current
+  const noteChangeRef = useRef(onNoteChange)
+  noteChangeRef.current = onNoteChange
+  useEffect(() => {
+    if (frame.feature !== 'notes' || !editorHost.current) return
+    let parsed: OutputData | undefined
+    try { parsed = JSON.parse(initialNote) as OutputData } catch { parsed = undefined }
+    const editor = new EditorJS({
+      holder: editorHost.current,
+      autofocus: true,
+      data: parsed?.blocks ? parsed : { blocks: initialNote.split('\n').filter(Boolean).map((text) => ({ type: 'paragraph', data: { text } })) },
+      tools: {
+        header: Header,
+        list: List,
+        quote: Quote,
+        checklist: Checklist,
+        image: { class: ImageTool, config: { uploader: { uploadByFile: async (file: File) => ({ success: 1, file: { url: await new Promise<string>((resolve) => { const reader = new FileReader(); reader.onload = () => resolve(String(reader.result)); reader.readAsDataURL(file) }) } }) } } },
+        inlineCode: InlineCode,
+        code: CodeTool,
+        linkTool: LinkTool,
+        marker: Marker,
+      },
+      onChange: async () => { const output = await editor.save(); noteChangeRef.current?.(JSON.stringify(output)) },
+    })
+    editorInstance.current = editor
+    return () => { editor.isReady.then(() => editor.destroy()).catch(() => undefined); editorInstance.current = null }
+  }, [frame.id, frame.feature, initialNote])
   const [pomodoroDuration, setPomodoroDuration] = useState(() => Number(localStorage.getItem('focus-space-pomodoro-duration')) || 25)
   const [pomodoroSeconds, setPomodoroSeconds] = useState(() => (Number(localStorage.getItem('focus-space-pomodoro-duration')) || 25) * 60)
   const [pomodoroRunning, setPomodoroRunning] = useState(false)
@@ -71,30 +76,6 @@ function FrameCard({ frame, active, frameRef, noteBody, onNoteChange }: { frame:
     oscillator.connect(gain).connect(context.destination)
     oscillator.start(); oscillator.stop(context.currentTime + 0.5)
   }
-  const editorHost = useRef<HTMLDivElement | null>(null)
-  const editorView = useRef<EditorView | null>(null)
-  const imageInput = useRef<HTMLInputElement | null>(null)
-  const initialNote = useRef(note).current
-  const changeHandler = useRef(onNoteChange)
-  changeHandler.current = onNoteChange
-  useEffect(() => {
-    if (frame.feature !== 'notes' || !editorHost.current) return
-    const view = new EditorView({
-      state: EditorState.create({
-        doc: initialNote,
-        extensions: [markdown(), inlineMarkdownPreview, EditorView.lineWrapping, EditorView.updateListener.of((update) => {
-          if (update.docChanged) changeHandler.current?.(update.state.doc.toString())
-        })],
-      }),
-      parent: editorHost.current,
-    })
-    editorView.current = view
-    return () => { view.destroy(); editorView.current = null }
-  }, [frame.feature, initialNote])
-  useEffect(() => {
-    const view = editorView.current
-    if (view && view.state.doc.toString() !== note) view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: note } })
-  }, [note])
   useEffect(() => {
     if (frame.feature !== 'pomodoro' || !pomodoroRunning) return
     const timer = window.setInterval(() => setPomodoroSeconds((current) => {
@@ -105,14 +86,6 @@ function FrameCard({ frame, active, frameRef, noteBody, onNoteChange }: { frame:
   }, [frame.feature, pomodoroRunning])
   useEffect(() => { localStorage.setItem('focus-space-pomodoro-duration', String(pomodoroDuration)) }, [pomodoroDuration])
   const chooseTimer = (minutes: number) => { setPomodoroDuration(minutes); setPomodoroRunning(false); setPomodoroSeconds(minutes * 60); requestAnimationFrame(() => startButton.current?.focus()) }
-  const insertMarkdown = (snippet: string) => {
-    onNoteChange?.(`${note}${note && !note.endsWith('\n') ? '\n' : ''}${snippet}`)
-  }
-  const uploadImage = (file: File) => {
-    const reader = new FileReader()
-    reader.onload = () => insertMarkdown(`![${file.name}](${String(reader.result)})`)
-    reader.readAsDataURL(file)
-  }
   return (
     <section ref={frameRef} className={`${active ? 'workspace-frame active' : 'workspace-frame'} ${frame.feature === 'notes' ? 'note-frame' : ''}`} aria-label={frame.title} aria-current={active ? 'page' : undefined} tabIndex={-1}>
       <p className="frame-eyebrow">{frame.eyebrow}</p>
@@ -125,22 +98,7 @@ function FrameCard({ frame, active, frameRef, noteBody, onNoteChange }: { frame:
         <div className="pomodoro-actions"><button ref={startButton} type="button" onClick={() => setPomodoroRunning((current) => !current)}>{pomodoroRunning ? 'Pause' : 'Start focus'}</button><button type="button" onClick={() => { setPomodoroRunning(false); setPomodoroSeconds(pomodoroDuration * 60) }}>Reset</button></div>
         <p className="frame-foot">Take a five-minute break when the interval ends</p>
       </div> : frame.feature === 'notes' ? <>
-        <div className="markdown-toolbar" aria-label="Markdown formatting">
-          <button type="button" onClick={() => insertMarkdown('# Heading')}>H</button>
-          <button type="button" onClick={() => insertMarkdown('**bold**')}><b>B</b></button>
-          <button type="button" onClick={() => insertMarkdown('*italic*')}><i>I</i></button>
-          <button type="button" onClick={() => insertMarkdown('~~strikethrough~~')}><s>S</s></button>
-          <button type="button" onClick={() => insertMarkdown('- List item')}>•</button>
-          <button type="button" onClick={() => insertMarkdown('1. List item')}>1.</button>
-          <button type="button" onClick={() => insertMarkdown('- [ ] Task')}>☐</button>
-          <button type="button" onClick={() => insertMarkdown('> Quote')}>❝</button>
-          <button type="button" onClick={() => insertMarkdown('`code`')}>{'<>'}</button>
-          <button type="button" onClick={() => insertMarkdown('[link text](https://example.com)')}>↗</button>
-          <button type="button" onClick={() => imageInput.current?.click()}>▧</button>
-          <input ref={imageInput} className="image-upload" type="file" accept="image/*" onChange={(event) => { const file = event.target.files?.[0]; if (file) uploadImage(file); event.target.value = '' }} />
-        </div>
-        <div ref={editorHost} className="note-editor" aria-label="Note Markdown editor" />
-        <MarkdownPreview value={note} />
+        <div ref={editorHost} className="note-editor editorjs-note" aria-label="Note block editor" />
         <small className="markdown-hint">Markdown is saved automatically on this device.</small>
       </> : <>
       <p className="frame-description">{frame.description}</p>
@@ -153,21 +111,6 @@ function FrameCard({ frame, active, frameRef, noteBody, onNoteChange }: { frame:
 
 function StackPreview({ frame }: { frame: WorkspaceFrame }) {
   return <div className="stack-preview" aria-hidden="true"><p>{frame.eyebrow}</p><h2>{frame.title}</h2><span>{frame.description}</span></div>
-}
-
-function MarkdownPreview({ value }: { value: string }) {
-  return <div className="markdown-preview" aria-label="Formatted Markdown">{value.split('\n').map((line, index) => {
-    const key = `${index}-${line}`
-    if (line.startsWith('# ')) return <h2 key={key}>{line.slice(2)}</h2>
-    if (line.startsWith('## ')) return <h3 key={key}>{line.slice(3)}</h3>
-    if (line.startsWith('> ')) return <blockquote key={key}>{line.slice(2)}</blockquote>
-    const image = line.match(/^!\[([^\]]*)\]\((.+)\)$/)
-    if (image) return <img key={key} className="markdown-image" src={image[2]} alt={image[1]} />
-    if (line.startsWith('- [ ] ')) return <p key={key}>☐ {line.slice(6)}</p>
-    if (line.startsWith('- [x] ')) return <p key={key}>☑ {line.slice(6)}</p>
-    if (line.startsWith('- ')) return <p key={key}>• {line.slice(2)}</p>
-    return <p key={key}>{line || '\u00a0'}</p>
-  })}</div>
 }
 
 function App() {
@@ -307,6 +250,7 @@ function App() {
         requestAnimationFrame(() => enteringLeft ? stackRefs.current[stackedFrames[0].id]?.focus() : sideRefs.current[nextSide]?.focus())
         return
       }
+      if (event.target instanceof HTMLElement && event.target.closest('.mdxeditor')) return
       if (focusedSide === 'left' && withinSide && (event.key === 'ArrowUp' || event.key === 'ArrowDown')) {
         if (!stackedFrames.length) return
         event.preventDefault()
@@ -446,7 +390,7 @@ function App() {
             ))}
             </div>
           </aside>
-          <section ref={(node) => { sideRefs.current.main = node }} className={`side-region main-side ${focusedSide === 'main' ? 'side-focused' : ''} ${focusedSide === 'main' && withinSide ? 'within-focused' : ''}`} aria-label="Main frame" tabIndex={0}>
+          <section ref={(node) => { sideRefs.current.main = node }} onFocusCapture={() => { setFocusedSide('main'); setWithinSide(true) }} className={`side-region main-side ${focusedSide === 'main' ? 'side-focused' : ''} ${focusedSide === 'main' && withinSide ? 'within-focused' : ''}`} aria-label="Main frame" tabIndex={0}>
             <div className={activeFrame.feature === 'notes' ? 'main-frame-position note-position' : 'main-frame-position'}>
               <FrameCard frame={activeFrame} active noteBody={noteBodies[activeFrame.id]} onNoteChange={(value) => setNoteBodies((current) => ({ ...current, [activeFrame.id]: value }))} frameRef={(node) => { frameRefs.current[activeFrame.id] = node }} />
             </div>
