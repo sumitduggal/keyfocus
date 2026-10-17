@@ -103,15 +103,13 @@ function App() {
 
   const openFeaturePanel = (feature: Feature) => {
     setFeaturePanel(feature)
-    requestAnimationFrame(() => {
-      const featureButton = rightItemRefs.current[`feature-${feature}`]
-      if (featureButton) {
-        setFeatureAnchorY(
-          featureButton.getBoundingClientRect().top +
-            featureButton.getBoundingClientRect().height / 2,
-        )
-      }
-    })
+    const featureButton = rightItemRefs.current[`feature-${feature}`]
+    if (featureButton) {
+      setFeatureAnchorY(
+        featureButton.getBoundingClientRect().top +
+          featureButton.getBoundingClientRect().height / 2,
+      )
+    }
   }
 
   const focusDockItem = () => {
@@ -124,7 +122,7 @@ function App() {
           : rightFocusIndex === features.length + 2
             ? 'logout'
             : `feature-${features[rightFocusIndex - 1]}`
-    requestAnimationFrame(() => rightItemRefs.current[id]?.focus())
+    rightItemRefs.current[id]?.focus()
   }
 
   const closeFeaturePanel = () => {
@@ -142,7 +140,7 @@ function App() {
       setQuery('')
       setMenuOpen(true)
       setMenuFocusIndex(0)
-      requestAnimationFrame(() => actionInputRef.current?.focus())
+      actionInputRef.current?.focus()
       return
     }
     const newFrame = { ...featureMeta[command].frame, feature: command, id: crypto.randomUUID() }
@@ -209,16 +207,15 @@ function App() {
   }, [focusedSide, withinSide])
   useEffect(() => {
     if (focusedSide === 'main' && withinSide && !menuOpen) {
-      requestAnimationFrame(() => frameRefs.current[activeFrameId]?.focus())
+      frameRefs.current[activeFrameId]?.focus()
     }
   }, [activeFrameId, focusedSide, frames, menuOpen, withinSide])
   useEffect(() => {
     if (!featurePanel) return
     setEntryFocusIndex(0)
-    requestAnimationFrame(() => {
-      featureEntryRefs.current[featureEntries[0]?.id]?.focus()
-      featureAsideRef.current?.focus()
-    })
+    const firstEntry = featureEntries[0] ? featureEntryRefs.current[featureEntries[0].id] : null
+    if (firstEntry) firstEntry.focus()
+    else featureAsideRef.current?.focus()
   }, [featureEntries, featurePanel])
 
   useEffect(() => {
@@ -230,7 +227,7 @@ function App() {
         setMenuOpen(true)
         setSearchMode(false)
         setMenuFocusIndex(0)
-        requestAnimationFrame(() => actionInputRef.current?.focus())
+        actionInputRef.current?.focus()
         return
       }
       if (
@@ -248,7 +245,7 @@ function App() {
         setStackFocusIndex(-1)
         setFocusedSide('main')
         setWithinSide(false)
-        requestAnimationFrame(() => sideRefs.current.main?.focus())
+        sideRefs.current.main?.focus()
         return
       }
       if (featurePanel) return
@@ -267,11 +264,11 @@ function App() {
         if (nextFrames.length) {
           const nextIndex = Math.min(stackFocusIndex, nextFrames.length - 1)
           setStackFocusIndex(nextIndex)
-          requestAnimationFrame(() => stackRefs.current[nextFrames[nextIndex]?.id]?.focus())
+          stackRefs.current[nextFrames[nextIndex]?.id]?.focus()
         } else {
           setStackFocusIndex(-1)
           setWithinSide(false)
-          requestAnimationFrame(() => sideRefs.current.left?.focus())
+          sideRefs.current.left?.focus()
         }
         return
       }
@@ -285,11 +282,8 @@ function App() {
         setFocusedSide(nextSide)
         setWithinSide(enteringLeft)
         setStackFocusIndex(enteringLeft ? 0 : -1)
-        requestAnimationFrame(() =>
-          enteringLeft
-            ? stackRefs.current[stackedFrames[0].id]?.focus()
-            : sideRefs.current[nextSide]?.focus(),
-        )
+        if (enteringLeft) stackRefs.current[stackedFrames[0].id]?.focus()
+        else sideRefs.current[nextSide]?.focus()
         return
       }
       if (focusedSide === 'left' && withinSide && (event.key === 'ArrowUp' || event.key === 'ArrowDown')) {
@@ -299,7 +293,7 @@ function App() {
           ? Math.max(0, stackFocusIndex - 1)
           : Math.min(stackedFrames.length - 1, stackFocusIndex + 1)
         setStackFocusIndex(next)
-        requestAnimationFrame(() => stackRefs.current[stackedFrames[next]?.id]?.focus())
+        stackRefs.current[stackedFrames[next]?.id]?.focus()
         return
       }
       if (focusedSide === 'right' && withinSide && (event.key === 'ArrowUp' || event.key === 'ArrowDown')) {
@@ -316,7 +310,7 @@ function App() {
               : next === count - 2
                 ? 'settings'
                 : `feature-${(Object.keys(featureMeta) as Feature[])[next - 1]}`
-        requestAnimationFrame(() => rightItemRefs.current[id]?.focus())
+        rightItemRefs.current[id]?.focus()
         return
       }
       if (event.key !== 'Enter') return
@@ -325,14 +319,14 @@ function App() {
         setWithinSide(true)
         if (focusedSide === 'left' && stackedFrames.length) {
           setStackFocusIndex(0)
-          requestAnimationFrame(() => stackRefs.current[stackedFrames[0].id]?.focus())
+          stackRefs.current[stackedFrames[0].id]?.focus()
         }
         if (focusedSide === 'main') {
-          requestAnimationFrame(() => frameRefs.current[activeFrameId]?.focus())
+          frameRefs.current[activeFrameId]?.focus()
         }
         if (focusedSide === 'right') {
           setRightFocusIndex(0)
-          requestAnimationFrame(() => profileRef.current?.focus())
+          profileRef.current?.focus()
         }
         return
       }
@@ -350,7 +344,6 @@ function App() {
         setActiveFrameId(selectedFrame.id)
         setStackFocusIndex(-1)
         setFocusedSide('main')
-        requestAnimationFrame(() => frameRefs.current[selectedFrame.id]?.focus())
       }
       if (focusedSide === 'right' && rightFocusIndex >= 1 && rightFocusIndex <= Object.keys(featureMeta).length) {
         const feature = (Object.keys(featureMeta) as Feature[])[rightFocusIndex - 1]

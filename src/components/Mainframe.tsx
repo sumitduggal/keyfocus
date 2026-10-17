@@ -138,7 +138,7 @@ export function Mainframe({
       setPomodoroDuration(minutes)
       setPomodoroRunning(false)
       setPomodoroSeconds(minutes * 60)
-      requestAnimationFrame(() => startButton.current?.focus())
+      startButton.current?.focus()
     },
     [],
   )

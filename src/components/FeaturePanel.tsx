@@ -43,7 +43,7 @@ export function FeaturePanel({
         if (!featureEntries.length) return
         const delta = event.key === 'ArrowDown' ? 1 : -1
         const next = Math.max(0, Math.min(featureEntries.length - 1, entryFocusIndex + delta))
-        requestAnimationFrame(() => featureEntryRefs[featureEntries[next]?.id]?.focus())
+        featureEntryRefs[featureEntries[next]?.id]?.focus()
         return
       }
       if (event.key === 'Escape') {
