@@ -1,39 +1,29 @@
-import type { Feature } from '../types'
+import type { Feature, Theme } from '../types'
 import { featureMeta } from '../constants'
 
 interface DockProps {
-  focusedSide: string
-  withinSide: boolean
   rightItemRefs: Record<string, HTMLButtonElement | null>
   profileRef: React.RefObject<HTMLButtonElement | null>
   framesCountByFeature: Record<Feature, number>
-  compactMode: boolean
-  setCompactMode: (value: boolean) => void
+  theme: Theme
+  onToggleTheme: () => void
   setRightFocusIndex: (index: number) => void
   onFeaturePress: (feature: Feature) => void
 }
 
 export function Dock({
-  focusedSide,
-  withinSide,
   rightItemRefs,
   profileRef,
   framesCountByFeature,
-  compactMode,
-  setCompactMode,
+  theme,
+  onToggleTheme,
   setRightFocusIndex,
   onFeaturePress,
 }: DockProps) {
   const features = Object.keys(featureMeta) as Feature[]
 
   return (
-    <aside
-      className={`side-region right-side ${focusedSide === 'right' ? 'side-focused' : ''} ${
-        focusedSide === 'right' && withinSide ? 'within-focused' : ''
-      }`}
-      aria-label="Settings and utilities"
-      tabIndex={0}
-    >
+    <>
       <div className="right-group profile-group">
         <button
           ref={(node) => {
@@ -101,14 +91,14 @@ export function Dock({
           className="setting"
           onFocus={() => setRightFocusIndex(features.length + 1)}
           onClick={() => {
-            setCompactMode(!compactMode)
+            onToggleTheme()
             setRightFocusIndex(features.length + 1)
           }}
         >
-          <span>⚙</span>
+          <span aria-hidden="true">{theme === 'dark' ? '☾' : '☀'}</span>
           <span>
-            <b>Settings</b>
-            <small>{compactMode ? 'Compact on' : 'Preferences'}</small>
+            <b>Appearance</b>
+            <small>{theme === 'dark' ? 'Dark theme · ⌘⇧L' : 'Light theme · ⌘⇧L'}</small>
           </span>
         </button>
       </div>
@@ -129,6 +119,6 @@ export function Dock({
           </span>
         </button>
       </div>
-    </aside>
+    </>
   )
 }

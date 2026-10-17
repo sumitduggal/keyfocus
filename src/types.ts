@@ -10,6 +10,8 @@ export type Command = Feature | 'Search'
 
 export type Side = 'left' | 'main' | 'right'
 
+export type Theme = 'dark' | 'light'
+
 export interface WorkspaceFrame {
   id: string
   feature: Feature

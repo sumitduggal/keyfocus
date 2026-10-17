@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { KeyboardEvent } from 'react'
 import { useReducedMotion } from 'motion/react'
-import type { Command, Feature, Side, WorkspaceFrame } from './types'
+import type { Command, Feature, Side, Theme, WorkspaceFrame } from './types'
 import { featureMeta, commandNames, initialFrame } from './constants'
 import { Mainframe } from './components/Mainframe'
 import { Stack } from './components/Stack'
@@ -22,7 +22,9 @@ function App() {
   const [stackFocusIndex, setStackFocusIndex] = useState(-1)
   const [focusedSide, setFocusedSide] = useState<Side>('main')
   const [withinSide, setWithinSide] = useState(false)
-  const [compactMode, setCompactMode] = useState(false)
+  const [theme, setTheme] = useState<Theme>(
+    () => (localStorage.getItem('focus-space-theme') as Theme | null) ?? 'dark',
+  )
   const [menuOpen, setMenuOpen] = useState(false)
   const [query, setQuery] = useState('')
   const [menuFocusIndex, setMenuFocusIndex] = useState(0)
@@ -130,6 +132,10 @@ function App() {
     focusDockItem()
   }
 
+  const toggleTheme = useCallback(() => {
+    setTheme((current) => (current === 'dark' ? 'light' : 'dark'))
+  }, [])
+
   const runCommand = (command: Command) => {
     if (command === 'Search') {
       setSearchMode(true)
@@ -191,6 +197,10 @@ function App() {
     localStorage.setItem('focus-space-note-bodies', JSON.stringify(noteBodies))
   }, [noteBodies])
   useEffect(() => {
+    document.documentElement.dataset.theme = theme
+    localStorage.setItem('focus-space-theme', theme)
+  }, [theme])
+  useEffect(() => {
     if (focusedSide !== 'left' || !withinSide || stackFocusIndex < 0) return
     stackRefs.current[stackedFrames[stackFocusIndex]?.id]?.focus()
   }, [focusedSide, stackFocusIndex, stackedFrames, withinSide])
@@ -221,6 +231,15 @@ function App() {
         setSearchMode(false)
         setMenuFocusIndex(0)
         requestAnimationFrame(() => actionInputRef.current?.focus())
+        return
+      }
+      if (
+        (event.metaKey || event.ctrlKey) &&
+        event.shiftKey &&
+        event.key.toLowerCase() === 'l'
+      ) {
+        event.preventDefault()
+        toggleTheme()
         return
       }
       if (event.key === 'Escape') {
@@ -351,6 +370,7 @@ function App() {
     rightFocusIndex,
     stackFocusIndex,
     stackedFrames,
+    toggleTheme,
     withinSide,
   ])
 
@@ -428,13 +448,11 @@ function App() {
             tabIndex={0}
           >
             <Dock
-              focusedSide="right"
-              withinSide={withinSide}
               rightItemRefs={rightItemRefs.current}
               profileRef={profileRef}
               framesCountByFeature={framesCountByFeature}
-              compactMode={compactMode}
-              setCompactMode={setCompactMode}
+              theme={theme}
+              onToggleTheme={toggleTheme}
               setRightFocusIndex={setRightFocusIndex}
               onFeaturePress={(feature) => {
                 if (feature === 'pomodoro') openFeatureDirectly(feature)
