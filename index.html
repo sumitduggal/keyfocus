@@ -7,15 +7,15 @@
     <title>keyfocus</title>
     <script>
       // Apply the saved theme before first paint so there is no flash.
-      ;(() => {
+      (() => {
         try {
-          const saved = localStorage.getItem('focus-space-theme')
+          const saved = localStorage.getItem("focus-space-theme");
           document.documentElement.dataset.theme =
-            saved === 'light' || saved === 'dark' ? saved : 'dark'
+            saved === "light" || saved === "dark" ? saved : "dark";
         } catch {
-          document.documentElement.dataset.theme = 'dark'
+          document.documentElement.dataset.theme = "dark";
         }
-      })()
+      })();
     </script>
   </head>
   <body>

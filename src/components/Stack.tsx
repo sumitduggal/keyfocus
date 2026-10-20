@@ -1,14 +1,14 @@
-import { useCallback } from 'react'
-import { motion } from 'motion/react'
-import type { WorkspaceFrame } from '../types'
-import { StackPreview } from './Mainframe'
+import { useCallback } from "react";
+import { motion } from "motion/react";
+import type { WorkspaceFrame } from "../types";
+import { StackPreview } from "./Mainframe";
 
 interface StackProps {
-  stackedFrames: WorkspaceFrame[]
-  stackFocusIndex: number
-  stackRefs: Record<string, HTMLElement | null>
-  reduceMotion: boolean
-  onSelect: (index: number) => void
+  stackedFrames: WorkspaceFrame[];
+  stackFocusIndex: number;
+  stackRefs: Record<string, HTMLElement | null>;
+  reduceMotion: boolean;
+  onSelect: (index: number) => void;
 }
 
 export function Stack({
@@ -20,18 +20,16 @@ export function Stack({
 }: StackProps) {
   const handleFocus = useCallback(
     (index: number) => {
-      onSelect(index)
+      onSelect(index);
     },
     [onSelect],
-  )
+  );
 
   return (
     <div className="frame-stack">
       {stackedFrames.map((frame, index) => (
         <motion.div
-          className={
-            index === stackFocusIndex ? 'stack-item previewed' : 'stack-item'
-          }
+          className={index === stackFocusIndex ? "stack-item previewed" : "stack-item"}
           key={frame.id}
           animate={{
             y: index * 73,
@@ -45,12 +43,17 @@ export function Stack({
                   : 3
                 : 1,
           }}
-          transition={reduceMotion ? { duration: 0 } : { type: 'spring', stiffness: 330, damping: 30 }}
-          style={{ zIndex: index === stackFocusIndex ? stackedFrames.length + 1 : stackedFrames.length - index }}
+          transition={
+            reduceMotion ? { duration: 0 } : { type: "spring", stiffness: 330, damping: 30 }
+          }
+          style={{
+            zIndex:
+              index === stackFocusIndex ? stackedFrames.length + 1 : stackedFrames.length - index,
+          }}
         >
           <div
             ref={(node) => {
-              stackRefs[frame.id] = node
+              stackRefs[frame.id] = node;
             }}
             className="stack-frame"
             aria-label={`Frame: ${frame.title}`}
@@ -64,5 +67,5 @@ export function Stack({
         </motion.div>
       ))}
     </div>
-  )
+  );
 }

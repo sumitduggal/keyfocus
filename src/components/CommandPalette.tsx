@@ -1,28 +1,28 @@
-import { motion } from 'motion/react'
-import type { Command } from '../types'
-import { featureMeta } from '../constants'
+import { motion } from "motion/react";
+import type { Command } from "../types";
+import { featureMeta } from "../constants";
 
 interface SearchResult {
-  id: string
-  feature: string
-  title: string
+  id: string;
+  feature: string;
+  title: string;
 }
 
 interface CommandPaletteProps {
-  menuOpen: boolean
-  searchMode: boolean
-  query: string
-  visibleCommands: Command[]
-  searchResults: SearchResult[]
-  menuFocusIndex: number
-  activeMenuId: string | undefined
-  actionInputRef: React.RefObject<HTMLInputElement | null>
-  reduceMotion: boolean
-  onQueryChange: (value: string) => void
-  onFocus: () => void
-  onKeyDown: (event: React.KeyboardEvent<HTMLInputElement>) => void
-  onRunCommand: (command: Command) => void
-  onSelectResult: (id: string) => void
+  menuOpen: boolean;
+  searchMode: boolean;
+  query: string;
+  visibleCommands: Command[];
+  searchResults: SearchResult[];
+  menuFocusIndex: number;
+  activeMenuId: string | undefined;
+  actionInputRef: React.RefObject<HTMLInputElement | null>;
+  reduceMotion: boolean;
+  onQueryChange: (value: string) => void;
+  onFocus: () => void;
+  onKeyDown: (event: React.KeyboardEvent<HTMLInputElement>) => void;
+  onRunCommand: (command: Command) => void;
+  onSelectResult: (id: string) => void;
 }
 
 export function CommandPalette({
@@ -44,15 +44,15 @@ export function CommandPalette({
   const activeLabel = activeMenuId
     ? searchMode
       ? `result-${activeMenuId}`
-      : `action-${activeMenuId.toLowerCase().replaceAll(' ', '-')}`
-    : undefined
+      : `action-${activeMenuId.toLowerCase().replaceAll(" ", "-")}`
+    : undefined;
 
   return (
     <>
       <motion.div
         className="command-wrap"
         animate={menuOpen ? { scaleX: 1.2, scaleY: 1.2 } : { scaleX: 1, scaleY: 1 }}
-        transition={reduceMotion ? { duration: 0 } : { duration: 0.18, ease: 'easeOut' }}
+        transition={reduceMotion ? { duration: 0 } : { duration: 0.18, ease: "easeOut" }}
       >
         <input
           ref={actionInputRef}
@@ -63,7 +63,7 @@ export function CommandPalette({
           onChange={(event) => onQueryChange(event.target.value)}
           onFocus={onFocus}
           onKeyDown={onKeyDown}
-          placeholder={searchMode ? 'Search created features…' : 'Choose an action…'}
+          placeholder={searchMode ? "Search created features…" : "Choose an action…"}
         />
         <kbd>⌘K</kbd>
       </motion.div>
@@ -86,15 +86,15 @@ export function CommandPalette({
             exit={{ opacity: 0, y: 5 }}
             transition={{
               duration: reduceMotion ? 0 : 0.16,
-              ease: 'easeOut',
+              ease: "easeOut",
             }}
           >
             <p className="menu-label">
               {searchMode
-                ? 'Search created features'
+                ? "Search created features"
                 : query
-                  ? 'Matching actions'
-                  : 'Create or search'}
+                  ? "Matching actions"
+                  : "Create or search"}
             </p>
             {searchMode ? (
               searchResults.length ? (
@@ -105,7 +105,7 @@ export function CommandPalette({
                     role="menuitem"
                     aria-selected={index === menuFocusIndex}
                     type="button"
-                    className={index === menuFocusIndex ? 'selected' : ''}
+                    className={index === menuFocusIndex ? "selected" : ""}
                     onMouseEnter={() => {}}
                     onClick={() => onSelectResult(frame.id)}
                   >
@@ -122,54 +122,52 @@ export function CommandPalette({
               ) : (
                 <p className="empty-command">No matching features</p>
               )
-            ) : (
-              visibleCommands.length ? (
-                visibleCommands.map((command, index) =>
-                  command === 'Search' ? (
-                    <button
-                      key={command}
-                      id="action-search"
-                      role="menuitem"
-                      aria-selected={index === menuFocusIndex}
-                      type="button"
-                      className={index === menuFocusIndex ? 'selected' : ''}
-                      onMouseEnter={() => {}}
-                      onClick={() => onRunCommand(command)}
-                    >
-                      <span className="command-glyph">⌕</span>
-                      <span>
-                        <b>Search</b>
-                        <small>Find an existing feature</small>
-                      </span>
-                      <kbd>↵</kbd>
-                    </button>
-                  ) : (
-                    <button
-                      key={command}
-                      id={`action-${command.replaceAll(' ', '-')}`}
-                      role="menuitem"
-                      aria-selected={index === menuFocusIndex}
-                      type="button"
-                      className={index === menuFocusIndex ? 'selected' : ''}
-                      onMouseEnter={() => {}}
-                      onClick={() => onRunCommand(command)}
-                    >
-                      <span className="command-glyph">{featureMeta[command].glyph}</span>
-                      <span>
-                        <b>{featureMeta[command].frame.title}</b>
-                        <small>{featureMeta[command].description}</small>
-                      </span>
-                      <kbd>↵</kbd>
-                    </button>
-                  ),
-                )
-              ) : (
-                <p className="empty-command">No matching actions</p>
+            ) : visibleCommands.length ? (
+              visibleCommands.map((command, index) =>
+                command === "Search" ? (
+                  <button
+                    key={command}
+                    id="action-search"
+                    role="menuitem"
+                    aria-selected={index === menuFocusIndex}
+                    type="button"
+                    className={index === menuFocusIndex ? "selected" : ""}
+                    onMouseEnter={() => {}}
+                    onClick={() => onRunCommand(command)}
+                  >
+                    <span className="command-glyph">⌕</span>
+                    <span>
+                      <b>Search</b>
+                      <small>Find an existing feature</small>
+                    </span>
+                    <kbd>↵</kbd>
+                  </button>
+                ) : (
+                  <button
+                    key={command}
+                    id={`action-${command.replaceAll(" ", "-")}`}
+                    role="menuitem"
+                    aria-selected={index === menuFocusIndex}
+                    type="button"
+                    className={index === menuFocusIndex ? "selected" : ""}
+                    onMouseEnter={() => {}}
+                    onClick={() => onRunCommand(command)}
+                  >
+                    <span className="command-glyph">{featureMeta[command].glyph}</span>
+                    <span>
+                      <b>{featureMeta[command].frame.title}</b>
+                      <small>{featureMeta[command].description}</small>
+                    </span>
+                    <kbd>↵</kbd>
+                  </button>
+                ),
               )
+            ) : (
+              <p className="empty-command">No matching actions</p>
             )}
           </motion.div>
         </motion.div>
       )}
     </>
-  )
+  );
 }
