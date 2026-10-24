@@ -875,6 +875,10 @@
   .right-side.is-collapsed .now-playing-toggle::before {
     content: "♪";
     font: 17px/1 var(--font-mono-stack);
+    /* The note sits high in its box, so it is nudged down to be as far above Settings as Settings is
+       above Log out. */
+    display: inline-block;
+    transform: translateY(10.5px);
   }
 
   .right-side.is-collapsed .now-playing-toggle:hover,
