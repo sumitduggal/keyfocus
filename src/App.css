@@ -791,3 +791,99 @@
   font-size: 11px;
   letter-spacing: 0.14em;
 }
+
+/* The control panel can shrink to a slim rail so the main frame gets its width. Only where the
+   panel sits at the side; below that it is a strip and stays as it is. */
+.dock-toggle {
+  display: none;
+}
+
+@media (min-width: 1100px) {
+  .dock-toggle {
+    position: absolute;
+    z-index: 1;
+    /* Sits on the Operator row, where that row's status dot used to be. */
+    top: 51px;
+    right: 22px;
+    display: block;
+    width: 20px;
+    height: 16px;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--text-faint);
+    font: 12px/1 var(--font-mono-stack);
+    cursor: pointer;
+  }
+
+  .dock-toggle:hover {
+    color: var(--accent);
+  }
+
+  .dock-profile .dock-pip {
+    display: none;
+  }
+
+  /* Collapsed, the panel keeps one icon per item and drops the words. The words stay in the page
+     for screen readers, so each button keeps its name. */
+  .right-side.is-collapsed {
+    width: 56px;
+    padding: 36px 6px 0;
+    overflow-x: hidden;
+  }
+
+  .right-side.is-collapsed .dock-toggle {
+    top: 10px;
+    right: 18px;
+  }
+
+  .right-side.is-collapsed .dock-section,
+  .right-side.is-collapsed .dock-index,
+  .right-side.is-collapsed .dock-chevron,
+  .right-side.is-collapsed .now-playing {
+    display: none;
+  }
+
+  .right-side.is-collapsed .dock-copy {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+
+  .right-side.is-collapsed .dock-profile,
+  .right-side.is-collapsed .dock-item,
+  .right-side.is-collapsed .dock-item.is-quiet {
+    grid-template-columns: 1fr;
+    justify-items: center;
+    margin-top: 0;
+    padding: 0;
+    min-height: 44px;
+  }
+
+  .right-side.is-collapsed .dock-profile {
+    min-height: 48px;
+  }
+
+  .right-side.is-collapsed .dock-glyph {
+    width: 24px;
+    height: 24px;
+    font-size: 17px;
+  }
+
+  .right-side.is-collapsed .dock-foot {
+    padding-top: 8px;
+  }
+
+  .main-side.dock-collapsed {
+    right: 56px;
+  }
+}
+
+@media (min-width: 1100px) and (prefers-reduced-motion: no-preference) {
+  .side-region.right-side,
+  .side-region.main-side {
+    transition: width 0.2s ease, right 0.2s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+  }
+}

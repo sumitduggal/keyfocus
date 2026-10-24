@@ -91,3 +91,24 @@ test('mobile tab bar switches sections', async ({ page }) => {
   await tabs.getByRole('button', { name: 'Active' }).click()
   await expect(page.getByRole('button', { name: 'Start focus' })).toBeVisible()
 })
+
+test('the control panel collapses to a rail, widens the main frame, and stays collapsed after reload', async ({ page }) => {
+  const frame = page.getByRole('region', { name: 'Main frame' })
+  const before = (await frame.boundingBox())!.width
+  await page.getByRole('button', { name: 'Hide control panel' }).click()
+  // The rail keeps an icon for every item, with the name as a tooltip, but no words.
+  for (const name of ['Pomodoro', 'Todo List', 'Habits', 'Reminders', 'Bookmarks', 'Settings', 'Log out'])
+    await expect(page.locator(`.dock-item[title="${name}"] .dock-glyph`)).toBeVisible()
+  await expect(page.locator('.dock-item[title="Pomodoro"] .dock-copy')).not.toBeInViewport({ ratio: 0.5 })
+  await expect.poll(async () => (await frame.boundingBox())!.width).toBeGreaterThan(before + 150)
+  await page.reload()
+  await expect(page.getByRole('button', { name: 'Show control panel' })).toBeVisible()
+  await page.getByRole('button', { name: 'Show control panel' }).click()
+  await expect(dock(page, 'Pomodoro').locator('.dock-copy')).toBeVisible()
+})
+
+test('Alt+Right opens a collapsed control panel', async ({ page }) => {
+  await page.getByRole('button', { name: 'Hide control panel' }).click()
+  await page.keyboard.press('Alt+ArrowRight')
+  await expect(page.getByRole('button', { name: 'Hide control panel' })).toBeVisible()
+})

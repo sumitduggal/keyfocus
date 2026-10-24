@@ -37,6 +37,7 @@ export function Dock({
         }}
         type="button"
         className="dock-profile"
+        title="Operator"
         onFocus={() => setRightFocusIndex(0)}
         onClick={() => setRightFocusIndex(0)}
       >
@@ -64,6 +65,7 @@ export function Dock({
                 registerItem(`feature-${feature}`, node);
               }}
               type="button"
+              title={featureMeta[feature].frame.title}
               className={`dock-item ${feature === activeFeature ? "is-active" : ""}`}
               onFocus={() => setRightFocusIndex(dockIndex)}
               onKeyDown={(event) => {
@@ -110,6 +112,7 @@ export function Dock({
           }}
           type="button"
           className="dock-item is-quiet"
+          title="Settings"
           data-settings-toggle
           onFocus={() => setRightFocusIndex(features.length + 1)}
           onClick={() => {
@@ -135,6 +138,7 @@ export function Dock({
           }}
           type="button"
           className="dock-item is-quiet"
+          title="Log out"
           onFocus={() => setRightFocusIndex(features.length + 2)}
           onClick={() => setRightFocusIndex(features.length + 2)}
         >

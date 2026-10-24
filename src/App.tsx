@@ -6,6 +6,7 @@ import {
   FRAMES_KEY,
   NOTE_BODIES_KEY,
   THEME_KEY,
+  DOCK_COLLAPSED_KEY,
   commandNames,
   featureMeta,
   initialFrame,
@@ -112,6 +113,17 @@ function App() {
   const [trashMenu, setTrashMenu] = useState(false);
   const [searchMode, setSearchMode] = useState(false);
   const [rightFocusIndex, setRightFocusIndex] = useState(0);
+  // The control panel can shrink to a slim rail, which gives the main frame its width.
+  const [dockCollapsed, setDockCollapsed] = useState(() => {
+    try {
+      return localStorage.getItem(DOCK_COLLAPSED_KEY) === "1";
+    } catch {
+      return false;
+    }
+  });
+  useEffect(() => {
+    setStored(DOCK_COLLAPSED_KEY, dockCollapsed ? "1" : "0");
+  }, [dockCollapsed]);
   const [featurePanel, setFeaturePanel] = useState<Feature | null>(null);
   const [featureAnchorY, setFeatureAnchorY] = useState<number | null>(null);
   const [entryFocusIndex, setEntryFocusIndex] = useState(0);
@@ -739,6 +751,8 @@ function App() {
         const next = Math.max(0, Math.min(sideOrder.length - 1, sideOrder.indexOf(focusedSide) + offset));
         const nextSide = sideOrder[next];
         const enteringLeft = nextSide === "left" && stackedFrames.length > 0;
+        // Moving to the control panel opens it, so there is something to focus.
+        if (nextSide === "right") setDockCollapsed(false);
         setFocusedSide(nextSide);
         setWithinSide(enteringLeft);
         setStackFocusIndex(enteringLeft ? 0 : -1);
@@ -914,7 +928,7 @@ function App() {
               setFocusedSide("main");
               setWithinSide(true);
             }}
-            className={`side-region main-side ${focusedSide === "main" && !barActive ? "side-focused" : ""} ${
+            className={`side-region main-side${dockCollapsed ? " dock-collapsed" : ""} ${focusedSide === "main" && !barActive ? "side-focused" : ""} ${
               focusedSide === "main" && withinSide && !barActive ? "within-focused" : ""
             }`}
             aria-label="Main frame"
@@ -968,12 +982,21 @@ function App() {
             ref={(node) => {
               sideRefs.current.right = node;
             }}
-            className={`side-region right-side ${focusedSide === "right" && !barActive ? "side-focused" : ""} ${
+            className={`side-region right-side${dockCollapsed ? " is-collapsed" : ""} ${focusedSide === "right" && !barActive ? "side-focused" : ""} ${
               focusedSide === "right" && withinSide && !barActive ? "within-focused" : ""
             }`}
             aria-label="Settings and utilities"
             tabIndex={0}
           >
+            <button
+              type="button"
+              className="dock-toggle"
+              aria-label={dockCollapsed ? "Show control panel" : "Hide control panel"}
+              aria-expanded={!dockCollapsed}
+              onClick={() => setDockCollapsed((current) => !current)}
+            >
+              {dockCollapsed ? "‹" : "›"}
+            </button>
             <Dock
               registerItem={registerItem}
               profileRef={profileRef}
