@@ -11,9 +11,15 @@ import {
   type Track,
 } from "./music";
 
+export interface Station {
+  name: string;
+  url: string;
+}
+
 export interface PlayerState extends MusicSettings {
   tracks: Track[];
   playing: boolean;
+  station: Station | null; // a live radio station replaces the track while it is set
 }
 
 // One player for the whole app, so audio keeps playing when the person switches frames.
@@ -21,6 +27,7 @@ let state: PlayerState = {
   ...DEFAULT_MUSIC_SETTINGS,
   tracks: [],
   playing: false,
+  station: null,
 };
 const listeners = new Set<() => void>();
 let started = false;
@@ -28,6 +35,7 @@ let started = false;
 // One looping audio element per selected built-in sound, so several can play together.
 const soundAudios = new Map<SoundId, HTMLAudioElement>();
 let trackAudio: HTMLAudioElement | null = null;
+let radioAudio: HTMLAudioElement | null = null;
 // The full file each preview is still loading, so dropping the preview can stop that download too.
 const loadingFull = new Map<HTMLAudioElement, HTMLAudioElement>();
 
@@ -172,6 +180,10 @@ function onTrackEnded() {
 }
 
 function startTrack() {
+  if (radioAudio) {
+    playAudio(radioAudio);
+    return;
+  }
   const audio = currentTrackAudio();
   if (audio) playAudio(audio);
 }
@@ -180,11 +192,12 @@ function startTrack() {
 function pauseAll() {
   soundAudios.forEach((audio) => audio.pause());
   trackAudio?.pause();
+  radioAudio?.pause();
   emit({ playing: false });
 }
 
 export function play(): void {
-  if (state.trackIndex < 0 && state.sounds.length === 0) return;
+  if (state.trackIndex < 0 && state.sounds.length === 0 && !state.station) return;
   state.sounds.forEach(startSound);
   startTrack();
   emit({ playing: true });
@@ -226,6 +239,7 @@ export function setSoundVolume(volume: number): void {
 export function setTrackVolume(volume: number): void {
   emit({ trackVolume: volume });
   if (trackAudio) trackAudio.volume = volume;
+  if (radioAudio) radioAudio.volume = volume;
 }
 
 export function setLoop(loop: boolean): void {
@@ -236,6 +250,7 @@ export function setLoop(loop: boolean): void {
 // Moves to another track and keeps playing if it was playing. Sounds are not touched.
 function moveToTrack(index: number): void {
   if (state.tracks.length === 0) return;
+  stopRadio();
   const next = Math.min(Math.max(index, 0), state.tracks.length - 1);
   if (trackAudio) drop(trackAudio);
   trackAudio = null;
@@ -269,4 +284,27 @@ export function nextTrack(): void {
 
 export function previousTrack(): void {
   chooseTrack(previousTrackIndex(state.trackIndex, state.tracks.length));
+}
+
+function stopRadio() {
+  if (radioAudio) drop(radioAudio);
+  radioAudio = null;
+  if (state.station) state = { ...state, station: null };
+}
+
+// Plays a live radio station in place of the track. Sounds keep layering under it.
+// shortcut: pausing a live stream resumes where it buffered, not live; reload it if that matters.
+export function playStation(station: Station): void {
+  if (trackAudio) drop(trackAudio);
+  trackAudio = null;
+  stopRadio();
+  const audio = new Audio(station.url);
+  audio.volume = state.trackVolume;
+  audio.addEventListener("error", () => {
+    if (radioAudio === audio) emit({ playing: false });
+  });
+  radioAudio = audio;
+  emit({ trackIndex: -1, station, playing: true });
+  state.sounds.forEach(startSound);
+  playAudio(audio);
 }
