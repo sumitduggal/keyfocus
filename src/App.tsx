@@ -17,6 +17,7 @@ import { Stack } from "./components/Stack";
 import { Dock } from "./components/Dock";
 import { FeaturePanel } from "./components/FeaturePanel";
 import { CommandPalette } from "./components/CommandPalette";
+import { Weather } from "./components/Weather";
 import {
   loadTodoLists,
   loadTodoViews,
@@ -760,10 +761,7 @@ function App() {
           </div>
 
           <div className="hud-status">
-            <div className="hud-status-line">
-              <span>System status</span>
-              <b>Normal</b>
-            </div>
+            <Weather />
             <HudClock />
           </div>
         </header>
