@@ -34,15 +34,21 @@ export const loadSettings = (): Settings => {
 export const saveSettings = (settings: Settings) =>
   setStored(KEY, JSON.stringify(settings));
 
+// One audio context is reused, so repeated alerts do not each leave a new one open.
+let beepContext: AudioContext | null = null;
+
 export const playAlert = (soundId: string, volume: number) => {
   const sound = alertSounds.find((item) => item.id === soundId);
   if (sound?.src) {
     const audio = new Audio(sound.src);
     audio.volume = volume;
-    void audio.play();
+    // Browsers refuse to play until the page has been used; the alert is skipped then.
+    audio.play().catch(() => undefined);
     return;
   }
-  const context = new AudioContext();
+  beepContext ??= new AudioContext();
+  const context = beepContext;
+  void context.resume();
   const oscillator = context.createOscillator();
   const gain = context.createGain();
   oscillator.frequency.setValueAtTime(660, context.currentTime);
