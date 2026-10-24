@@ -740,6 +740,11 @@
   padding-bottom: 7px;
 }
 
+/* Appearance and Log out have no number, so they use the space it would take. */
+.dock-item.is-quiet {
+  grid-template-columns: 18px minmax(0, 1fr) 10px;
+}
+
 /* ===== COMMAND PALETTE ===== */
 .command-wrap {
   position: absolute;

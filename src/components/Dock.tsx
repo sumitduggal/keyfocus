@@ -34,7 +34,6 @@ export function Dock({
     <div className="dock">
       <div className="dock-head">
         <span>Control</span>
-        <span className="dock-head-code">Sys-04</span>
       </div>
 
       <button
@@ -123,7 +122,6 @@ export function Dock({
             setRightFocusIndex(features.length + 1);
           }}
         >
-          <span className="dock-index">SYS</span>
           <span className="dock-glyph" aria-hidden="true">
             {theme === "dark" ? "☾" : "☀"}
           </span>
@@ -145,7 +143,6 @@ export function Dock({
           onFocus={() => setRightFocusIndex(features.length + 2)}
           onClick={() => setRightFocusIndex(features.length + 2)}
         >
-          <span className="dock-index">SYS</span>
           <span className="dock-glyph" aria-hidden="true">
             ↪
           </span>
