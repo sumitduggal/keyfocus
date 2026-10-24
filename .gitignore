@@ -26,3 +26,8 @@ public/previews
 
 # graphify generated output
 graphify-out/
+
+test-results
+playwright-report
+.nyc_output
+coverage

@@ -2,6 +2,7 @@ import { existsSync, readFileSync, readdirSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { defineConfig, type Plugin } from 'vite'
 import react from '@vitejs/plugin-react'
+import istanbul from 'vite-plugin-istanbul'
 
 const MUSIC_DIR = fileURLToPath(new URL('./public/music', import.meta.url))
 const TITLES_FILE = `${MUSIC_DIR}/titles.json`
@@ -55,5 +56,11 @@ function musicTracks(): Plugin {
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [react(), musicTracks()],
+  plugins: [
+    react(),
+    musicTracks(),
+    // Only for `npm run e2e:coverage`: instruments src so Playwright can collect window.__coverage__.
+    ...(process.env.E2E_COVERAGE ? [istanbul({ include: 'src/**', forceBuildInstrument: true, exclude: ['**/*.test.ts'], extension: ['.ts', '.tsx'], requireEnv: false })] : []),
+  ],
+  build: { sourcemap: Boolean(process.env.E2E_COVERAGE) },
 })
