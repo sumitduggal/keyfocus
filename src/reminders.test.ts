@@ -4,6 +4,7 @@ import {
   createReminder,
   cyclePriority,
   describeRepeat,
+  editReminder,
   groupReminders,
   loadReminders,
   nextDue,
@@ -122,6 +123,37 @@ describe("answering", () => {
   it("offers tomorrow at 9:00", () => {
     expect(snoozeTime("tomorrow", now)).toBe("2025-10-16T09:00");
     expect(snoozeTime("4h", now)).toBe("2025-10-15T14:00");
+  });
+});
+
+describe("editing", () => {
+  it("keeps an overdue reminder overdue when only the text changes", () => {
+    const fired = tick(data(oneOff("2025-10-15T09:00")), now).data;
+    const edited = editReminder(fired, "r1", { text: "Call mum back", due: "2025-10-15T09:00", repeat: null });
+    expect(edited.reminders[0]).toMatchObject({ text: "Call mum back", firedAt: "2025-10-15T09:00" });
+    expect(tick(edited, now).fired).toHaveLength(0);
+  });
+
+  it("starts over when the time or repeat changes", () => {
+    const fired = tick(data(oneOff("2025-10-15T09:00")), now).data;
+    const moved = editReminder(fired, "r1", { text: "Call mum", due: "2025-10-16T09:00", repeat: null });
+    expect(moved.reminders[0].firedAt).toBeNull();
+    const repeated = editReminder(fired, "r1", { text: "Call mum", due: "2025-10-15T09:00", repeat: { kind: "daily", every: 1 } });
+    expect(repeated.reminders[0].firedAt).toBeNull();
+  });
+});
+
+describe("loading repeats", () => {
+  const load = (repeat: unknown) =>
+    loadReminders({ getItem: () => JSON.stringify({ f1: { reminders: [{ ...oneOff("2025-10-15T09:00"), repeat }], done: [] } }) }).f1.reminders;
+
+  it("keeps a valid repeat and drops ones missing their fields", () => {
+    expect(load({ kind: "weekly", every: 1, weekdays: [1, 3] })).toHaveLength(1);
+    expect(load({ kind: "weekly", every: 1 })).toHaveLength(0);
+    expect(load({ kind: "weekly", every: 1, weekdays: [] })).toHaveLength(0);
+    expect(load({ kind: "monthly", every: 1, monthDay: 0 })).toHaveLength(0);
+    expect(load({ kind: "monthly-nth", every: 1, nth: 9, weekday: 2 })).toHaveLength(0);
+    expect(load({ kind: "monthly-nth", every: 1, nth: -1, weekday: 5 })).toHaveLength(1);
   });
 });
 

@@ -16,7 +16,7 @@ import { SNOOZE_CHOICES, snoozeTime, summarise, toDate } from "../reminders";
 export function ReminderBanner() {
   const { lists, banner, nudges } = useSyncExternalStore(subscribeReminders, getRemindersState);
   const habitNudges = banner.flatMap((item) => {
-    const nudge = nudges.find((open) => open.habitId === item.id);
+    const nudge = nudges.find((open) => open.habitId === item.id && open.day === item.day);
     return item.nudge && nudge ? [nudge] : [];
   });
   const items = banner.flatMap((item) => {
@@ -29,7 +29,7 @@ export function ReminderBanner() {
   return (
     <div className="reminder-banner" role="alert" aria-label="Reminders due">
       {habitNudges.map((nudge) => (
-        <div key={`habit:${nudge.habitId}`} className="reminder-banner-item">
+        <div key={`habit:${nudge.habitId}:${nudge.day}`} className="reminder-banner-item">
           <b>
             {nudge.icon ?? DEFAULT_HABIT_ICON} {nudge.name}
           </b>
@@ -37,7 +37,7 @@ export function ReminderBanner() {
             <button type="button" onClick={() => tickNudge(nudge)}>
               Done today
             </button>
-            <button type="button" aria-label="Dismiss" onClick={() => dismissBanner(nudge.frameId, nudge.habitId, true)}>
+            <button type="button" aria-label="Dismiss" onClick={() => dismissBanner(nudge.frameId, nudge.habitId, true, nudge.day)}>
               ×
             </button>
           </div>

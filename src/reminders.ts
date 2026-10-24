@@ -210,9 +210,16 @@ export function editReminder(
   if (!text) return data;
   return {
     ...data,
-    reminders: data.reminders.map((reminder) =>
-      reminder.id === id ? { ...reminder, ...changes, text, firedAt: null, snoozedUntil: null } : reminder,
-    ),
+    reminders: data.reminders.map((reminder) => {
+      if (reminder.id !== id) return reminder;
+      // Only a new time or repeat starts the reminder over. A text fix keeps it overdue or snoozed,
+      // so editing does not set the alert off again.
+      const rescheduled =
+        changes.due !== reminder.due || JSON.stringify(changes.repeat) !== JSON.stringify(reminder.repeat);
+      return rescheduled
+        ? { ...reminder, ...changes, text, firedAt: null, snoozedUntil: null }
+        : { ...reminder, text };
+    }),
   };
 }
 
@@ -538,10 +545,26 @@ export function describeRepeat(repeat: Repeat | null): string {
 function isRepeat(value: unknown): value is Repeat {
   if (typeof value !== "object" || value === null) return false;
   const repeat = value as Record<string, unknown>;
-  return (
-    ["daily", "weekly", "monthly", "monthly-nth", "yearly"].includes(String(repeat.kind)) &&
-    Number.isFinite(repeat.every)
-  );
+  const number = (field: string, min: number, max: number) =>
+    Number.isInteger(repeat[field]) && (repeat[field] as number) >= min && (repeat[field] as number) <= max;
+  if (!number("every", 1, 1000)) return false;
+  switch (repeat.kind) {
+    case "daily":
+    case "yearly":
+      return true;
+    case "weekly":
+      return (
+        Array.isArray(repeat.weekdays) &&
+        repeat.weekdays.length > 0 &&
+        repeat.weekdays.every((day) => Number.isInteger(day) && day >= 0 && day <= 6)
+      );
+    case "monthly":
+      return number("monthDay", 1, 31);
+    case "monthly-nth":
+      return (number("nth", 1, 4) || repeat.nth === -1) && number("weekday", 0, 6);
+    default:
+      return false;
+  }
 }
 
 const isStamp = (value: unknown): value is string => typeof value === "string" && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(value);

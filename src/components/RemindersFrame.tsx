@@ -376,10 +376,15 @@ function EditPanel({
   const [due, setDue] = useState(reminder.due);
   const [repeat, setRepeat] = useState(describeRepeat(reminder.repeat));
   const [confirming, setConfirming] = useState(false);
+  const [error, setError] = useState("");
 
   const save = () => {
     // The repeat box takes the same words as the sentence box, for example "every 2nd tuesday".
     const parsed = repeat.trim() ? parseReminder(`${repeat} ${due.slice(0, 10)} ${due.slice(11)}`, now) : null;
+    if (repeat.trim() && !parsed?.repeat) {
+      setError("Repeat not understood. Try “every weekday” or “every 2nd tuesday”.");
+      return;
+    }
     onEdit({ text, due: parsed?.due ?? due, repeat: parsed?.repeat ?? null });
   };
 
@@ -395,8 +400,20 @@ function EditPanel({
       </label>
       <label className="habit-target reminder-field">
         Repeat (blank for none)
-        <input value={repeat} placeholder="every weekday" onChange={(event) => setRepeat(event.target.value)} />
+        <input
+          value={repeat}
+          placeholder="every weekday"
+          onChange={(event) => {
+            setRepeat(event.target.value);
+            setError("");
+          }}
+        />
       </label>
+      {error && (
+        <p className="todo-hint" role="alert">
+          {error}
+        </p>
+      )}
       <div className="habit-actions">
         <button type="button" disabled={!text.trim() || !due} onClick={save}>
           Save

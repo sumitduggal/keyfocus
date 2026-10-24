@@ -1,6 +1,7 @@
 import {
   EMPTY_REMINDERS,
   completeReminder,
+  REMINDERS_KEY,
   loadReminders,
   saveReminders,
   snoozeReminder,
@@ -10,12 +11,13 @@ import {
 } from "./reminders";
 import type { Habit } from "./habits";
 import { loadSettings, playAlert } from "./settings";
-import { dueNudges, loadNudges, pruneNudges, saveNudges, type Nudge } from "./nudges";
+import { NUDGES_KEY, dueNudges, loadNudges, pruneNudges, saveNudges, type Nudge } from "./nudges";
 
 export interface BannerItem {
   frameId: string;
   id: string; // a reminder id, or a habit id for a nudge
   nudge?: boolean;
+  day?: string; // for a nudge: the day it was for, since a habit can have more than one open
 }
 
 export interface RemindersState {
@@ -91,7 +93,7 @@ function checkNudges(silent: boolean, now: Date) {
     nudges: [...kept, ...due],
     banner: silent
       ? state.banner
-      : [...state.banner.filter((item) => !item.nudge || kept.some((nudge) => nudge.habitId === item.id)), ...due.map((nudge) => ({ frameId: nudge.frameId, id: nudge.habitId, nudge: true }))],
+      : [...state.banner.filter((item) => !item.nudge || kept.some((nudge) => nudge.habitId === item.id && nudge.day === item.day)), ...due.map((nudge) => ({ frameId: nudge.frameId, id: nudge.habitId, nudge: true, day: nudge.day }))],
   });
   if (!silent && due.length > 0) {
     ringAlert();
@@ -102,8 +104,20 @@ function checkNudges(silent: boolean, now: Date) {
   }
 }
 
+// A banner only makes sense while its reminder is still overdue, or its nudge still open. Deleting
+// or editing a reminder, or ticking a habit elsewhere, leaves an entry behind that this clears.
+function dropStaleBanner() {
+  const banner = state.banner.filter((item) =>
+    item.nudge
+      ? state.nudges.some((nudge) => nudge.habitId === item.id && nudge.day === item.day)
+      : (state.lists[item.frameId]?.reminders.find((reminder) => reminder.id === item.id)?.firedAt ?? null) !== null,
+  );
+  if (banner.length !== state.banner.length) emit({ banner });
+}
+
 function check(silent: boolean) {
   const now = new Date();
+  dropStaleBanner();
   checkNudges(silent, now);
   const lists: Record<string, RemindersData> = {};
   const alerts: BannerItem[] = [];
@@ -137,10 +151,25 @@ export function initReminders(): void {
   check(true);
   emit({});
   window.setInterval(() => check(false), 1000);
+  // Another tab saved. Take its data, so this tab does not later save over it with a stale copy.
+  window.addEventListener("storage", (event) => {
+    if (event.key === REMINDERS_KEY) {
+      state = { ...state, lists: loadReminders(localStorage) };
+    } else if (event.key === NUDGES_KEY) {
+      const nudges = loadNudges(localStorage);
+      lastNudged = nudges.lastNudged;
+      state = { ...state, nudges: nudges.open };
+    } else {
+      return;
+    }
+    listeners.forEach((listener) => listener());
+  });
 }
 
-const without = (banner: BannerItem[], frameId: string, id: string, nudge = false) =>
-  banner.filter((item) => !(item.frameId === frameId && item.id === id && Boolean(item.nudge) === nudge));
+const without = (banner: BannerItem[], frameId: string, id: string, nudge = false, day?: string) =>
+  banner.filter(
+    (item) => !(item.frameId === frameId && item.id === id && Boolean(item.nudge) === nudge && item.day === day),
+  );
 
 // Registered by the app once its habits are loaded. Nudges start firing from then on.
 export function registerHabitSource(source: HabitSource): void {
@@ -163,8 +192,8 @@ export function snoozeUntil(frameId: string, id: string, until: string): void {
   emit({ banner: without(state.banner, frameId, id) });
 }
 
-export function dismissBanner(frameId: string, id: string, nudge = false): void {
-  emit({ banner: without(state.banner, frameId, id, nudge) });
+export function dismissBanner(frameId: string, id: string, nudge = false, day?: string): void {
+  emit({ banner: without(state.banner, frameId, id, nudge, day) });
 }
 
 // Ticks the habit for the nudge's day. The nudge then clears itself on the next check.
@@ -172,7 +201,7 @@ export function tickNudge(nudge: Nudge): void {
   habitSource?.tick(nudge.frameId, nudge.habitId, nudge.day);
   emit({
     nudges: state.nudges.filter((open) => open.habitId !== nudge.habitId || open.day !== nudge.day),
-    banner: without(state.banner, nudge.frameId, nudge.habitId, true),
+    banner: without(state.banner, nudge.frameId, nudge.habitId, true, nudge.day),
   });
 }
 
@@ -180,10 +209,9 @@ export function tickNudge(nudge: Nudge): void {
 export function skipNudge(nudge: Nudge): void {
   emit({
     nudges: state.nudges.filter((open) => open.habitId !== nudge.habitId || open.day !== nudge.day),
-    banner: without(state.banner, nudge.frameId, nudge.habitId, true),
+    banner: without(state.banner, nudge.frameId, nudge.habitId, true, nudge.day),
   });
 }
-
 
 // Deleting a frame removes its reminders; the removed data comes back so the delete can be undone.
 export function removeFrameReminders(frameId: string): RemindersData | undefined {
