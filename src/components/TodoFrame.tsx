@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import type { KeyboardEvent } from "react";
+import type { CSSProperties, DragEvent, KeyboardEvent } from "react";
 import {
   addTodoItem,
   clearCompletedTodos,
@@ -8,6 +8,7 @@ import {
   deleteTodoItem,
   isOverdue,
   moveTodoItem,
+  moveTodoItemTo,
   nestTodoItem,
   openTodoCount,
   parseTodoInput,
@@ -19,6 +20,7 @@ import {
   type TodoFilter,
   type TodoItem,
   type TodoSort,
+  type TodoViewState,
 } from "../todo";
 
 interface Suggestion {
@@ -84,29 +86,33 @@ export function TodoFrame({
   items,
   onChange,
   onDeleteList,
+  view,
+  onViewChange,
 }: {
   items: TodoItem[];
   onChange: (items: TodoItem[]) => void;
   onDeleteList?: () => void;
+  view: TodoViewState;
+  onViewChange: (view: TodoViewState) => void;
 }) {
   const [draft, setDraft] = useState("");
   const [activeSuggestion, setActiveSuggestion] = useState(0);
   const [dismissedToken, setDismissedToken] = useState<string | null>(null);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
-  const [filter, setFilter] = useState<TodoFilter>("all");
-  const [sort, setSort] = useState<TodoSort>("manual");
+  const { filter, sort } = view;
+  const setFilter = (next: TodoFilter) => onViewChange({ filter: next, sort });
+  const setSort = (next: TodoSort) => onViewChange({ filter, sort: next });
+  const dragId = useRef<string | null>(null);
   const listRef = useRef<HTMLUListElement | null>(null);
 
   const today = new Date();
   const groups = visibleTodoGroups(items, { filter, sort }, today);
-  const rows = groups.flatMap((group) => [
-    { item: group.parent, step: false },
-    ...group.children.map((child) => ({ item: child, step: true })),
-  ]);
+  const rows = groups.flatMap((group) => group.rows);
+  const shownIds = rows.map((row) => row.item.id);
+  // Drag, drop and nesting follow the order on screen; reordering needs the saved order visible.
+  const canReorder = sort === "manual" && filter === "all";
   const progress = progressCounts(items);
   const completedCount = progress.done;
-  // Reordering only makes sense when every item is shown in its saved order.
-  const canReorder = sort === "manual" && filter === "all";
 
   const token = currentToken(draft);
   const sigil = token.charAt(0);
@@ -194,15 +200,16 @@ export function TodoFrame({
     }
     if (event.key === "Delete" || event.key === "Backspace") {
       event.preventDefault();
-      const removed = new Set([id, ...items.filter((item) => item.parentId === id).map((item) => item.id)]);
-      const survivors = checks.filter((check) => !removed.has(check.dataset.todoId ?? ""));
+      // The rows that will still exist after this delete, including steps at every depth.
+      const remaining = new Set(deleteTodoItem(items, id).map((item) => item.id));
+      const survivors = checks.filter((check) => remaining.has(check.dataset.todoId ?? ""));
       const next = survivors.find((check) => checks.indexOf(check) > index) ?? survivors[survivors.length - 1];
       onChange(deleteTodoItem(items, id));
       if (next) focusCheck(next.dataset.todoId ?? "");
     }
     if (event.key === "[") {
       event.preventDefault();
-      onChange(nestTodoItem(items, id));
+      onChange(nestTodoItem(items, id, shownIds));
       focusCheck(id);
     }
     if (event.key === "]") {
@@ -278,14 +285,48 @@ export function TodoFrame({
       </div>
 
       <ul ref={listRef} className="todo-list" aria-label="Todo items" onKeyDown={handleListKey}>
-        {rows.map(({ item, step }, index) => {
+        {rows.map(({ item, depth }, index) => {
           const overdue = isOverdue(item, today);
           const classes = ["todo-row"];
           if (item.done) classes.push("is-done");
-          if (step) classes.push("is-step");
+          if (depth > 0) classes.push("is-step");
           if (overdue) classes.push("is-overdue");
           return (
-            <li key={item.id} className={classes.join(" ")}>
+            <li
+              key={item.id}
+              className={classes.join(" ")}
+              style={{ "--depth": depth } as CSSProperties}
+              onDragOver={(event: DragEvent<HTMLLIElement>) => {
+                if (!canReorder || dragId.current === null || dragId.current === item.id) return;
+                event.preventDefault();
+              }}
+              onDrop={(event: DragEvent<HTMLLIElement>) => {
+                event.preventDefault();
+                if (!canReorder) return;
+                const from = dragId.current;
+                dragId.current = null;
+                if (from === null) return;
+                const rect = event.currentTarget.getBoundingClientRect();
+                const placement = event.clientY < rect.top + rect.height / 2 ? "before" : "after";
+                onChange(moveTodoItemTo(items, from, item.id, placement));
+              }}
+            >
+              <span
+                className="todo-handle"
+                draggable={canReorder}
+                aria-hidden="true"
+                title="Drag to reorder"
+                onDragStart={(event) => {
+                  dragId.current = item.id;
+                  event.dataTransfer.setData("text/plain", item.id);
+                  event.dataTransfer.effectAllowed = "move";
+                }}
+                onDragEnd={() => {
+                  dragId.current = null;
+                }}
+              >
+                ⠿
+              </span>
               <button
                 type="button"
                 className="todo-check"
@@ -305,10 +346,12 @@ export function TodoFrame({
               <button
                 type="button"
                 className="todo-nest"
-                aria-label={step ? `Move out of parent: ${item.text}` : `Nest under the item above: ${item.text}`}
-                onClick={() => onChange(step ? unnestTodoItem(items, item.id) : nestTodoItem(items, item.id))}
+                aria-label={depth > 0 ? `Move up a level: ${item.text}` : `Nest under the item above: ${item.text}`}
+                onClick={() =>
+                  onChange(depth > 0 ? unnestTodoItem(items, item.id) : nestTodoItem(items, item.id, shownIds))
+                }
               >
-                {step ? "↰" : "↳"}
+                {depth > 0 ? "↰" : "↳"}
               </button>
               <button
                 type="button"

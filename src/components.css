@@ -1567,7 +1567,7 @@
 
 .todo-row {
   display: grid;
-  grid-template-columns: 40px minmax(0, 1fr) auto 40px auto 40px;
+  grid-template-columns: 16px 40px minmax(0, 1fr) auto 40px auto 40px;
   align-items: center;
   gap: 8px;
   min-height: 48px;
@@ -1845,9 +1845,8 @@
   background: var(--surface-2);
 }
 
-/* Steps are indented under their parent, with a connector. */
+/* Steps are indented by depth under their parent, with a connector. */
 .todo-row.is-step {
-  margin-left: 28px;
   border-style: dashed;
 }
 
@@ -1863,6 +1862,21 @@
 
 .todo-row {
   position: relative;
+  margin-left: calc(min(var(--depth, 0), 4) * 24px); /* capped so text keeps room on phones */
+}
+
+.todo-handle {
+  display: grid;
+  width: 16px;
+  place-items: center;
+  color: var(--text-faint);
+  font: 14px/1 var(--font-mono-stack);
+  cursor: grab;
+  user-select: none;
+}
+
+.todo-handle:active {
+  cursor: grabbing;
 }
 
 .todo-row.is-overdue {

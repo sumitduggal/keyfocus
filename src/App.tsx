@@ -8,7 +8,25 @@ import { Stack } from "./components/Stack";
 import { Dock } from "./components/Dock";
 import { FeaturePanel } from "./components/FeaturePanel";
 import { CommandPalette } from "./components/CommandPalette";
-import { loadTodoLists, openTodoCount, restoreTodoItems, saveTodoLists, type TodoItem } from "./todo";
+import {
+  loadTodoLists,
+  loadTodoViews,
+  openTodoCount,
+  saveTodoLists,
+  saveTodoViews,
+  type TodoItem,
+  type TodoViewState,
+} from "./todo";
+import {
+  addTrashEntry,
+  loadTrash,
+  pruneTrash,
+  removeTrashEntry,
+  removedItemsBetween,
+  restoreRemovedItems,
+  saveTrash,
+  type TrashEntry,
+} from "./todo-trash";
 import "./App.css";
 import "./components.css";
 
@@ -75,9 +93,11 @@ function App() {
   const [query, setQuery] = useState("");
   const [menuFocusIndex, setMenuFocusIndex] = useState(0);
   // The last undoable change; the toast clears itself after five seconds.
-  const [undo, setUndo] = useState<{ message: string; restore: () => void } | null>(null);
+  const [undo, setUndo] = useState<{ message: string; restore: () => void; trashId?: string } | null>(null);
   // Feature picked in ⌘K: the palette lists its existing frames and a New row.
   const [featureMenu, setFeatureMenu] = useState<Feature | null>(null);
+  // Recently deleted entries, shown from the top level of ⌘K.
+  const [trashMenu, setTrashMenu] = useState(false);
   const [searchMode, setSearchMode] = useState(false);
   const [rightFocusIndex, setRightFocusIndex] = useState(0);
   const [featurePanel, setFeaturePanel] = useState<Feature | null>(null);
@@ -92,6 +112,13 @@ function App() {
 
   const [todoLists, setTodoLists] = useState<Record<string, TodoItem[]>>(() =>
     loadTodoLists(localStorage),
+  );
+  const [todoViews, setTodoViews] = useState<Record<string, TodoViewState>>(() =>
+    loadTodoViews(localStorage),
+  );
+  // Recently deleted items and lists, kept for seven days across reloads.
+  const [trash, setTrash] = useState<TrashEntry[]>(() =>
+    pruneTrash(loadTrash(localStorage), new Date()),
   );
 
   const frameRefs = useRef<Record<string, HTMLElement | null>>({});
@@ -147,18 +174,33 @@ function App() {
     [featureMenu, frames, query],
   );
   // Row count and ids for the list the palette is currently showing.
+  // Trash entries that can still be restored: lists always, item changes only while their list exists.
+  const trashRows = trash
+    .filter((entry) => entry.kind === "list" || frames.some((frame) => frame.id === entry.frameId))
+    .map((entry) =>
+      entry.kind === "list"
+        ? { id: entry.id, title: entry.frame.title, hint: "Deleted list" }
+        : { id: entry.id, title: entry.title, hint: "Removed items" },
+    );
+  const showTrashRow = !query && trashRows.length > 0;
   const menuRowCount = searchMode
     ? searchResults.length
-    : featureMenu
-      ? featureMenuEntries.length + 1
-      : visibleCommands.length;
+    : trashMenu
+      ? trashRows.length
+      : featureMenu
+        ? featureMenuEntries.length + 1
+        : visibleCommands.length + (showTrashRow ? 1 : 0);
   const activeMenuId = searchMode
     ? searchResults[menuFocusIndex]?.id
-    : featureMenu
-      ? menuFocusIndex === 0
-        ? "new"
-        : featureMenuEntries[menuFocusIndex - 1]?.id
-      : visibleCommands[menuFocusIndex];
+    : trashMenu
+      ? trashRows[menuFocusIndex]?.id
+      : featureMenu
+        ? menuFocusIndex === 0
+          ? "new"
+          : featureMenuEntries[menuFocusIndex - 1]?.id
+        : menuFocusIndex === visibleCommands.length && showTrashRow
+          ? "trash"
+          : visibleCommands[menuFocusIndex];
 
   const todoOpenCount = frames.reduce(
     (total, frame) =>
@@ -254,34 +296,62 @@ function App() {
   const changeTodoList = (items: TodoItem[]) => {
     const frameId = activeFrame.id;
     const previous = todoLists[frameId] ?? [];
-    if (items.length < previous.length) {
-      const removed = previous.length - items.length;
+    const removed = removedItemsBetween(previous, items);
+    if (removed.length) {
+      const trashId = crypto.randomUUID();
+      setTrash((current) =>
+        addTrashEntry(current, {
+          id: trashId,
+          removedAt: new Date().toISOString(),
+          kind: "items",
+          frameId,
+          title: activeFrame.title,
+          removed,
+        }),
+      );
       setUndo({
-        message: `Removed ${removed} item${removed === 1 ? "" : "s"}`,
-        restore: () =>
+        message: `Removed ${removed.length} item${removed.length === 1 ? "" : "s"}`,
+        trashId,
+        restore: () => {
           setTodoLists((current) => ({
             ...current,
-            [frameId]: restoreTodoItems(current[frameId] ?? [], previous),
-          })),
+            [frameId]: restoreRemovedItems(current[frameId] ?? [], removed),
+          }));
+          setTrash((current) => removeTrashEntry(current, trashId));
+        },
       });
     }
     setTodoLists((current) => ({ ...current, [frameId]: items }));
   };
 
   // Removes a frame and its todo list. Falls back to the first remaining frame, or a fresh Pomodoro.
-  const deleteFrame = (id: string) => {
+  const deleteFrame = useCallback((id: string) => {
     const position = frames.findIndex((frame) => frame.id === id);
     const removedFrame = frames[position];
     const removedList = todoLists[id];
+    const trashId = crypto.randomUUID();
+    setTrash((current) =>
+      addTrashEntry(current, {
+        id: trashId,
+        removedAt: new Date().toISOString(),
+        kind: "list",
+        frame: removedFrame,
+        position,
+        items: removedList ?? [],
+      }),
+    );
     setUndo({
       message: `Deleted "${removedFrame.title}"`,
+      trashId,
       restore: () => {
         setFrames((current) => {
+          if (current.some((frame) => frame.id === id)) return current;
           const restored = [...current];
           restored.splice(Math.min(position, restored.length), 0, removedFrame);
           return restored;
         });
         if (removedList) setTodoLists((current) => ({ ...current, [id]: removedList }));
+        setTrash((current) => removeTrashEntry(current, trashId));
       },
     });
     const remaining = frames.filter((frame) => frame.id !== id);
@@ -290,12 +360,15 @@ function App() {
     setTodoLists((current) =>
       Object.fromEntries(Object.entries(current).filter(([frameId]) => frameId !== id)),
     );
+    setTodoViews((current) =>
+      Object.fromEntries(Object.entries(current).filter(([frameId]) => frameId !== id)),
+    );
     if (id === activeFrameId) {
       setActiveFrameId(next.id);
       setFocusedSide("main");
       setWithinSide(true);
     }
-  };
+  }, [activeFrameId, frames, todoLists]);
 
   const promoteStackFrame = (index: number) => {
     const selectedFrame = stackedFrames[index];
@@ -318,8 +391,41 @@ function App() {
     setQuery("");
   };
 
+  // Puts a removed item back, or a whole list, and drops it from Recently deleted.
+  const restoreTrash = (id: string) => {
+    const entry = trash.find((candidate) => candidate.id === id);
+    if (!entry) return;
+    if (entry.kind === "list") {
+      const frame = entry.frame;
+      setFrames((current) => {
+        if (current.some((existing) => existing.id === frame.id)) return current;
+        const restored = [...current];
+        restored.splice(Math.min(entry.position, restored.length), 0, frame);
+        return restored;
+      });
+      setTodoLists((current) => ({ ...current, [frame.id]: entry.items }));
+    } else {
+      const frameId = entry.frameId;
+      setTodoLists((current) => ({
+        ...current,
+        [frameId]: restoreRemovedItems(current[frameId] ?? [], entry.removed),
+      }));
+    }
+    setTrash((current) => removeTrashEntry(current, id));
+    // A pending Undo for the same entry is now redundant.
+    setUndo((current) => (current?.trashId === id ? null : current));
+    setTrashMenu(false);
+    setMenuFocusIndex(0);
+  };
+
   const commandKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
     if (event.key === "Escape") {
+      if (trashMenu) {
+        event.stopPropagation();
+        setTrashMenu(false);
+        setMenuFocusIndex(0);
+        return;
+      }
       if (featureMenu && !searchMode) {
         // Back to the command list only; the global Escape would also close the palette.
         event.stopPropagation();
@@ -345,6 +451,11 @@ function App() {
       if (result) showFrame(result.id);
       return;
     }
+    if (trashMenu) {
+      const row = trashRows[menuFocusIndex];
+      if (row) restoreTrash(row.id);
+      return;
+    }
     if (featureMenu) {
       if (menuFocusIndex === 0) {
         runCommand(featureMenu);
@@ -352,6 +463,11 @@ function App() {
         const entry = featureMenuEntries[menuFocusIndex - 1];
         if (entry) showFrame(entry.id);
       }
+      return;
+    }
+    if (showTrashRow && menuFocusIndex === visibleCommands.length) {
+      setTrashMenu(true);
+      setMenuFocusIndex(0);
       return;
     }
     if (visibleCommands[menuFocusIndex]) chooseCommand(visibleCommands[menuFocusIndex]);
@@ -371,6 +487,12 @@ function App() {
   useEffect(() => {
     saveTodoLists(localStorage, todoLists);
   }, [todoLists]);
+  useEffect(() => {
+    saveTodoViews(localStorage, todoViews);
+  }, [todoViews]);
+  useEffect(() => {
+    saveTrash(localStorage, trash);
+  }, [trash]);
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
     localStorage.setItem("focus-space-theme", theme);
@@ -404,6 +526,7 @@ function App() {
         setMenuOpen(true);
         setSearchMode(false);
         setFeatureMenu(null);
+        setTrashMenu(false);
         setMenuFocusIndex(0);
         actionInputRef.current?.focus();
         return;
@@ -443,10 +566,7 @@ function App() {
         if (!removed) return;
         event.preventDefault();
         const nextFrames = stackedFrames.filter((frame) => frame.id !== removed.id);
-        setFrames((current) => current.filter((frame) => frame.id !== removed.id));
-        setTodoLists((current) =>
-          Object.fromEntries(Object.entries(current).filter(([id]) => id !== removed.id)),
-        );
+        deleteFrame(removed.id);
         if (nextFrames.length) {
           const nextIndex = Math.min(stackFocusIndex, nextFrames.length - 1);
           setStackFocusIndex(nextIndex);
@@ -548,6 +668,7 @@ function App() {
   }, [
     activeFrame,
     activeFrameId,
+    deleteFrame,
     featurePanel,
     focusedSide,
     menuOpen,
@@ -680,6 +801,10 @@ function App() {
                 noteBody={noteBodies[activeFrame.id]}
                 todoItems={todoLists[activeFrame.id]}
                 onDelete={() => deleteFrame(activeFrame.id)}
+                todoView={todoViews[activeFrame.id] ?? { filter: "all", sort: "manual" }}
+                onTodoViewChange={(view) =>
+                  setTodoViews((current) => ({ ...current, [activeFrame.id]: view }))
+                }
                 onTitleChange={(title) =>
                   setFrames((current) =>
                     current.map((frame) => (frame.id === activeFrame.id ? { ...frame, title } : frame)),
@@ -751,6 +876,17 @@ function App() {
               title: frame.title,
             }))}
             featureMenu={featureMenu}
+            trashMenu={trashMenu}
+            trashRows={trashRows}
+            showTrashRow={showTrashRow}
+            trashCount={trashRows.length}
+            onRestoreTrash={restoreTrash}
+            onOpenTrash={() => {
+              setTrashMenu(true);
+              setMenuFocusIndex(0);
+              // The clicked row unmounts, so keep keyboard focus in the palette input.
+              actionInputRef.current?.focus();
+            }}
             featureEntries={featureMenuEntries.map((frame) => ({
               id: frame.id,
               feature: frame.feature,

@@ -12,6 +12,12 @@ interface CommandPaletteProps {
   menuOpen: boolean;
   searchMode: boolean;
   featureMenu: Feature | null;
+  trashMenu: boolean;
+  trashRows: { id: string; title: string; hint: string }[];
+  showTrashRow: boolean;
+  trashCount: number;
+  onRestoreTrash: (id: string) => void;
+  onOpenTrash: () => void;
   query: string;
   visibleCommands: Command[];
   searchResults: SearchResult[];
@@ -37,6 +43,12 @@ export function CommandPalette({
   menuOpen,
   searchMode,
   featureMenu,
+  trashMenu,
+  trashRows,
+  showTrashRow,
+  trashCount,
+  onRestoreTrash,
+  onOpenTrash,
   query,
   visibleCommands,
   searchResults,
@@ -114,7 +126,9 @@ export function CommandPalette({
             <p className="menu-label">
               {searchMode
                 ? "Search created features"
-                : featureMenu
+                : trashMenu
+                  ? "Recently deleted · Esc to go back"
+                  : featureMenu
                   ? `${featureMeta[featureMenu].frame.title} · Esc to go back`
                   : query
                     ? "Matching actions"
@@ -145,6 +159,30 @@ export function CommandPalette({
                 ))
               ) : (
                 <p className="empty-command">No matching features</p>
+              )
+            ) : trashMenu ? (
+              trashRows.length ? (
+                trashRows.map((row, index) => (
+                  <button
+                    key={row.id}
+                    id={resultDomId(row.id)}
+                    role="menuitem"
+                    aria-selected={index === menuFocusIndex}
+                    type="button"
+                    className={index === menuFocusIndex ? "selected" : ""}
+                    onMouseEnter={() => {}}
+                    onClick={() => onRestoreTrash(row.id)}
+                  >
+                    <span className="command-glyph">↺</span>
+                    <span>
+                      <b>{row.title}</b>
+                      <small>{row.hint} · Restore</small>
+                    </span>
+                    <kbd>↵</kbd>
+                  </button>
+                ))
+              ) : (
+                <p className="empty-command">Nothing recently deleted</p>
               )
             ) : featureMenu ? (
               <>
@@ -184,8 +222,9 @@ export function CommandPalette({
                   </button>
                 ))}
               </>
-            ) : visibleCommands.length ? (
-              visibleCommands.map((command, index) =>
+            ) : visibleCommands.length || showTrashRow ? (
+              <>
+              {visibleCommands.map((command, index) =>
                 command === "Search" ? (
                   <button
                     key={command}
@@ -223,7 +262,26 @@ export function CommandPalette({
                     <kbd>↵</kbd>
                   </button>
                 ),
-              )
+              )}
+              {showTrashRow && (
+                <button
+                  id="action-trash"
+                  role="menuitem"
+                  aria-selected={visibleCommands.length === menuFocusIndex}
+                  type="button"
+                  className={visibleCommands.length === menuFocusIndex ? "selected" : ""}
+                  onMouseEnter={() => {}}
+                  onClick={onOpenTrash}
+                >
+                  <span className="command-glyph">↺</span>
+                  <span>
+                    <b>Recently deleted</b>
+                    <small>{trashCount} to restore for seven days</small>
+                  </span>
+                  <kbd>↵</kbd>
+                </button>
+              )}
+              </>
             ) : (
               <p className="empty-command">No matching actions</p>
             )}

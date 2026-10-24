@@ -1,4 +1,4 @@
-Status: implemented
+Status: implemented (round 2)
 
 ## Problem Statement
 
@@ -56,3 +56,12 @@ Add to each Todo list: clear completed, a progress bar, in-place item editing, o
 
 - Keyboard map on a focused row: Alt+Up and Alt+Down reorder; "[" nests under the item above; "]" un-nests; Space and Enter toggle done; Delete and Backspace remove the item when focus is on the row, not in the text field.
 - Undo toast appears at the bottom of the screen and dismisses after 5 seconds.
+
+## Round 2 decisions (agreed)
+
+- Subtasks nest without a depth limit. An item can be nested under the item directly above it on screen, together with its own steps. Nesting is refused only when it would put an item under its own step (a cycle).
+- "]" moves an item up one level (to its parent's level). Alt+Up/Down still reorder siblings.
+- Drag and drop: each row has a drag handle. Dropping an item above or below another row moves it to that row's position and parent. An item cannot be dropped inside its own steps.
+- Undo after reload: deleted items and lists go to a Recently deleted area, kept for 7 days, then removed automatically on load. Restoring from it puts the item back as it was. The five-second Undo toast still works as before.
+- Sort and filter are remembered per list across reloads.
+- Recently deleted is reached from the ⌘K command list when it has entries. Each entry can be restored with Enter.

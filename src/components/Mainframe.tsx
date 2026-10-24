@@ -11,7 +11,7 @@ import CodeTool from "@editorjs/code";
 import LinkTool from "@editorjs/link";
 import Marker from "@editorjs/marker";
 import type { WorkspaceFrame } from "../types";
-import type { TodoItem } from "../todo";
+import type { TodoItem, TodoViewState } from "../todo";
 import { TodoFrame } from "./TodoFrame";
 
 // Moves focus to the next focusable element after `current` in page order.
@@ -34,6 +34,8 @@ export function Mainframe({
   onTodoChange,
   onTitleChange,
   onDelete,
+  todoView,
+  onTodoViewChange,
 }: {
   frame: WorkspaceFrame;
   active: boolean;
@@ -44,6 +46,8 @@ export function Mainframe({
   onTodoChange?: (items: TodoItem[]) => void;
   onTitleChange?: (title: string) => void;
   onDelete?: () => void;
+  todoView?: TodoViewState;
+  onTodoViewChange?: (view: TodoViewState) => void;
 }) {
   const note = noteBody ?? "";
   const editorHost = useRef<HTMLDivElement | null>(null);
@@ -303,6 +307,8 @@ export function Mainframe({
           <TodoFrame
             key={frame.id}
             items={todoItems ?? []}
+            view={todoView ?? { filter: "all", sort: "manual" }}
+            onViewChange={onTodoViewChange ?? (() => undefined)}
             onChange={onTodoChange ?? (() => undefined)}
             onDeleteList={onDelete}
           />

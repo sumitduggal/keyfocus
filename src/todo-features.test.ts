@@ -133,19 +133,19 @@ describe("nestTodoItem and unnestTodoItem", () => {
     expect(nestTodoItem(items, "a")[0].parentId).toBeNull();
   });
 
-  it("refuses to nest an item that already has steps under it", () => {
+  it("nests an item together with the steps it already has", () => {
     const items = [item({ id: "a" }), item({ id: "b" }), item({ id: "c", parentId: "b" })];
-    expect(nestTodoItem(items, "b")[1].parentId).toBeNull();
+    expect(nestTodoItem(items, "b")[1].parentId).toBe("a");
   });
 
-  it("nests under the group of the step directly above it", () => {
+  it("nests under the step directly above it, at any depth", () => {
     const items = [item({ id: "a" }), item({ id: "s", parentId: "a" }), item({ id: "b" })];
-    expect(nestTodoItem(items, "b")[2].parentId).toBe("a");
+    expect(nestTodoItem(items, "b")[2].parentId).toBe("s");
   });
 
-  it("nests in display order, so a step's group is the one shown above", () => {
+  it("nests in display order, under the step shown above", () => {
     const items = [item({ id: "p" }), item({ id: "c", parentId: "p" }), item({ id: "q" })];
-    expect(nestTodoItem(items, "q")[2].parentId).toBe("p");
+    expect(nestTodoItem(items, "q")[2].parentId).toBe("c");
   });
 
   it("un-nests a step back to the top level", () => {
@@ -210,24 +210,10 @@ describe("deleteTodoItem with steps", () => {
 });
 
 
-import { restoreTodoItems } from "./todo";
 
-describe("restoreTodoItems", () => {
-  it("puts back removed items in their old order and keeps items added since", () => {
-    const previous = [item({ id: "a" }), item({ id: "b" }), item({ id: "c" })];
-    const current = [item({ id: "a" }), item({ id: "new" })];
-    expect(restoreTodoItems(current, previous).map((i) => i.id)).toEqual(["a", "b", "c", "new"]);
-  });
-
-  it("keeps the current version of items that still exist", () => {
-    const previous = [item({ id: "a", text: "old" })];
-    const current = [item({ id: "a", text: "edited" })];
-    expect(restoreTodoItems(current, previous)[0].text).toBe("edited");
-  });
-});
 
 describe("loadTodoLists with steps of steps", () => {
-  it("treats a parent that is itself a step as top-level", () => {
+  it("keeps a parent that is itself a step, since depth is unlimited", () => {
     const stored = JSON.stringify({
       f: [
         { id: "a", text: "A", done: false, priority: "medium", due: null },
@@ -237,7 +223,46 @@ describe("loadTodoLists with steps of steps", () => {
     });
     const storage = { getItem: (key: string) => (key === TODO_STORAGE_KEY ? stored : null) };
     const items = loadTodoLists(storage).f;
-    expect(items.find((i) => i.id === "c")!.parentId).toBeNull();
+    expect(items.find((i) => i.id === "c")!.parentId).toBe("b");
     expect(items.find((i) => i.id === "b")!.parentId).toBe("a");
+  });
+});
+
+describe("unlimited depth", () => {
+  it("nests under the item shown directly above, even when that item is a step", () => {
+    const items = [item({ id: "a" }), item({ id: "b" }), item({ id: "b1", parentId: "b" }), item({ id: "c" })];
+    expect(nestTodoItem(items, "c")[3].parentId).toBe("b1");
+  });
+
+  it("nests under a step at any depth", () => {
+    const items = [item({ id: "a" }), item({ id: "s", parentId: "a" }), item({ id: "t" })];
+    expect(nestTodoItem(items, "t")[2].parentId).toBe("s");
+  });
+
+  it("refuses to nest an item under its own step", () => {
+    const items = [item({ id: "a" }), item({ id: "s", parentId: "a" })];
+    expect(nestTodoItem(items, "a")).toEqual(items);
+  });
+
+  it("un-nests one level, to the parent's level", () => {
+    const items = [item({ id: "a" }), item({ id: "s", parentId: "a" }), item({ id: "t", parentId: "s" })];
+    expect(unnestTodoItem(items, "t")[2].parentId).toBe("a");
+  });
+
+  it("keeps a deep saved tree and breaks only a cycle", () => {
+    const stored = JSON.stringify({
+      f: [
+        { id: "a", text: "A", done: false, priority: "medium", due: null },
+        { id: "b", text: "B", done: false, priority: "medium", due: null, parentId: "a" },
+        { id: "c", text: "C", done: false, priority: "medium", due: null, parentId: "b" },
+        { id: "x", text: "X", done: false, priority: "medium", due: null, parentId: "y" },
+        { id: "y", text: "Y", done: false, priority: "medium", due: null, parentId: "x" },
+      ],
+    });
+    const storage = { getItem: (key: string) => (key === TODO_STORAGE_KEY ? stored : null) };
+    const items = loadTodoLists(storage).f;
+    expect(items.find((i) => i.id === "c")!.parentId).toBe("b");
+    expect(items.find((i) => i.id === "b")!.parentId).toBe("a");
+    expect([items.find((i) => i.id === "x")!, items.find((i) => i.id === "y")!].some((i) => i.parentId === null)).toBe(true);
   });
 });
