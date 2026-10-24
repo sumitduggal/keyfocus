@@ -1,7 +1,16 @@
+import { useSyncExternalStore } from "react";
 import type { Feature } from "../types";
 import { featureMeta, visibleFeatures } from "../constants";
 import { NowPlaying } from "./NowPlaying";
+import { formatClock, getPomodoroState, subscribePomodoro, type PomodoroState } from "../pomodoro";
 import "../components.css";
+
+// The Pomodoro entry shows the timer while one is under way.
+function pomodoroLabel({ phase, remainingSec }: PomodoroState): string {
+  if (phase === "running") return `${formatClock(remainingSec)} left`;
+  if (phase === "paused") return `Paused · ${formatClock(remainingSec)}`;
+  return phase === "complete" ? "Complete" : "Open timer";
+}
 
 interface DockProps {
   registerItem: (id: string, node: HTMLButtonElement | null) => void;
@@ -27,6 +36,7 @@ export function Dock({
   onFeaturePress,
 }: DockProps) {
   const features = visibleFeatures;
+  const pomodoro = useSyncExternalStore(subscribePomodoro, getPomodoroState);
 
   return (
     <div className="dock">
@@ -66,7 +76,7 @@ export function Dock({
               }}
               type="button"
               title={featureMeta[feature].frame.title}
-              className={`dock-item ${feature === activeFeature ? "is-active" : ""}`}
+              className={`dock-item ${feature === activeFeature ? "is-active" : ""}${feature === "pomodoro" && pomodoro.phase === "running" ? " is-timing" : ""}`}
               onFocus={() => setRightFocusIndex(dockIndex)}
               onKeyDown={(event) => {
                 if (event.key === "Enter") {
@@ -89,7 +99,7 @@ export function Dock({
                 <b>{featureMeta[feature].frame.title}</b>
                 <small>
                   {feature === "pomodoro"
-                    ? "Open timer"
+                    ? pomodoroLabel(pomodoro)
                     : feature === "todo list"
                       ? `${todoOpenCount} open${todoOverdueCount ? ` · ${todoOverdueCount} overdue` : ""}`
                       : `${framesCountByFeature[feature]} entries`}

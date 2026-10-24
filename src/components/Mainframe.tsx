@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useSyncExternalStore } from "react";
 import type { CSSProperties, RefCallback } from "react";
 import type EditorJS from "@editorjs/editorjs";
 import type { OutputData } from "@editorjs/editorjs";
@@ -9,9 +9,13 @@ import { TodoFrame } from "./TodoFrame";
 import { HabitsFrame } from "./HabitsFrame";
 import { RemindersFrame } from "./RemindersFrame";
 import { BookmarksFrame } from "./BookmarksFrame";
-import { POMODORO_DURATION_KEY } from "../constants";
-import { setStored } from "../storage";
-import { loadSettings, playAlert } from "../settings";
+import {
+  getPomodoroState,
+  resetPomodoro,
+  setPomodoroMinutes,
+  subscribePomodoro,
+  togglePomodoro,
+} from "../pomodoro";
 
 // Moves focus to the next focusable element after `current` in page order.
 function focusNextElement(current: HTMLElement) {
@@ -158,43 +162,14 @@ export function Mainframe({
     };
   }, [frame.id, frame.feature, initialNote]);
 
-  const [pomodoroDuration, setPomodoroDuration] = useState(
-    () => Number(localStorage.getItem(POMODORO_DURATION_KEY)) || 25,
-  );
-  const [pomodoroSeconds, setPomodoroSeconds] = useState(
-    () => (Number(localStorage.getItem(POMODORO_DURATION_KEY)) || 25) * 60,
-  );
-  const [pomodoroRunning, setPomodoroRunning] = useState(false);
+  const pomodoro = useSyncExternalStore(subscribePomodoro, getPomodoroState);
+  const pomodoroDuration = pomodoro.durationMin;
+  const pomodoroSeconds = pomodoro.remainingSec;
+  const pomodoroRunning = pomodoro.phase === "running";
   const startButton = useRef<HTMLButtonElement | null>(null);
 
-  const playCompletionAlert = () => {
-    const { alertSound, alertVolume } = loadSettings();
-    playAlert(alertSound, alertVolume);
-  };
-
-  useEffect(() => {
-    if (frame.feature !== "pomodoro" || !pomodoroRunning) return;
-    const timer = window.setInterval(() => {
-      setPomodoroSeconds((current) => {
-        if (current <= 1) {
-          setPomodoroRunning(false);
-          playCompletionAlert();
-          return 0;
-        }
-        return current - 1;
-      });
-    }, 1000);
-    return () => window.clearInterval(timer);
-  }, [frame.feature, pomodoroRunning]);
-
-  useEffect(() => {
-    setStored(POMODORO_DURATION_KEY, String(pomodoroDuration));
-  }, [pomodoroDuration]);
-
   const chooseTimer = useCallback((minutes: number) => {
-    setPomodoroDuration(minutes);
-    setPomodoroRunning(false);
-    setPomodoroSeconds(minutes * 60);
+    setPomodoroMinutes(minutes);
     startButton.current?.focus();
   }, []);
 
@@ -302,16 +277,13 @@ export function Mainframe({
             <button
               ref={startButton}
               type="button"
-              onClick={() => setPomodoroRunning((current) => !current)}
+              onClick={togglePomodoro}
             >
               {pomodoroRunning ? "Pause" : "Start focus"}
             </button>
             <button
               type="button"
-              onClick={() => {
-                setPomodoroRunning(false);
-                setPomodoroSeconds(pomodoroDuration * 60);
-              }}
+              onClick={resetPomodoro}
             >
               Reset
             </button>

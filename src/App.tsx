@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import type { KeyboardEvent } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import type { CSSProperties, KeyboardEvent } from "react";
 import { useAnimate, useReducedMotion } from "motion/react";
 import type { Command, Feature, Side, Theme, WorkspaceFrame } from "./types";
 import {
@@ -26,6 +26,7 @@ import { CommandPalette } from "./components/CommandPalette";
 import { Weather } from "./components/Weather";
 import { loadHabits, saveHabits, toggleDay, type Habit } from "./habits";
 import { loadFrames, loadNoteBodies, loadTheme } from "./saved-state";
+import { formatClock, getPomodoroState, subscribePomodoro } from "./pomodoro";
 import { initReminders, registerHabitSource, removeFrameReminders, restoreFrameReminders } from "./reminders-store";
 import { HudReminders, ReminderBanner } from "./components/ReminderBanner";
 import {
@@ -188,6 +189,17 @@ function App() {
   }, []);
   const getEntry = useCallback((id: string) => featureEntryRefs.current[id] ?? null, []);
   const reduceMotion = useReducedMotion() ?? false;
+  // The Pomodoro timer shows in the header and the tab title whichever frame is open.
+  const pomodoro = useSyncExternalStore(subscribePomodoro, getPomodoroState);
+  const baseTitle = useRef(document.title);
+  useEffect(() => {
+    const { phase, remainingSec } = pomodoro;
+    document.title =
+      phase === "running" ? `${formatClock(remainingSec)} · ${baseTitle.current}`
+      : phase === "paused" ? `Paused ${formatClock(remainingSec)} · ${baseTitle.current}`
+      : phase === "complete" ? `Done · ${baseTitle.current}`
+      : baseTitle.current;
+  }, [pomodoro]);
   // The main frame slides in when another frame takes its place. It is animated in place rather than
   // re-created, so a running Pomodoro keeps its state.
   const [frameScope, animateFrame] = useAnimate<HTMLDivElement>();
@@ -889,15 +901,31 @@ function App() {
             </span>
           </div>
 
-          <div className="hud-readout" aria-hidden="true">
-            <span>
-              <i>Mode</i>Deep focus
-            </span>
-            <span>
+          <div className="hud-readout">
+            {pomodoro.phase === "idle" ? (
+              <span aria-hidden="true">
+                <i>Mode</i>Deep focus
+              </span>
+            ) : (
+              <button
+                type="button"
+                className={`hud-pomodoro is-${pomodoro.phase}`}
+                aria-label={`Pomodoro ${pomodoro.phase === "complete" ? "complete" : `${pomodoro.phase}, ${formatClock(pomodoro.remainingSec)} left`}. Open timer`}
+                onClick={() => openFeatureDirectly("pomodoro")}
+                style={{ "--progress": `${(1 - pomodoro.remainingSec / (pomodoro.durationMin * 60)) * 360}deg` } as CSSProperties}
+              >
+                <div className="hud-pomodoro-ring" aria-hidden="true" />
+                <div className="hud-pomodoro-text" aria-hidden="true">
+                  <i>{pomodoro.phase === "running" ? "Focus" : pomodoro.phase === "paused" ? "Paused" : "Done"}</i>
+                  <b>{pomodoro.phase === "complete" ? "00:00" : formatClock(pomodoro.remainingSec)}</b>
+                </div>
+              </button>
+            )}
+            <span aria-hidden="true">
               <i>Frames</i>
               {pad(frames.length)}
             </span>
-            <span>
+            <span aria-hidden="true">
               <i>Active</i>
               {activeFrame.feature}
             </span>

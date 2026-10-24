@@ -839,9 +839,51 @@
 
   .right-side.is-collapsed .dock-section,
   .right-side.is-collapsed .dock-index,
-  .right-side.is-collapsed .dock-chevron,
-  .right-side.is-collapsed .now-playing {
+  .right-side.is-collapsed .dock-chevron {
     display: none;
+  }
+
+  /* The music player keeps one ♪ button that opens the music panel. Its popup follows the rail in,
+     like the flyouts. */
+  .right-side.is-collapsed .now-playing {
+    margin-bottom: 0;
+    padding: 0;
+    border: 0;
+    background: none;
+  }
+
+  .right-side.is-collapsed .now-playing-marquee,
+  .right-side.is-collapsed .now-playing-step,
+  .right-side.is-collapsed .now-playing-play,
+  .right-side.is-collapsed .now-playing-toggle span {
+    display: none;
+  }
+
+  .right-side.is-collapsed .now-playing-toggle {
+    box-sizing: border-box;
+    width: 100%;
+    height: 44px;
+    min-height: 44px;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--text-muted);
+    font-size: 0;
+    cursor: pointer;
+  }
+
+  .right-side.is-collapsed .now-playing-toggle::before {
+    content: "♪";
+    font: 17px/1 var(--font-mono-stack);
+  }
+
+  .right-side.is-collapsed .now-playing-toggle:hover,
+  .right-side.is-collapsed .now-playing-toggle[aria-expanded="true"] {
+    color: var(--accent);
+  }
+
+  .right-side.is-collapsed .now-playing-popup {
+    right: 80px;
   }
 
   .right-side.is-collapsed .dock-copy {
@@ -998,5 +1040,84 @@
 @media (min-width: 1100px) and (prefers-reduced-motion: no-preference) {
   .feature-aside {
     transition: right 0.2s ease;
+  }
+}
+
+/* The Pomodoro timer as a ticket in the header, taking the place of the Mode tile while one is under way. */
+.hud-pomodoro {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 15px;
+  border: 0;
+  border-right: 1px solid var(--border);
+  background: var(--accent-soft);
+  color: var(--accent-text);
+  cursor: pointer;
+}
+
+.hud-pomodoro:hover {
+  background: color-mix(in srgb, var(--accent) 22%, transparent);
+}
+
+/* A div, not a span: the readout's span rules would pad it into an oval. */
+.hud-pomodoro-ring {
+  flex: none;
+  box-sizing: border-box;
+  width: 24px;
+  height: 24px;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: conic-gradient(var(--accent) var(--progress), var(--border) 0);
+  mask: radial-gradient(farthest-side, transparent 58%, #000 62%);
+}
+
+.hud-pomodoro-text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  text-align: left;
+}
+
+.hud-pomodoro-text i {
+  color: var(--text-faint);
+  font: normal 9px/1 var(--font-mono-stack);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.hud-pomodoro-text b {
+  font: 700 12px/1 var(--font-display);
+  letter-spacing: 0.1em;
+}
+
+.hud-pomodoro.is-paused {
+  background: transparent;
+  color: var(--text-muted);
+}
+
+.hud-pomodoro.is-complete {
+  background: var(--warm-soft);
+  color: var(--warm);
+}
+
+.hud-pomodoro.is-complete .hud-pomodoro-ring {
+  background: var(--warm);
+}
+
+/* While the timer runs, its dock icon glows, which also shows in the collapsed rail. */
+.dock-item.is-timing .dock-glyph {
+  color: var(--accent);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .dock-item.is-timing .dock-glyph {
+    animation: dock-timing 1.6s ease-in-out infinite;
+  }
+}
+
+@keyframes dock-timing {
+  50% {
+    opacity: 0.45;
   }
 }
