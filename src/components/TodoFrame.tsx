@@ -296,8 +296,15 @@ export function TodoFrame({
               key={item.id}
               className={classes.join(" ")}
               style={{ "--depth": depth } as CSSProperties}
+              onDragEnter={(event: DragEvent<HTMLLIElement>) => {
+                // Browsers only allow a drop after both dragenter and dragover are cancelled.
+                if (!canReorder || dragId.current === null || dragId.current === item.id) return;
+                event.preventDefault();
+              }}
               onDragOver={(event: DragEvent<HTMLLIElement>) => {
                 if (!canReorder || dragId.current === null || dragId.current === item.id) return;
+                // Must match the drag's "move" effect, or the browser refuses the drop.
+                event.dataTransfer.dropEffect = "move";
                 event.preventDefault();
               }}
               onDrop={(event: DragEvent<HTMLLIElement>) => {
@@ -315,7 +322,7 @@ export function TodoFrame({
                 className="todo-handle"
                 draggable={canReorder}
                 aria-hidden="true"
-                title="Drag to reorder"
+                title={canReorder ? "Drag to reorder" : "Set sort to manual and filter to all to reorder"}
                 onDragStart={(event) => {
                   dragId.current = item.id;
                   event.dataTransfer.setData("text/plain", item.id);
