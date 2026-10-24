@@ -8,7 +8,8 @@ interface FeaturePanelProps {
   featureAnchorY: number | null;
   entryFocusIndex: number;
   featureAsideRef: React.RefObject<HTMLElement | null>;
-  featureEntryRefs: Record<string, HTMLButtonElement | null>;
+  registerEntry: (id: string, node: HTMLButtonElement | null) => void;
+  getEntry: (id: string) => HTMLButtonElement | null;
   onClose: () => void;
   onCreate?: () => void;
   onEntryClick: (frame: WorkspaceFrame) => void;
@@ -20,7 +21,8 @@ export function FeaturePanel({
   featureAnchorY,
   entryFocusIndex,
   featureAsideRef,
-  featureEntryRefs,
+  registerEntry,
+  getEntry,
   onClose,
   onCreate,
   onEntryClick,
@@ -42,7 +44,8 @@ export function FeaturePanel({
         if (!featureEntries.length) return;
         const delta = event.key === "ArrowDown" ? 1 : -1;
         const next = Math.max(0, Math.min(featureEntries.length - 1, entryFocusIndex + delta));
-        featureEntryRefs[featureEntries[next]?.id]?.focus();
+        const entry = featureEntries[next];
+        if (entry) getEntry(entry.id)?.focus();
         return;
       }
       if (event.key === "Escape") {
@@ -68,7 +71,7 @@ export function FeaturePanel({
         first.focus();
       }
     },
-    [featureEntries, entryFocusIndex, featureEntryRefs, onClose],
+    [featureEntries, entryFocusIndex, getEntry, onClose],
   );
 
   return (
@@ -102,7 +105,7 @@ export function FeaturePanel({
               <button
                 key={frame.id}
                 ref={(node) => {
-                  featureEntryRefs[frame.id] = node;
+                  registerEntry(frame.id, node);
                 }}
                 type="button"
                 className={index === entryFocusIndex ? "entry-selected" : ""}

@@ -1,18 +1,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { CSSProperties, RefCallback } from "react";
-import EditorJS, { type OutputData } from "@editorjs/editorjs";
-import Header from "@editorjs/header";
-import List from "@editorjs/list";
-import Quote from "@editorjs/quote";
-import Checklist from "@editorjs/checklist";
-import ImageTool from "@editorjs/image";
-import InlineCode from "@editorjs/inline-code";
-import CodeTool from "@editorjs/code";
-import LinkTool from "@editorjs/link";
-import Marker from "@editorjs/marker";
+import type EditorJS from "@editorjs/editorjs";
+import type { OutputData } from "@editorjs/editorjs";
 import type { WorkspaceFrame } from "../types";
 import type { TodoItem, TodoViewState } from "../todo";
 import { TodoFrame } from "./TodoFrame";
+import { POMODORO_DURATION_KEY } from "../constants";
+import { setStored } from "../storage";
 
 // Moves focus to the next focusable element after `current` in page order.
 function focusNextElement(current: HTMLElement) {
@@ -22,6 +16,52 @@ function focusNextElement(current: HTMLElement) {
     ),
   );
   focusables[focusables.indexOf(current) + 1]?.focus();
+}
+
+// Notes is hidden for now, so its editor and tools load only when a notes frame opens.
+function loadEditor() {
+  return Promise.all([
+    import("@editorjs/editorjs"),
+    import("@editorjs/header"),
+    import("@editorjs/list"),
+    import("@editorjs/quote"),
+    import("@editorjs/checklist"),
+    import("@editorjs/image"),
+    import("@editorjs/inline-code"),
+    import("@editorjs/code"),
+    import("@editorjs/link"),
+    import("@editorjs/marker"),
+  ]).then(([editor, header, list, quote, checklist, image, inlineCode, code, link, marker]) => ({
+    EditorJS: editor.default,
+    tools: {
+      header: header.default,
+      list: list.default,
+      quote: quote.default,
+      checklist: checklist.default,
+      image: {
+        class: image.default,
+        config: {
+          uploader: {
+            uploadByFile: async (file: File) =>
+              ({
+                success: 1,
+                file: {
+                  url: await new Promise<string>((resolve) => {
+                    const reader = new FileReader();
+                    reader.onload = () => resolve(String(reader.result));
+                    reader.readAsDataURL(file);
+                  }),
+                },
+              }) as const,
+          },
+        },
+      },
+      inlineCode: inlineCode.default,
+      code: code.default,
+      linkTool: link.default,
+      marker: marker.default,
+    },
+  }));
 }
 
 export function Mainframe({
@@ -71,71 +111,49 @@ export function Mainframe({
     const container = document.createElement("div");
     container.className = "note-editor-mount";
     host.appendChild(container);
-    let editor: EditorJS;
-    try {
-      editor = new EditorJS({
-        holder: container,
-        autofocus: true,
-        data: parsed?.blocks
-          ? parsed
-          : {
-              blocks: initialNote
-                .split("\n")
-                .filter(Boolean)
-                .map((text) => ({ type: "paragraph", data: { text } })),
-            },
-        tools: {
-          header: Header,
-          list: List,
-          quote: Quote,
-          checklist: Checklist,
-          image: {
-            class: ImageTool,
-            config: {
-              uploader: {
-                uploadByFile: async (file: File) =>
-                  ({
-                    success: 1,
-                    file: {
-                      url: await new Promise<string>((resolve) => {
-                        const reader = new FileReader();
-                        reader.onload = () => resolve(String(reader.result));
-                        reader.readAsDataURL(file);
-                      }),
-                    },
-                  }) as const,
+    let editor: EditorJS | undefined;
+    let cancelled = false;
+    loadEditor().then(({ EditorJS, tools }) => {
+      if (cancelled) return;
+      try {
+        editor = new EditorJS({
+          holder: container,
+          autofocus: true,
+          data: parsed?.blocks
+            ? parsed
+            : {
+                blocks: initialNote
+                  .split("\n")
+                  .filter(Boolean)
+                  .map((text) => ({ type: "paragraph", data: { text } })),
               },
-            },
+          tools,
+          onChange: async () => {
+            const instance = editorInstance.current;
+            if (!instance) return;
+            const output = await instance.save();
+            noteChangeRef.current?.(JSON.stringify(output));
           },
-          inlineCode: InlineCode,
-          code: CodeTool,
-          linkTool: LinkTool,
-          marker: Marker,
-        },
-        onChange: async () => {
-          const instance = editorInstance.current;
-          if (!instance) return;
-          const output = await instance.save();
-          noteChangeRef.current?.(JSON.stringify(output));
-        },
-      });
-    } catch (error) {
-      console.error("KEYFOCUS editor init failed", error);
-      return;
-    }
-    editorInstance.current = editor;
+        });
+        editorInstance.current = editor;
+      } catch (error) {
+        console.error("KEYFOCUS editor init failed", error);
+      }
+    });
     return () => {
-      editor.isReady.then(() => editor.destroy()).catch(() => undefined);
+      cancelled = true;
+      const finished = editor;
+      finished?.isReady.then(() => finished.destroy()).catch(() => undefined);
       editorInstance.current = null;
       container.remove();
     };
   }, [frame.id, frame.feature, initialNote]);
 
   const [pomodoroDuration, setPomodoroDuration] = useState(
-    () => Number(localStorage.getItem("focus-space-pomodoro-duration")) || 25,
+    () => Number(localStorage.getItem(POMODORO_DURATION_KEY)) || 25,
   );
   const [pomodoroSeconds, setPomodoroSeconds] = useState(
-    () => (Number(localStorage.getItem("focus-space-pomodoro-duration")) || 25) * 60,
+    () => (Number(localStorage.getItem(POMODORO_DURATION_KEY)) || 25) * 60,
   );
   const [pomodoroRunning, setPomodoroRunning] = useState(false);
   const startButton = useRef<HTMLButtonElement | null>(null);
@@ -169,7 +187,7 @@ export function Mainframe({
   }, [frame.feature, pomodoroRunning]);
 
   useEffect(() => {
-    localStorage.setItem("focus-space-pomodoro-duration", String(pomodoroDuration));
+    setStored(POMODORO_DURATION_KEY, String(pomodoroDuration));
   }, [pomodoroDuration]);
 
   const chooseTimer = useCallback((minutes: number) => {

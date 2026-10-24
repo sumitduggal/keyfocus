@@ -42,7 +42,7 @@ describe("loadMusicSettings", () => {
     expect(loadMusicSettings(fakeStorage({ [MUSIC_SETTINGS_KEY]: stored }))).toEqual({
       ...DEFAULT_MUSIC_SETTINGS,
       soundVolume: 1,
-      trackIndex: 0,
+      trackIndex: -1,
       trackVolume: 0,
     });
   });
@@ -73,6 +73,7 @@ describe("track navigation", () => {
   it("moves back and wraps to the end", () => {
     expect(previousTrackIndex(1, 3)).toBe(0);
     expect(previousTrackIndex(0, 3)).toBe(2);
+    expect(previousTrackIndex(-1, 3)).toBe(2);
   });
 
   it("stays at zero when there are no tracks", () => {

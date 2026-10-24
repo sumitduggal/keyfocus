@@ -9,6 +9,7 @@ import {
   selectTrack,
   setLoop,
   clearSounds,
+  deselectTrack,
   toggleSound,
   setSoundVolume,
   setTrackVolume,
@@ -137,7 +138,12 @@ export function NowPlaying() {
             <ol className="now-playing-tracks">
               {music.tracks.map((track, index) => (
                 <li key={track.file}>
-                  <button type="button" aria-current={index === music.trackIndex} className={index === music.trackIndex ? "is-selected" : ""} onClick={() => selectTrack(index)}>
+                  <button
+                    type="button"
+                    aria-current={index === music.trackIndex}
+                    className={index === music.trackIndex ? "is-selected" : ""}
+                    onClick={() => (index === music.trackIndex ? deselectTrack() : selectTrack(index))}
+                  >
                     {track.title}
                   </button>
                 </li>

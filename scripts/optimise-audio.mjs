@@ -2,13 +2,15 @@
 // Files already at or below the target bitrate are skipped, and a file is only replaced when the
 // new one is smaller. Needs ffmpeg and ffprobe on the PATH; without them it warns and does nothing.
 import { execFileSync } from "node:child_process";
-import { existsSync, readdirSync, renameSync, rmSync, statSync } from "node:fs";
+import { existsSync, mkdirSync, readdirSync, renameSync, rmSync, statSync } from "node:fs";
 import { join } from "node:path";
 
 const TARGETS = [
   { dir: "public/music", bitrate: 128, channels: 2 },
   { dir: "public/sounds", bitrate: 96, channels: 1 },
 ];
+// Previews are the opening seconds of each file. They play at once on a click while the full file loads.
+const PREVIEW_SECONDS = 10;
 const dryRun = process.argv.includes("--dry-run");
 
 function hasTool(name) {
@@ -32,11 +34,17 @@ function bitrateOf(file) {
 
 function reencode({ file, bitrate, channels }) {
   const temp = `${file}.tmp.mp3`;
-  execFileSync(
-    "ffmpeg",
-    ["-v", "error", "-y", "-i", file, "-vn", "-ac", String(channels), "-b:a", `${bitrate}k`, "-codec:a", "libmp3lame", temp],
-    { stdio: "inherit" },
-  );
+  try {
+    execFileSync(
+      "ffmpeg",
+      ["-v", "error", "-y", "-i", file, "-vn", "-ac", String(channels), "-b:a", `${bitrate}k`, "-codec:a", "libmp3lame", temp],
+      { stdio: "inherit" },
+    );
+  } catch (error) {
+    // A half-written temp file would be listed as a track, so it is removed.
+    rmSync(temp, { force: true });
+    throw error;
+  }
   return temp;
 }
 
@@ -70,3 +78,19 @@ for (const { dir, bitrate, channels } of TARGETS) {
   }
 }
 if (!dryRun) console.log(`optimise-audio: saved ${(saved / 1e6).toFixed(1)} MB`);
+
+if (!dryRun) {
+  for (const { dir, channels } of TARGETS) {
+    if (!existsSync(dir)) continue;
+    const out = join("public/previews", dir.slice("public/".length));
+    mkdirSync(out, { recursive: true });
+    for (const name of readdirSync(dir).filter((f) => f.toLowerCase().endsWith(".mp3"))) {
+      execFileSync(
+        "ffmpeg",
+        ["-v", "error", "-y", "-i", join(dir, name), "-t", String(PREVIEW_SECONDS), "-vn", "-ac", String(channels), "-b:a", "64k", "-codec:a", "libmp3lame", join(out, name)],
+        { stdio: "inherit" },
+      );
+    }
+  }
+  console.log(`optimise-audio: wrote ${PREVIEW_SECONDS}s previews to public/previews`);
+}

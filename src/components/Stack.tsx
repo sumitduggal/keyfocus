@@ -6,7 +6,7 @@ import { featureMeta } from "../constants";
 interface StackProps {
   stackedFrames: WorkspaceFrame[];
   stackFocusIndex: number;
-  stackRefs: Record<string, HTMLElement | null>;
+  registerStack: (id: string, node: HTMLElement | null) => void;
   reduceMotion: boolean;
   onSelect: (index: number) => void;
   onPromote: (index: number) => void;
@@ -15,7 +15,7 @@ interface StackProps {
 export function Stack({
   stackedFrames,
   stackFocusIndex,
-  stackRefs,
+  registerStack,
   reduceMotion,
   onSelect,
   onPromote,
@@ -58,7 +58,7 @@ export function Stack({
         >
           <div
             ref={(node) => {
-              stackRefs[frame.id] = node;
+              registerStack(frame.id, node);
             }}
             className="stack-frame"
             aria-label={`Frame: ${frame.title}`}

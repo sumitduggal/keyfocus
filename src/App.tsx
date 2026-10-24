@@ -2,7 +2,16 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { KeyboardEvent } from "react";
 import { useReducedMotion } from "motion/react";
 import type { Command, Feature, Side, Theme, WorkspaceFrame } from "./types";
-import { featureMeta, commandNames, initialFrame, visibleFeatures } from "./constants";
+import {
+  FRAMES_KEY,
+  NOTE_BODIES_KEY,
+  THEME_KEY,
+  commandNames,
+  featureMeta,
+  initialFrame,
+  visibleFeatures,
+} from "./constants";
+import { setStored } from "./storage";
 import { Mainframe } from "./components/Mainframe";
 import { Stack } from "./components/Stack";
 import { Dock } from "./components/Dock";
@@ -75,7 +84,7 @@ function HudClock() {
 
 function App() {
   const [frames, setFrames] = useState<WorkspaceFrame[]>(() => {
-    const saved = localStorage.getItem("focus-space-frames");
+    const saved = localStorage.getItem(FRAMES_KEY);
     if (!saved) return [initialFrame];
     return (JSON.parse(saved) as Partial<WorkspaceFrame>[]).map((frame) => ({
       ...initialFrame,
@@ -88,7 +97,7 @@ function App() {
   const [focusedSide, setFocusedSide] = useState<Side>("main");
   const [withinSide, setWithinSide] = useState(false);
   const [theme, setTheme] = useState<Theme>(
-    () => (localStorage.getItem("focus-space-theme") as Theme | null) ?? "dark",
+    () => (localStorage.getItem(THEME_KEY) as Theme | null) ?? "dark",
   );
   const [menuOpen, setMenuOpen] = useState(false);
   const [query, setQuery] = useState("");
@@ -105,7 +114,7 @@ function App() {
   const [featureAnchorY, setFeatureAnchorY] = useState<number | null>(null);
   const [entryFocusIndex, setEntryFocusIndex] = useState(0);
   const [noteBodies, setNoteBodies] = useState<Record<string, string>>(() => {
-    const saved = localStorage.getItem("focus-space-note-bodies");
+    const saved = localStorage.getItem(NOTE_BODIES_KEY);
     return saved
       ? (JSON.parse(saved) as Record<string, string>)
       : { main: "# Notes\n\nStart writing in Markdown…\n\n- [ ] Capture the next idea" };
@@ -134,6 +143,17 @@ function App() {
   const actionInputRef = useRef<HTMLInputElement | null>(null);
   const featureAsideRef = useRef<HTMLElement | null>(null);
   const featureEntryRefs = useRef<Record<string, HTMLButtonElement | null>>({});
+  // Ref callbacks register buttons through these, so no render reads a ref's current value.
+  const registerItem = useCallback((id: string, node: HTMLButtonElement | null) => {
+    rightItemRefs.current[id] = node;
+  }, []);
+  const registerEntry = useCallback((id: string, node: HTMLButtonElement | null) => {
+    featureEntryRefs.current[id] = node;
+  }, []);
+  const registerStack = useCallback((id: string, node: HTMLElement | null) => {
+    stackRefs.current[id] = node;
+  }, []);
+  const getEntry = useCallback((id: string) => featureEntryRefs.current[id] ?? null, []);
   const reduceMotion = useReducedMotion() ?? false;
 
   const activeFrame = frames.find((frame) => frame.id === activeFrameId) ?? frames[0];
@@ -243,6 +263,7 @@ function App() {
 
   const openFeaturePanel = (feature: Feature) => {
     setFeaturePanel(feature);
+    setEntryFocusIndex(0);
     const featureButton = rightItemRefs.current[`feature-${feature}`];
     if (featureButton) {
       setFeatureAnchorY(
@@ -489,10 +510,10 @@ function App() {
     return () => window.clearTimeout(timer);
   }, [undo]);
   useEffect(() => {
-    localStorage.setItem("focus-space-frames", JSON.stringify(frames));
+    setStored(FRAMES_KEY, JSON.stringify(frames));
   }, [frames]);
   useEffect(() => {
-    localStorage.setItem("focus-space-note-bodies", JSON.stringify(noteBodies));
+    setStored(NOTE_BODIES_KEY, JSON.stringify(noteBodies));
   }, [noteBodies]);
   useEffect(() => {
     saveTodoLists(localStorage, todoLists);
@@ -505,7 +526,7 @@ function App() {
   }, [trash]);
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
-    localStorage.setItem("focus-space-theme", theme);
+    setStored(THEME_KEY, theme);
   }, [theme]);
   useEffect(() => {
     if (focusedSide !== "left" || !withinSide || stackFocusIndex < 0) return;
@@ -521,7 +542,6 @@ function App() {
   }, [activeFrameId, focusActiveFrame, focusedSide, frames, menuOpen, withinSide]);
   useEffect(() => {
     if (!featurePanel) return;
-    setEntryFocusIndex(0);
     const firstEntry = featureEntries[0] ? featureEntryRefs.current[featureEntries[0].id] : null;
     if (firstEntry) firstEntry.focus();
     else featureAsideRef.current?.focus();
@@ -759,15 +779,10 @@ function App() {
             aria-label="Latest frames"
             tabIndex={0}
           >
-            <div className="side-head">
-              <p className="side-label">Frame stack</p>
-              <span className="side-count">{pad(stackedFrames.length)}</span>
-            </div>
-            <p className="side-sub">Recent context // newest first</p>
             <Stack
               stackedFrames={stackedFrames}
               stackFocusIndex={stackFocusIndex}
-              stackRefs={stackRefs.current}
+              registerStack={registerStack}
               reduceMotion={reduceMotion}
               onSelect={(index) => {
                 setFocusedSide("left");
@@ -856,7 +871,7 @@ function App() {
             tabIndex={0}
           >
             <Dock
-              rightItemRefs={rightItemRefs.current}
+              registerItem={registerItem}
               profileRef={profileRef}
               framesCountByFeature={framesCountByFeature}
               todoOpenCount={todoOpenCount}
@@ -879,7 +894,8 @@ function App() {
               featureAnchorY={featureAnchorY}
               entryFocusIndex={entryFocusIndex}
               featureAsideRef={featureAsideRef}
-              featureEntryRefs={featureEntryRefs.current}
+              registerEntry={registerEntry}
+              getEntry={getEntry}
               onClose={closeFeaturePanel}
               onCreate={() => {
                 runCommand(featurePanel);

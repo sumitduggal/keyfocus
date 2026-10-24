@@ -4,7 +4,7 @@ import { NowPlaying } from "./NowPlaying";
 import "../components.css";
 
 interface DockProps {
-  rightItemRefs: Record<string, HTMLButtonElement | null>;
+  registerItem: (id: string, node: HTMLButtonElement | null) => void;
   profileRef: React.RefObject<HTMLButtonElement | null>;
   framesCountByFeature: Record<Feature, number>;
   todoOpenCount: number;
@@ -17,7 +17,7 @@ interface DockProps {
 }
 
 export function Dock({
-  rightItemRefs,
+  registerItem,
   profileRef,
   framesCountByFeature,
   todoOpenCount,
@@ -32,14 +32,10 @@ export function Dock({
 
   return (
     <div className="dock">
-      <div className="dock-head">
-        <span>Control</span>
-      </div>
-
       <button
         ref={(node) => {
           profileRef.current = node;
-          rightItemRefs.profile = node;
+          registerItem("profile", node);
         }}
         type="button"
         className="dock-profile"
@@ -67,7 +63,7 @@ export function Dock({
             <button
               key={feature}
               ref={(node) => {
-                rightItemRefs[`feature-${feature}`] = node;
+                registerItem(`feature-${feature}`, node);
               }}
               type="button"
               className={`dock-item ${feature === activeFeature ? "is-active" : ""}`}
@@ -112,7 +108,7 @@ export function Dock({
 
         <button
           ref={(node) => {
-            rightItemRefs.settings = node;
+            registerItem("settings", node);
           }}
           type="button"
           className="dock-item is-quiet"
@@ -136,7 +132,7 @@ export function Dock({
 
         <button
           ref={(node) => {
-            rightItemRefs.logout = node;
+            registerItem("logout", node);
           }}
           type="button"
           className="dock-item is-quiet"

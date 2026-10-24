@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "optimize:audio": "node scripts/optimise-audio.mjs",
+    "predev": "node scripts/optimise-audio.mjs",
     "build": "node scripts/optimise-audio.mjs && tsc -b && vite build",
     "lint": "oxlint",
     "preview": "vite preview",

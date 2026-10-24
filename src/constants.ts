@@ -77,3 +77,9 @@ export const initialFrame: WorkspaceFrame = {
   id: "main",
   feature: "pomodoro",
 };
+
+// Keys for the app's own saved state. Feature modules keep theirs next to their code.
+export const FRAMES_KEY = "focus-space-frames";
+export const NOTE_BODIES_KEY = "focus-space-note-bodies";
+export const THEME_KEY = "focus-space-theme";
+export const POMODORO_DURATION_KEY = "focus-space-pomodoro-duration";
