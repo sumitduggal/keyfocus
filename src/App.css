@@ -763,3 +763,15 @@
     animation: none;
   }
 }
+
+/* The active frame shows its focus box: soft when its region is selected, strong when inside it. */
+.main-side.side-focused .workspace-frame {
+  outline: 1px solid var(--accent-soft);
+  outline-offset: 3px;
+}
+
+.main-side.within-focused .workspace-frame {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+  box-shadow: var(--shadow-card-active), var(--glow);
+}

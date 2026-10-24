@@ -142,6 +142,13 @@ function App() {
   const profileRef = useRef<HTMLButtonElement | null>(null);
   const rightItemRefs = useRef<Record<string, HTMLButtonElement | null>>({});
   const actionInputRef = useRef<HTMLInputElement | null>(null);
+  // Where Escape came from, so Escape in the command bar can go back; and a flag so that
+  // focusing the bar from Escape does not open its menu.
+  const returnTo = useRef<{ side: Side; within: boolean }>({ side: "main", within: false });
+  const quietBarFocus = useRef(false);
+  const keepBarFocus = useRef(false);
+  // While the command bar has focus no region should look active.
+  const [barActive, setBarActive] = useState(false);
   const featureAsideRef = useRef<HTMLElement | null>(null);
   const featureEntryRefs = useRef<Record<string, HTMLButtonElement | null>>({});
   // Ref callbacks register buttons through these, so no render reads a ref's current value.
@@ -539,6 +546,10 @@ function App() {
     else sideRefs.current[focusedSide]?.focus();
   }, [focusActiveFrame, focusedSide, withinSide]);
   useEffect(() => {
+    if (keepBarFocus.current) {
+      keepBarFocus.current = false;
+      return;
+    }
     if (focusedSide === "main" && withinSide && !menuOpen) focusActiveFrame();
   }, [activeFrameId, focusActiveFrame, focusedSide, frames, menuOpen, withinSide]);
   useEffect(() => {
@@ -549,9 +560,25 @@ function App() {
   }, [featureEntries, featurePanel]);
 
   useEffect(() => {
+    const track = (event: FocusEvent) => setBarActive(event.target === actionInputRef.current);
+    document.addEventListener("focusin", track);
+    return () => document.removeEventListener("focusin", track);
+  }, []);
+
+  useEffect(() => {
+    const rightItemId = (index: number) => {
+      const count = visibleFeatures.length + 3;
+      if (index === 0) return "profile";
+      if (index === count - 1) return "logout";
+      if (index === count - 2) return "settings";
+      return `feature-${visibleFeatures[index - 1]}`;
+    };
     const navigate = (event: globalThis.KeyboardEvent) => {
       if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
         event.preventDefault();
+        if (document.activeElement !== actionInputRef.current) {
+          returnTo.current = { side: focusedSide, within: withinSide };
+        }
         setFocusedSide("main");
         setWithinSide(true);
         setMenuOpen(true);
@@ -577,15 +604,55 @@ function App() {
         return;
       }
       if (event.key === "Escape") {
+        // Popups stop Escape themselves, so reaching here means nothing was left to close.
         event.preventDefault();
+        if (event.target === actionInputRef.current) {
+          setMenuOpen(false);
+          setSearchMode(false);
+          if (menuOpen) {
+            keepBarFocus.current = true;
+            return;
+          }
+          const { side, within } = returnTo.current;
+          setFocusedSide(side);
+          setWithinSide(within);
+          if (!within) sideRefs.current[side]?.focus();
+          else if (side === "main") focusActiveFrame();
+          else if (side === "left") {
+            (stackRefs.current[stackedFrames[stackFocusIndex]?.id] ?? sideRefs.current.left)?.focus();
+          } else rightItemRefs.current[rightItemId(rightFocusIndex)]?.focus();
+          return;
+        }
+        returnTo.current = { side: focusedSide, within: withinSide };
         setMenuOpen(false);
-        setStackFocusIndex(-1);
-        setFocusedSide("main");
-        setWithinSide(false);
-        sideRefs.current.main?.focus();
+        quietBarFocus.current = true;
+        actionInputRef.current?.focus();
+        quietBarFocus.current = false;
         return;
       }
       if (featurePanel) return;
+      // Tab stays inside the region being worked in; Alt+arrows and Cmd+K leave it.
+      if (
+        event.key === "Tab" &&
+        withinSide &&
+        !menuOpen &&
+        !event.defaultPrevented &&
+        event.target !== actionInputRef.current
+      ) {
+        const region = sideRefs.current[focusedSide];
+        const focusable = Array.from(
+          region?.querySelectorAll<HTMLElement>(
+            'button:not([disabled]), input:not([disabled]), textarea:not([disabled]), select:not([disabled]), a[href], [contenteditable="true"], [tabindex]:not([tabindex="-1"])',
+          ) ?? [],
+        ).filter((element) => element.offsetParent !== null);
+        event.preventDefault();
+        if (!focusable.length) return;
+        const target = event.target as Node;
+        const index = focusable.findIndex((element) => element === target || element.contains(target));
+        const step = event.shiftKey ? -1 : 1;
+        focusable[index === -1 ? 0 : (index + step + focusable.length) % focusable.length].focus();
+        return;
+      }
       if (menuOpen || event.target instanceof HTMLInputElement) return;
       // Option+1-9 bring that stacked frame into the main side. Reads the physical key, because
       // Option changes the typed character on macOS.
@@ -661,15 +728,7 @@ function App() {
         const delta = event.key === "ArrowUp" ? -1 : 1;
         const next = Math.max(0, Math.min(count - 1, rightFocusIndex + delta));
         setRightFocusIndex(next);
-        const id =
-          next === 0
-            ? "profile"
-            : next === count - 1
-              ? "logout"
-              : next === count - 2
-                ? "settings"
-                : `feature-${visibleFeatures[next - 1]}`;
-        rightItemRefs.current[id]?.focus();
+        rightItemRefs.current[rightItemId(next)]?.focus();
         return;
       }
       if (event.key !== "Enter") return;
@@ -714,6 +773,7 @@ function App() {
     activeFrame,
     activeFrameId,
     deleteFrame,
+    focusActiveFrame,
     featurePanel,
     focusedSide,
     menuOpen,
@@ -771,8 +831,8 @@ function App() {
             ref={(node) => {
               sideRefs.current.left = node;
             }}
-            className={`side-region left-side ${focusedSide === "left" ? "side-focused" : ""} ${
-              focusedSide === "left" && withinSide ? "within-focused" : ""
+            className={`side-region left-side ${focusedSide === "left" && !barActive ? "side-focused" : ""} ${
+              focusedSide === "left" && withinSide && !barActive ? "within-focused" : ""
             }`}
             aria-label="Latest frames"
             tabIndex={0}
@@ -813,8 +873,8 @@ function App() {
               setFocusedSide("main");
               setWithinSide(true);
             }}
-            className={`side-region main-side ${focusedSide === "main" ? "side-focused" : ""} ${
-              focusedSide === "main" && withinSide ? "within-focused" : ""
+            className={`side-region main-side ${focusedSide === "main" && !barActive ? "side-focused" : ""} ${
+              focusedSide === "main" && withinSide && !barActive ? "within-focused" : ""
             }`}
             aria-label="Main frame"
             tabIndex={0}
@@ -862,8 +922,8 @@ function App() {
             ref={(node) => {
               sideRefs.current.right = node;
             }}
-            className={`side-region right-side ${focusedSide === "right" ? "side-focused" : ""} ${
-              focusedSide === "right" && withinSide ? "within-focused" : ""
+            className={`side-region right-side ${focusedSide === "right" && !barActive ? "side-focused" : ""} ${
+              focusedSide === "right" && withinSide && !barActive ? "within-focused" : ""
             }`}
             aria-label="Settings and utilities"
             tabIndex={0}
@@ -945,6 +1005,7 @@ function App() {
               setMenuOpen(true);
             }}
             onFocus={() => {
+              if (quietBarFocus.current) return;
               setMenuFocusIndex(0);
               setMenuOpen(true);
             }}

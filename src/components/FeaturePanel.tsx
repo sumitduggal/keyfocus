@@ -50,6 +50,8 @@ export function FeaturePanel({
       }
       if (event.key === "Escape") {
         event.preventDefault();
+        // Close the panel without also sending the global Escape to the command bar.
+        event.stopPropagation();
         onClose();
         return;
       }
