@@ -5,6 +5,8 @@ export const BUILT_IN_SOUNDS = [
   { id: "rain", label: "Rain", file: "rain.mp3" },
   { id: "thunder", label: "Thunder", file: "thunder.mp3" },
   { id: "chirping", label: "Chirping", file: "chirping.mp3" },
+  { id: "fire", label: "Fire", file: "Fire-sound.mp3" },
+  { id: "pigeon", label: "Pigeon", file: "real-pigeon-cooing-sound-effect.mp3" },
 ] as const;
 
 export type SoundId = (typeof BUILT_IN_SOUNDS)[number]["id"];

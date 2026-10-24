@@ -114,7 +114,11 @@ function upgrade(preview: HTMLAudioElement, src: string, isCurrent: () => boolea
 }
 
 function startSound(sound: SoundId) {
-  if (soundAudios.has(sound)) return;
+  const existing = soundAudios.get(sound);
+  if (existing) {
+    playAudio(existing);
+    return;
+  }
   const file = soundFile(sound);
   const preview = new Audio(`/previews/sounds/${file}`);
   preview.loop = true;
@@ -172,8 +176,9 @@ function startTrack() {
   if (audio) playAudio(audio);
 }
 
+// Sounds are paused, not dropped, so playing again resumes every selected one without reloading.
 function pauseAll() {
-  stopAllSounds();
+  soundAudios.forEach((audio) => audio.pause());
   trackAudio?.pause();
   emit({ playing: false });
 }

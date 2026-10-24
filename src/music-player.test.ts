@@ -93,3 +93,20 @@ describe("music player", () => {
     expect(FakeAudio.instances).toHaveLength(0);
   });
 });
+
+describe("pausing and playing sounds", () => {
+  it("resumes every selected sound after a pause", async () => {
+    const player = await freshPlayer();
+    player.toggleSound("rain");
+    player.toggleSound("thunder");
+    player.toggleSound("chirping");
+    const sounds = FakeAudio.instances.filter((audio) => audio.src.includes("/previews/sounds/"));
+    expect(sounds).toHaveLength(3);
+
+    player.pause();
+    expect(sounds.every((audio) => audio.paused)).toBe(true);
+
+    player.play();
+    expect(sounds.every((audio) => !audio.paused)).toBe(true);
+  });
+});
