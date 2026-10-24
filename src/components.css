@@ -2165,8 +2165,8 @@
 
 .now-playing-row button {
   display: grid;
-  flex: 0 0 auto;
-  width: 28px;
+  flex: 1 1 0;
+  min-width: 0;
   height: 28px;
   place-items: center;
   border: 1px solid var(--border-strong);
@@ -2321,4 +2321,82 @@
   color: var(--text-muted);
   font: 14px/1 var(--font-mono-stack);
   cursor: pointer;
+}
+
+/* Two-level player: the track name on top, the controls below. The name scrolls like a marquee while playing. */
+.now-playing-marquee {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.now-playing-marquee:focus-visible {
+  outline: 1px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.now-playing-track {
+  display: inline-flex;
+  color: var(--text);
+  font: 10px/1.2 var(--font-mono-stack);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.now-playing-track span {
+  flex: 0 0 auto;
+  padding-right: 3em;
+}
+
+.now-playing-track.is-scrolling {
+  animation: now-playing-marquee 12s linear infinite;
+}
+
+/* A soft highlight sweeps across the title while playing, like the processing shimmer in Claude Code. */
+.now-playing-track.is-playing span {
+  background-image: linear-gradient(
+    90deg,
+    var(--text-muted) 0%,
+    var(--text-muted) 40%,
+    var(--text) 50%,
+    var(--text-muted) 60%,
+    var(--text-muted) 100%
+  );
+  background-size: 250% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: now-playing-shimmer 2.4s linear infinite;
+}
+
+@keyframes now-playing-shimmer {
+  from {
+    background-position: 100% 0;
+  }
+  to {
+    background-position: 0 0;
+  }
+}
+
+.now-playing-track.is-scrolling:hover {
+  animation-play-state: paused;
+}
+
+@keyframes now-playing-marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
 }

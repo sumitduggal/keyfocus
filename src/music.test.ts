@@ -4,7 +4,6 @@ import {
   MUSIC_SETTINGS_KEY,
   loadMusicSettings,
   nextTrackIndex,
-  parseTrackList,
   previousTrackIndex,
   saveMusicSettings,
 } from "./music";
@@ -28,9 +27,9 @@ describe("loadMusicSettings", () => {
   });
 
   it("keeps valid saved values, except the sound layer", () => {
-    const stored = JSON.stringify({ sound: "rain", soundVolume: 0.4, trackIndex: 2, trackVolume: 0.7, loop: true });
+    const stored = JSON.stringify({ sounds: ["rain"], soundVolume: 0.4, trackIndex: 2, trackVolume: 0.7, loop: true });
     expect(loadMusicSettings(fakeStorage({ [MUSIC_SETTINGS_KEY]: stored }))).toEqual({
-      sound: null,
+      sounds: [],
       soundVolume: 0.4,
       trackIndex: 2,
       trackVolume: 0.7,
@@ -59,29 +58,9 @@ describe("saveMusicSettings", () => {
 
   it("never remembers the built-in sound layer", () => {
     const storage = fakeStorage();
-    saveMusicSettings(storage, { ...DEFAULT_MUSIC_SETTINGS, sound: "rain" });
-    expect(loadMusicSettings(storage).sound).toBeNull();
-    expect(JSON.parse(storage.read(MUSIC_SETTINGS_KEY)!).sound).toBeNull();
-  });
-});
-
-describe("parseTrackList", () => {
-  it("reads titles and files in order", () => {
-    const json = { tracks: [{ file: "a.mp3", title: "Deep work mix" }, { file: "b.mp3", title: "Ambient room" }] };
-    expect(parseTrackList(json)).toEqual([
-      { file: "a.mp3", title: "Deep work mix" },
-      { file: "b.mp3", title: "Ambient room" },
-    ]);
-  });
-
-  it("drops entries without a file or title", () => {
-    const json = { tracks: [{ file: "a.mp3" }, { title: "No file" }, { file: "b.mp3", title: "Kept" }] };
-    expect(parseTrackList(json)).toEqual([{ file: "b.mp3", title: "Kept" }]);
-  });
-
-  it("returns an empty list for anything that is not a track list", () => {
-    expect(parseTrackList(null)).toEqual([]);
-    expect(parseTrackList({ tracks: "nope" })).toEqual([]);
+    saveMusicSettings(storage, { ...DEFAULT_MUSIC_SETTINGS, sounds: ["rain", "thunder"] });
+    expect(loadMusicSettings(storage).sounds).toEqual([]);
+    expect(JSON.parse(storage.read(MUSIC_SETTINGS_KEY)!).sounds).toEqual([]);
   });
 });
 

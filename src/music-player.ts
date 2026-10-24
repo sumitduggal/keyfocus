@@ -1,8 +1,9 @@
+import musicTracks from "virtual:music-tracks";
 import {
+  BUILT_IN_SOUNDS,
   DEFAULT_MUSIC_SETTINGS,
   loadMusicSettings,
   nextTrackIndex,
-  parseTrackList,
   previousTrackIndex,
   saveMusicSettings,
   type MusicSettings,
@@ -13,7 +14,6 @@ import {
 export interface PlayerState extends MusicSettings {
   tracks: Track[];
   playing: boolean;
-  loadError: boolean;
 }
 
 // One player for the whole app, so audio keeps playing when the person switches frames.
@@ -21,19 +21,18 @@ let state: PlayerState = {
   ...DEFAULT_MUSIC_SETTINGS,
   tracks: [],
   playing: false,
-  loadError: false,
 };
 const listeners = new Set<() => void>();
 let started = false;
 
-let context: AudioContext | null = null;
-let soundNodes: { source: AudioBufferSourceNode; gain: GainNode } | null = null;
+// One looping audio element per selected built-in sound, so several can play together.
+const soundAudios = new Map<SoundId, HTMLAudioElement>();
 let trackAudio: HTMLAudioElement | null = null;
 
 function emit(next: Partial<PlayerState>) {
   state = { ...state, ...next };
   saveMusicSettings(localStorage, {
-    sound: state.sound,
+    sounds: state.sounds,
     soundVolume: state.soundVolume,
     trackIndex: state.trackIndex,
     trackVolume: state.trackVolume,
@@ -55,77 +54,34 @@ export function getMusicState(): PlayerState {
 export function initMusic(): void {
   if (started) return;
   started = true;
-  state = { ...state, ...loadMusicSettings(localStorage) };
-  fetch("/music/tracks.json")
-    .then((response) => (response.ok ? response.json() : Promise.reject(new Error("missing"))))
-    .then((json: unknown) => {
-      const tracks = parseTrackList(json);
-      trackIndexClamp(tracks.length);
-      emit({ tracks, loadError: false });
-    })
-    .catch(() => emit({ tracks: [], loadError: true }));
+  const tracks: Track[] = musicTracks;
+  const saved = loadMusicSettings(localStorage);
+  const trackIndex = saved.trackIndex < tracks.length ? saved.trackIndex : 0;
+  state = { ...state, ...saved, tracks, trackIndex };
+  emit({});
 }
 
-function trackIndexClamp(count: number) {
-  if (state.trackIndex >= count) state = { ...state, trackIndex: 0 };
+// Built-in sounds are audio files in public/sounds, looped under a track.
+function soundFile(sound: SoundId): string {
+  return BUILT_IN_SOUNDS.find((entry) => entry.id === sound)?.file ?? "";
 }
 
-function audioContext(): AudioContext {
-  if (!context) context = new AudioContext();
-  return context;
+function startSound(sound: SoundId) {
+  if (soundAudios.has(sound)) return;
+  const audio = new Audio(`/sounds/${soundFile(sound)}`);
+  audio.loop = true;
+  audio.volume = state.soundVolume;
+  soundAudios.set(sound, audio);
+  audio.play().catch(() => emit({ playing: false }));
 }
 
-// Built-in sounds are generated from white noise, shaped by filters.
-function makeNoise(ctx: AudioContext, sound: SoundId): { source: AudioBufferSourceNode; output: AudioNode } {
-  const length = ctx.sampleRate * 4;
-  const buffer = ctx.createBuffer(1, length, ctx.sampleRate);
-  const data = buffer.getChannelData(0);
-  let last = 0;
-  for (let i = 0; i < length; i++) {
-    const white = Math.random() * 2 - 1;
-    // Brown noise is a running sum of white noise.
-    last = (last + 0.02 * white) / 1.02;
-    data[i] = sound === "brown" ? last * 3.5 : white * 0.5;
-  }
-  const source = ctx.createBufferSource();
-  source.buffer = buffer;
-  source.loop = true;
-
-  const filter = ctx.createBiquadFilter();
-  if (sound === "rain") {
-    filter.type = "bandpass";
-    filter.frequency.value = 1800;
-    filter.Q.value = 0.4;
-  } else if (sound === "cafe") {
-    filter.type = "bandpass";
-    filter.frequency.value = 600;
-    filter.Q.value = 0.7;
-  } else {
-    filter.type = "lowpass";
-    filter.frequency.value = sound === "brown" ? 400 : 12000;
-  }
-  source.connect(filter);
-  source.start();
-  return { source, output: filter };
+function stopSound(sound: SoundId) {
+  soundAudios.get(sound)?.pause();
+  soundAudios.delete(sound);
 }
 
-function startSound() {
-  stopSound();
-  if (!state.sound) return;
-  const ctx = audioContext();
-  const { source, output } = makeNoise(ctx, state.sound);
-  const gain = ctx.createGain();
-  gain.gain.value = state.soundVolume;
-  output.connect(gain).connect(ctx.destination);
-  soundNodes = { source, gain };
-}
-
-function stopSound() {
-  if (!soundNodes) return;
-  soundNodes.source.stop();
-  soundNodes.source.disconnect();
-  soundNodes.gain.disconnect();
-  soundNodes = null;
+function stopAllSounds() {
+  [...soundAudios.keys()].forEach(stopSound);
 }
 
 function currentTrackAudio(): HTMLAudioElement | null {
@@ -143,14 +99,14 @@ function currentTrackAudio(): HTMLAudioElement | null {
 }
 
 // With loop on, the browser repeats the track. Otherwise play the next one, stopping after the last.
+// Moving on by itself keeps the selected sounds; only choosing a track stops them.
 function onTrackEnded() {
   if (state.loop) return;
-  const next = nextTrackIndex(state.trackIndex, state.tracks.length);
-  if (next === 0 && state.trackIndex === state.tracks.length - 1) {
+  if (state.trackIndex === state.tracks.length - 1) {
     pauseAll();
     return;
   }
-  selectTrack(next);
+  moveToTrack(nextTrackIndex(state.trackIndex, state.tracks.length));
 }
 
 function startTrack() {
@@ -159,15 +115,13 @@ function startTrack() {
 }
 
 function pauseAll() {
-  stopSound();
+  stopAllSounds();
   trackAudio?.pause();
   emit({ playing: false });
 }
 
 export function play(): void {
-  const ctx = audioContext();
-  void ctx.resume();
-  if (state.sound) startSound();
+  state.sounds.forEach(startSound);
   startTrack();
   emit({ playing: true });
 }
@@ -181,17 +135,28 @@ export function togglePlaying(): void {
   else play();
 }
 
-export function setSound(sound: SoundId | null): void {
-  emit({ sound });
-  if (state.playing) {
-    stopSound();
-    if (sound) startSound();
+// Adds or removes one built-in sound from the mix. Sounds are layered, so several can be on.
+export function toggleSound(sound: SoundId): void {
+  const selected = state.sounds.includes(sound);
+  const sounds = selected ? state.sounds.filter((id) => id !== sound) : [...state.sounds, sound];
+  emit({ sounds });
+  if (selected) {
+    stopSound(sound);
+    return;
   }
+  // Choosing a sound starts playing, as pressing play would.
+  if (state.playing) startSound(sound);
+  else play();
+}
+
+export function clearSounds(): void {
+  stopAllSounds();
+  emit({ sounds: [] });
 }
 
 export function setSoundVolume(volume: number): void {
   emit({ soundVolume: volume });
-  if (soundNodes) soundNodes.gain.gain.value = volume;
+  soundAudios.forEach((audio) => (audio.volume = volume));
 }
 
 export function setTrackVolume(volume: number): void {
@@ -204,8 +169,8 @@ export function setLoop(loop: boolean): void {
   if (trackAudio) trackAudio.loop = loop;
 }
 
-// Switches track. Keeps playing if it was playing.
-export function selectTrack(index: number): void {
+// Moves to another track and keeps playing if it was playing. Sounds are not touched.
+function moveToTrack(index: number): void {
   if (state.tracks.length === 0) return;
   const next = Math.min(Math.max(index, 0), state.tracks.length - 1);
   trackAudio?.pause();
@@ -213,10 +178,23 @@ export function selectTrack(index: number): void {
   if (state.playing) startTrack();
 }
 
+// Choosing a track stops the built-in sounds, so the chosen track plays on its own.
+function chooseTrack(index: number): void {
+  clearSounds();
+  moveToTrack(index);
+}
+
+// Picking a track from the list also starts it, as the person expects from a click.
+export function selectTrack(index: number): void {
+  if (state.tracks.length === 0) return;
+  chooseTrack(index);
+  play();
+}
+
 export function nextTrack(): void {
-  selectTrack(nextTrackIndex(state.trackIndex, state.tracks.length));
+  chooseTrack(nextTrackIndex(state.trackIndex, state.tracks.length));
 }
 
 export function previousTrack(): void {
-  selectTrack(previousTrackIndex(state.trackIndex, state.tracks.length));
+  chooseTrack(previousTrackIndex(state.trackIndex, state.tracks.length));
 }
