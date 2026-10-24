@@ -1364,6 +1364,65 @@
   }
 }
 
+/* ===== SETTINGS PANEL ===== */
+.settings-row {
+  display: grid;
+  gap: 8px;
+  padding: 12px 2px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text-muted);
+}
+
+.settings-row:last-child {
+  border-bottom: 0;
+}
+
+.settings-row b {
+  display: block;
+  color: var(--text);
+  font-size: 13px;
+}
+
+.settings-row small {
+  display: block;
+  margin-top: 2px;
+  color: var(--text-faint);
+  font: 10px/1.4 var(--font-mono-stack);
+}
+
+.settings-controls {
+  display: flex;
+  gap: 6px;
+}
+
+.settings-row button,
+.settings-row select {
+  padding: 6px 10px;
+  border: 1px solid var(--border-strong);
+  border-radius: 4px;
+  background: var(--surface-2);
+  color: var(--text);
+  font: 12px/1.2 inherit;
+  cursor: pointer;
+}
+
+.settings-controls select {
+  flex: 1;
+  min-width: 0;
+}
+
+.settings-row button:hover,
+.settings-row button:focus-visible,
+.settings-row select:focus-visible {
+  border-color: var(--accent);
+  outline: 0;
+}
+
+.settings-row input[type="range"] {
+  width: 100%;
+  accent-color: var(--accent);
+}
+
 /* ===== RESPONSIVE COMPONENT ADJUSTMENTS ===== */
 @media (max-width: 1280px) {
   .feature-aside {

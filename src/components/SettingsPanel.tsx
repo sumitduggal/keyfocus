@@ -6,101 +6,102 @@ import type { Settings } from "../settings";
 interface SettingsPanelProps {
   theme: Theme;
   settings: Settings;
+  anchorY: number | null;
   onToggleTheme: () => void;
   onChange: (patch: Partial<Settings>) => void;
-  onClose: () => void;
+  onClose: (restoreFocus: boolean) => void;
 }
-
-const row = "flex items-center justify-between gap-4 py-3 border-b border-border last:border-0";
-const control =
-  "bg-surface-2 text-text border border-border rounded-md px-2 py-1.5 text-[13px] focus-visible:outline-2 focus-visible:outline-accent";
 
 export function SettingsPanel({
   theme,
   settings,
+  anchorY,
   onToggleTheme,
   onChange,
   onClose,
 }: SettingsPanelProps) {
-  const dialogRef = useRef<HTMLDivElement | null>(null);
+  const panelRef = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
-    dialogRef.current?.querySelector<HTMLElement>("button, select, input")?.focus();
-  }, []);
+    panelRef.current?.focus();
+    const closeWhenFocusLeaves = (event: FocusEvent) => {
+      if (panelRef.current && !panelRef.current.contains(event.target as Node)) onClose(false);
+    };
+    document.addEventListener("focusin", closeWhenFocusLeaves);
+    return () => document.removeEventListener("focusin", closeWhenFocusLeaves);
+  }, [onClose]);
 
   return (
-    <div
-      className="fixed inset-0 z-50 grid place-items-center bg-black/50"
-      onMouseDown={(event) => event.target === event.currentTarget && onClose()}
+    <aside
+      ref={panelRef}
+      className="feature-aside settings-aside"
+      style={{ top: anchorY ?? "50%" }}
+      aria-label="Settings"
+      tabIndex={-1}
+      onKeyDown={(event) => {
+        if (event.key !== "Escape") return;
+        event.preventDefault();
+        // Close the panel without also sending the global Escape to the command bar.
+        event.stopPropagation();
+        onClose(true);
+      }}
     >
-      <div
-        ref={dialogRef}
-        role="dialog"
-        aria-modal="true"
-        aria-label="Settings"
-        className="w-[min(480px,92vw)] bg-surface border border-border rounded-lg p-5 text-text"
-        onKeyDown={(event) => {
-          if (event.key === "Escape") {
-            event.stopPropagation();
-            onClose();
-          }
-        }}
-      >
-        <div className="flex items-center justify-between mb-2">
-          <h2 className="text-base font-semibold">Settings</h2>
-          <button type="button" className={control} onClick={onClose}>
-            Done
-          </button>
-        </div>
-
-        <div className={row}>
-          <span>
-            <b className="block text-[13px]">Appearance</b>
-            <small className="text-text-faint">Shortcut ⌘⇧L</small>
-          </span>
-          <button type="button" className={control} onClick={onToggleTheme}>
-            {theme === "dark" ? "☾ Dark" : "☀ Light"}
-          </button>
-        </div>
-
-        <div className={row}>
-          <b className="text-[13px]">Timer alert</b>
-          <span className="flex gap-2">
-            <select
-              className={control}
-              aria-label="Timer alert sound"
-              value={settings.alertSound}
-              onChange={(event) => onChange({ alertSound: event.target.value })}
-            >
-              {alertSounds.map((sound) => (
-                <option key={sound.id} value={sound.id}>
-                  {sound.label}
-                </option>
-              ))}
-            </select>
-            <button
-              type="button"
-              className={control}
-              onClick={() => playAlert(settings.alertSound, settings.alertVolume)}
-            >
-              Play
-            </button>
-          </span>
-        </div>
-
-        <div className={row}>
-          <b className="text-[13px]">Alert volume</b>
-          <input
-            type="range"
-            min="0"
-            max="1"
-            step="0.05"
-            aria-label="Alert volume"
-            value={settings.alertVolume}
-            onChange={(event) => onChange({ alertVolume: Number(event.target.value) })}
-          />
-        </div>
+      <div className="feature-aside-heading">
+        <span aria-hidden="true">⚙</span>
+        <b>Settings</b>
+        <button type="button" aria-label="Close settings" onClick={() => onClose(true)}>
+          ×
+        </button>
       </div>
-    </div>
+
+      <div className="settings-row">
+        <span>
+          <b>Appearance</b>
+          <small>Shortcut ⌘⇧L</small>
+        </span>
+        <button type="button" onClick={onToggleTheme}>
+          {theme === "dark" ? "☾ Dark" : "☀ Light"}
+        </button>
+      </div>
+
+      <div className="settings-row">
+        <span>
+          <b>Timer alert</b>
+          <small>Plays when a session ends</small>
+        </span>
+        <span className="settings-controls">
+          <select
+            aria-label="Timer alert sound"
+            value={settings.alertSound}
+            onChange={(event) => onChange({ alertSound: event.target.value })}
+          >
+            {alertSounds.map((sound) => (
+              <option key={sound.id} value={sound.id}>
+                {sound.label}
+              </option>
+            ))}
+          </select>
+          <button
+            type="button"
+            onClick={() => playAlert(settings.alertSound, settings.alertVolume)}
+          >
+            Play
+          </button>
+        </span>
+      </div>
+
+      <div className="settings-row">
+        <b>Alert volume</b>
+        <input
+          type="range"
+          min="0"
+          max="1"
+          step="0.05"
+          aria-label="Alert volume"
+          value={settings.alertVolume}
+          onChange={(event) => onChange({ alertVolume: Number(event.target.value) })}
+        />
+      </div>
+    </aside>
   );
 }

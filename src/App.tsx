@@ -104,6 +104,7 @@ function App() {
     () => (localStorage.getItem(THEME_KEY) as Theme | null) ?? "dark",
   );
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [settingsAnchorY, setSettingsAnchorY] = useState<number | null>(null);
   const [settings, setSettings] = useState<Settings>(loadSettings);
   const [menuOpen, setMenuOpen] = useState(false);
   const [query, setQuery] = useState("");
@@ -942,7 +943,12 @@ function App() {
               todoOpenCount={todoOpenCount}
               todoOverdueCount={todoOverdueCount}
               activeFeature={activeFrame.feature}
-              onOpenSettings={() => setSettingsOpen(true)}
+              onOpenSettings={() => {
+                const rect = rightItemRefs.current.settings?.getBoundingClientRect();
+                setSettingsAnchorY(rect ? rect.top + rect.height / 2 : null);
+                setFeaturePanel(null);
+                setSettingsOpen(true);
+              }}
               setRightFocusIndex={setRightFocusIndex}
               onFeaturePress={(feature) => {
                 if (feature === "pomodoro") openFeatureDirectly(feature);
@@ -955,11 +961,12 @@ function App() {
             <SettingsPanel
               theme={theme}
               settings={settings}
+              anchorY={settingsAnchorY}
               onToggleTheme={toggleTheme}
               onChange={(patch) => setSettings((current) => ({ ...current, ...patch }))}
-              onClose={() => {
+              onClose={(restoreFocus) => {
                 setSettingsOpen(false);
-                rightItemRefs.current.settings?.focus();
+                if (restoreFocus) rightItemRefs.current.settings?.focus();
               }}
             />
           )}
