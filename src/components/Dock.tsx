@@ -1,4 +1,4 @@
-import type { Feature, Theme } from "../types";
+import type { Feature } from "../types";
 import { featureMeta, visibleFeatures } from "../constants";
 import { NowPlaying } from "./NowPlaying";
 import "../components.css";
@@ -10,8 +10,7 @@ interface DockProps {
   todoOpenCount: number;
   todoOverdueCount: number;
   activeFeature: Feature;
-  theme: Theme;
-  onToggleTheme: () => void;
+  onOpenSettings: () => void;
   setRightFocusIndex: (index: number) => void;
   onFeaturePress: (feature: Feature) => void;
 }
@@ -23,8 +22,7 @@ export function Dock({
   todoOpenCount,
   todoOverdueCount,
   activeFeature,
-  theme,
-  onToggleTheme,
+  onOpenSettings,
   setRightFocusIndex,
   onFeaturePress,
 }: DockProps) {
@@ -114,16 +112,16 @@ export function Dock({
           className="dock-item is-quiet"
           onFocus={() => setRightFocusIndex(features.length + 1)}
           onClick={() => {
-            onToggleTheme();
+            onOpenSettings();
             setRightFocusIndex(features.length + 1);
           }}
         >
           <span className="dock-glyph" aria-hidden="true">
-            {theme === "dark" ? "☾" : "☀"}
+            ⚙
           </span>
           <span className="dock-copy">
-            <b>Appearance</b>
-            <small>{theme === "dark" ? "Dark theme · ⌘⇧L" : "Light theme · ⌘⇧L"}</small>
+            <b>Settings</b>
+            <small>Appearance, timer alerts</small>
           </span>
           <span className="dock-chevron" aria-hidden="true">
             ›

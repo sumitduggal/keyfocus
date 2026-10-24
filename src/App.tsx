@@ -16,6 +16,9 @@ import { Mainframe } from "./components/Mainframe";
 import { Stack } from "./components/Stack";
 import { Dock } from "./components/Dock";
 import { FeaturePanel } from "./components/FeaturePanel";
+import { SettingsPanel } from "./components/SettingsPanel";
+import { loadSettings, saveSettings } from "./settings";
+import type { Settings } from "./settings";
 import { CommandPalette } from "./components/CommandPalette";
 import { Weather } from "./components/Weather";
 import {
@@ -100,6 +103,8 @@ function App() {
   const [theme, setTheme] = useState<Theme>(
     () => (localStorage.getItem(THEME_KEY) as Theme | null) ?? "dark",
   );
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [settings, setSettings] = useState<Settings>(loadSettings);
   const [menuOpen, setMenuOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [menuFocusIndex, setMenuFocusIndex] = useState(0);
@@ -523,6 +528,7 @@ function App() {
   useEffect(() => {
     setStored(NOTE_BODIES_KEY, JSON.stringify(noteBodies));
   }, [noteBodies]);
+  useEffect(() => saveSettings(settings), [settings]);
   useEffect(() => {
     saveTodoLists(localStorage, todoLists);
   }, [todoLists]);
@@ -630,7 +636,7 @@ function App() {
         quietBarFocus.current = false;
         return;
       }
-      if (featurePanel) return;
+      if (featurePanel || settingsOpen) return;
       // Tab stays inside the region being worked in; Alt+arrows and Cmd+K leave it.
       if (
         event.key === "Tab" &&
@@ -782,6 +788,7 @@ function App() {
     stackFocusIndex,
     stackedFrames,
     toggleTheme,
+    settingsOpen,
     undo,
     withinSide,
   ]);
@@ -935,8 +942,7 @@ function App() {
               todoOpenCount={todoOpenCount}
               todoOverdueCount={todoOverdueCount}
               activeFeature={activeFrame.feature}
-              theme={theme}
-              onToggleTheme={toggleTheme}
+              onOpenSettings={() => setSettingsOpen(true)}
               setRightFocusIndex={setRightFocusIndex}
               onFeaturePress={(feature) => {
                 if (feature === "pomodoro") openFeatureDirectly(feature);
@@ -944,6 +950,19 @@ function App() {
               }}
             />
           </aside>
+
+          {settingsOpen && (
+            <SettingsPanel
+              theme={theme}
+              settings={settings}
+              onToggleTheme={toggleTheme}
+              onChange={(patch) => setSettings((current) => ({ ...current, ...patch }))}
+              onClose={() => {
+                setSettingsOpen(false);
+                rightItemRefs.current.settings?.focus();
+              }}
+            />
+          )}
 
           {featurePanel && (
             <FeaturePanel
