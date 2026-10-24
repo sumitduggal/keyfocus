@@ -2,6 +2,7 @@ import { existsSync, readFileSync, readdirSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { defineConfig, type Plugin } from 'vite'
 import react from '@vitejs/plugin-react'
+import ogHandler from './api/_og.ts'
 
 const MUSIC_DIR = fileURLToPath(new URL('./public/music', import.meta.url))
 const TITLES_FILE = `${MUSIC_DIR}/titles.json`
@@ -53,7 +54,24 @@ function musicTracks(): Plugin {
   }
 }
 
+// Serves the bookmarks BFF at /api/og during development, the same handler Vercel runs in production.
+function bookmarksApi(): Plugin {
+  return {
+    name: 'bookmarks-api',
+    configureServer(server) {
+      server.middlewares.use('/api/og', (req, res) => {
+        void ogHandler(req, res)
+      })
+    },
+    configurePreviewServer(server) {
+      server.middlewares.use('/api/og', (req, res) => {
+        void ogHandler(req, res)
+      })
+    },
+  }
+}
+
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [react(), musicTracks()],
+  plugins: [react(), musicTracks(), bookmarksApi()],
 })

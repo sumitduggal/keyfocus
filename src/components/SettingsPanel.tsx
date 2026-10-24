@@ -2,6 +2,7 @@ import { useEffect, useLayoutEffect, useRef } from "react";
 import type { Theme } from "../types";
 import { alertSounds, playAlert } from "../settings";
 import type { Settings } from "../settings";
+import { BookmarksSettings } from "./BookmarksSettings";
 
 interface SettingsPanelProps {
   theme: Theme;
@@ -116,6 +117,8 @@ export function SettingsPanel({
           onChange={(event) => onChange({ alertVolume: Number(event.target.value) })}
         />
       </div>
+
+      <BookmarksSettings />
     </aside>
   );
 }
