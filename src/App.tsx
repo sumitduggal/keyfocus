@@ -906,10 +906,6 @@ function App() {
                 <span>Active surface</span>
                 <b>{activeFrame.feature}</b>
               </div>
-              <div>
-                <span>Channel</span>
-                <b>Local</b>
-              </div>
             </div>
           </aside>
 

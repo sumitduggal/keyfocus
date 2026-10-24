@@ -9,6 +9,7 @@ import {
   type RemindersData,
 } from "./reminders";
 import type { Habit } from "./habits";
+import { loadSettings, playAlert } from "./settings";
 import { dueNudges, loadNudges, pruneNudges, saveNudges, type Nudge } from "./nudges";
 
 export interface BannerItem {
@@ -54,25 +55,14 @@ export function getRemindersState(): RemindersState {
   return state;
 }
 
-// A short two-note chime made in the browser, so no audio file is needed.
-function playChime() {
+// Plays the sound and volume chosen in Settings. Audio can be blocked until the person has used
+// the page; the banner still shows.
+function ringAlert() {
   try {
-    const context = new AudioContext();
-    [880, 1174.66].forEach((frequency, index) => {
-      const oscillator = context.createOscillator();
-      const gain = context.createGain();
-      const start = context.currentTime + index * 0.18;
-      oscillator.frequency.value = frequency;
-      gain.gain.setValueAtTime(0.0001, start);
-      gain.gain.exponentialRampToValueAtTime(0.18, start + 0.02);
-      gain.gain.exponentialRampToValueAtTime(0.0001, start + 0.4);
-      oscillator.connect(gain).connect(context.destination);
-      oscillator.start(start);
-      oscillator.stop(start + 0.45);
-    });
-    window.setTimeout(() => void context.close(), 1200);
+    const { alertSound, alertVolume } = loadSettings();
+    playAlert(alertSound, alertVolume);
   } catch {
-    // Audio can be blocked until the person has used the page; the banner still shows.
+    // Nothing to do: the banner is the alert.
   }
 }
 
@@ -104,7 +94,7 @@ function checkNudges(silent: boolean, now: Date) {
       : [...state.banner.filter((item) => !item.nudge || kept.some((nudge) => nudge.habitId === item.id)), ...due.map((nudge) => ({ frameId: nudge.frameId, id: nudge.habitId, nudge: true }))],
   });
   if (!silent && due.length > 0) {
-    playChime();
+    ringAlert();
     const names = due.flatMap((nudge) => lists[nudge.frameId]?.find((habit) => habit.id === nudge.habitId)?.name ?? []);
     if (document.hidden && typeof Notification !== "undefined" && Notification.permission === "granted") {
       for (const name of names) new Notification("Habit", { body: name, tag: `habit-${name}` });
@@ -134,7 +124,7 @@ function check(silent: boolean) {
     return;
   }
   emit({ lists, banner: [...state.banner, ...alerts] });
-  playChime();
+  ringAlert();
   notify(fired);
 }
 

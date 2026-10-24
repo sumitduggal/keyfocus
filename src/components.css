@@ -926,7 +926,7 @@
 /* ===== FEATURE PANEL ===== */
 .feature-aside {
   position: absolute;
-  z-index: 5;
+  z-index: 7;
   top: 50%;
   right: 262px;
   width: 280px;
@@ -3084,4 +3084,17 @@
 .reminder-row .nudge-actions .habit-more {
   width: auto;
   padding: 0 10px;
+}
+
+/* Popups open from inside the main or control side, which sit below the command bar. While one is open the
+   side rises above it. Clicks still reach the command bar through the empty area. */
+.main-side:has(.habit-popup),
+.right-side:has(.now-playing-popup) {
+  z-index: 7;
+  pointer-events: none;
+}
+
+.main-side:has(.habit-popup) > *,
+.right-side:has(.now-playing-popup) > * {
+  pointer-events: auto;
 }
