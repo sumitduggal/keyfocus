@@ -922,7 +922,7 @@
   position: absolute;
   z-index: 5;
   top: 50%;
-  right: 316px;
+  right: 262px;
   width: 280px;
   max-height: calc(100% - 40px);
   box-sizing: border-box;
@@ -1361,7 +1361,7 @@
 /* ===== RESPONSIVE COMPONENT ADJUSTMENTS ===== */
 @media (max-width: 1280px) {
   .feature-aside {
-    right: 292px;
+    right: 240px;
   }
 }
 
