@@ -311,6 +311,8 @@
   flex: 1;
   min-height: 0;
   margin-top: 14px;
+  perspective: 900px;
+  perspective-origin: 50% 30%;
 }
 
 .stack-empty {
@@ -381,11 +383,13 @@
   top: 0;
   left: 0;
   width: 100%;
+  transform-style: preserve-3d;
   will-change: transform;
 }
 
 .stack-frame {
   position: relative;
+  overflow: hidden;
   padding: 10px 12px 12px;
   border: 1px solid var(--border);
   outline: 0;
@@ -438,7 +442,9 @@
   display: flex;
   align-items: center;
   gap: 7px;
-  margin-bottom: 8px;
+  margin: -10px -12px 8px;
+  padding: 8px 12px;
+  background: color-mix(in srgb, var(--text) 14%, var(--panel));
 }
 
 .stack-index {
@@ -1718,4 +1724,46 @@
 .frame-title-input:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 4px;
+}
+
+/* Delete the whole list, with an inline confirm. */
+.todo-delete-list,
+.todo-confirm button {
+  min-height: 40px;
+  padding: 0 14px;
+  border: 1px solid var(--border-strong);
+  border-radius: 4px;
+  background: transparent;
+  color: var(--text-muted);
+  font: 10px/1 var(--font-mono-stack);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.todo-delete-list {
+  margin-top: 20px;
+}
+
+.todo-confirm {
+  margin-top: 20px;
+  padding: 12px;
+  border: 1px solid var(--danger);
+  border-radius: 6px;
+}
+
+.todo-confirm p {
+  margin: 0 0 10px;
+  color: var(--text);
+  font: 12px/1.4 var(--font-ui);
+}
+
+.todo-confirm div {
+  display: flex;
+  gap: 8px;
+}
+
+.todo-confirm .todo-danger {
+  border-color: var(--danger);
+  color: var(--danger);
 }

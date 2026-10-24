@@ -14,6 +14,17 @@ import "./components.css";
 
 const pad = (value: number) => String(value).padStart(2, "0");
 
+// Puts a stacked frame first, the previous main frame second, and the rest after them.
+const promoteFrames = (
+  current: WorkspaceFrame[],
+  selectedFrame: WorkspaceFrame,
+  previousMain: WorkspaceFrame,
+) => [
+  selectedFrame,
+  previousMain,
+  ...current.filter((frame) => frame.id !== selectedFrame.id && frame.id !== previousMain.id),
+];
+
 // Mobile tab bar (below 760px). Each tab switches the same side focus that Alt+arrow uses.
 const sideTabs: { side: Side; label: string }[] = [
   { side: "left", label: "Frames" },
@@ -236,6 +247,33 @@ function App() {
     actionInputRef.current?.focus();
   };
 
+  // Moves a stacked frame into the main side and pushes the current main frame onto the stack.
+  // Removes a frame and its todo list. Falls back to the first remaining frame, or a fresh Pomodoro.
+  const deleteFrame = (id: string) => {
+    const remaining = frames.filter((frame) => frame.id !== id);
+    const next = remaining[0] ?? { ...initialFrame };
+    setFrames(remaining.length ? remaining : [next]);
+    setTodoLists((current) =>
+      Object.fromEntries(Object.entries(current).filter(([frameId]) => frameId !== id)),
+    );
+    if (id === activeFrameId) {
+      setActiveFrameId(next.id);
+      setFocusedSide("main");
+      setWithinSide(true);
+    }
+  };
+
+  const promoteStackFrame = (index: number) => {
+    const selectedFrame = stackedFrames[index];
+    if (!selectedFrame) return;
+    const previousMain = activeFrame;
+    setFrames((current) => promoteFrames(current, selectedFrame, previousMain));
+    setActiveFrameId(selectedFrame.id);
+    setStackFocusIndex(-1);
+    setFocusedSide("main");
+    setWithinSide(true);
+  };
+
   const showFrame = (id: string) => {
     setActiveFrameId(id);
     setFocusedSide("main");
@@ -442,13 +480,7 @@ function App() {
         event.preventDefault();
         const selectedFrame = stackedFrames[stackFocusIndex];
         const previousMain = activeFrame;
-        setFrames((current) => [
-          selectedFrame,
-          previousMain,
-          ...current.filter(
-            (frame) => frame.id !== selectedFrame.id && frame.id !== previousMain.id,
-          ),
-        ]);
+        setFrames((current) => promoteFrames(current, selectedFrame, previousMain));
         setActiveFrameId(selectedFrame.id);
         setStackFocusIndex(-1);
         setFocusedSide("main");
@@ -548,6 +580,7 @@ function App() {
                 setWithinSide(true);
                 setStackFocusIndex(index);
               }}
+              onPromote={promoteStackFrame}
             />
             <div className="side-readout">
               <div>
@@ -597,6 +630,7 @@ function App() {
                 active
                 noteBody={noteBodies[activeFrame.id]}
                 todoItems={todoLists[activeFrame.id]}
+                onDelete={() => deleteFrame(activeFrame.id)}
                 onTitleChange={(title) =>
                   setFrames((current) =>
                     current.map((frame) => (frame.id === activeFrame.id ? { ...frame, title } : frame)),

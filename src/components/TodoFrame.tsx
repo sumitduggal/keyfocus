@@ -54,11 +54,14 @@ const currentToken = (draft: string) => draft.split(/\s+/).pop() ?? "";
 export function TodoFrame({
   items,
   onChange,
+  onDeleteList,
 }: {
   items: TodoItem[];
   onChange: (items: TodoItem[]) => void;
+  onDeleteList?: () => void;
 }) {
   const [draft, setDraft] = useState("");
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [activeSuggestion, setActiveSuggestion] = useState(0);
   const [dismissedToken, setDismissedToken] = useState<string | null>(null);
   const listRef = useRef<HTMLUListElement | null>(null);
@@ -219,6 +222,25 @@ export function TodoFrame({
 
       {items.length === 0 && <p className="frame-foot">No items yet. Type above and press Enter.</p>}
       <p className="frame-foot">{openTodoCount(items)} open</p>
+
+      {onDeleteList &&
+        (confirmingDelete ? (
+          <div className="todo-confirm" role="alertdialog" aria-label="Confirm delete list">
+            <p>Delete this list and its {items.length} items? This cannot be undone.</p>
+            <div>
+              <button type="button" className="todo-danger" onClick={onDeleteList}>
+                Delete list
+              </button>
+              <button type="button" onClick={() => setConfirmingDelete(false)}>
+                Cancel
+              </button>
+            </div>
+          </div>
+        ) : (
+          <button type="button" className="todo-delete-list" onClick={() => setConfirmingDelete(true)}>
+            Delete list
+          </button>
+        ))}
     </>
   );
 }

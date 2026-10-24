@@ -14,6 +14,16 @@ import type { WorkspaceFrame } from "../types";
 import type { TodoItem } from "../todo";
 import { TodoFrame } from "./TodoFrame";
 
+// Moves focus to the next focusable element after `current` in page order.
+function focusNextElement(current: HTMLElement) {
+  const focusables = Array.from(
+    document.querySelectorAll<HTMLElement>(
+      'button:not([disabled]), input:not([disabled]), select, textarea, [tabindex]:not([tabindex="-1"])',
+    ),
+  );
+  focusables[focusables.indexOf(current) + 1]?.focus();
+}
+
 export function Mainframe({
   frame,
   active,
@@ -23,6 +33,7 @@ export function Mainframe({
   todoItems,
   onTodoChange,
   onTitleChange,
+  onDelete,
 }: {
   frame: WorkspaceFrame;
   active: boolean;
@@ -32,6 +43,7 @@ export function Mainframe({
   todoItems?: TodoItem[];
   onTodoChange?: (items: TodoItem[]) => void;
   onTitleChange?: (title: string) => void;
+  onDelete?: () => void;
 }) {
   const note = noteBody ?? "";
   const editorHost = useRef<HTMLDivElement | null>(null);
@@ -194,6 +206,11 @@ export function Mainframe({
               aria-label="List name"
               value={frame.title}
               onChange={(event) => onTitleChange?.(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key !== "Enter") return;
+                event.preventDefault();
+                focusNextElement(event.currentTarget);
+              }}
               onBlur={(event) => {
                 if (event.target.value.trim() === "") onTitleChange?.("Untitled");
               }}
@@ -283,7 +300,11 @@ export function Mainframe({
         </div>
       ) : frame.feature === "todo list" ? (
         <div className="frame-body">
-          <TodoFrame items={todoItems ?? []} onChange={onTodoChange ?? (() => undefined)} />
+          <TodoFrame
+            items={todoItems ?? []}
+            onChange={onTodoChange ?? (() => undefined)}
+            onDeleteList={onDelete}
+          />
         </div>
       ) : frame.feature === "notes" ? (
         <div className="frame-body note-body">

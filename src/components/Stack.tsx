@@ -9,6 +9,7 @@ interface StackProps {
   stackRefs: Record<string, HTMLElement | null>;
   reduceMotion: boolean;
   onSelect: (index: number) => void;
+  onPromote: (index: number) => void;
 }
 
 export function Stack({
@@ -17,6 +18,7 @@ export function Stack({
   stackRefs,
   reduceMotion,
   onSelect,
+  onPromote,
 }: StackProps) {
   const handleFocus = useCallback(
     (index: number) => {
@@ -42,7 +44,11 @@ export function Stack({
           key={frame.id}
           animate={{
             y: index * 104,
-            x: index * 5,
+            x: -index * 5,
+            z: -Math.min(index, 4) * 40,
+            rotateX: Math.min(index, 4) * 4,
+            rotateY: 22,
+            scale: 1 - Math.min(index, 4) * 0.03,
             opacity: 1 - Math.min(index, 4) * 0.08,
           }}
           transition={
@@ -59,7 +65,7 @@ export function Stack({
             role="button"
             tabIndex={-1}
             onFocus={() => handleFocus(index)}
-            onClick={() => handleFocus(index)}
+            onClick={() => onPromote(index)}
           >
             <span className="stack-line">
               <span className="stack-index">{String(index + 1).padStart(2, "0")}</span>
