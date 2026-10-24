@@ -1,5 +1,5 @@
 import { motion } from "motion/react";
-import type { Command } from "../types";
+import type { Command, Feature } from "../types";
 import { featureMeta } from "../constants";
 
 interface SearchResult {
@@ -11,9 +11,11 @@ interface SearchResult {
 interface CommandPaletteProps {
   menuOpen: boolean;
   searchMode: boolean;
+  featureMenu: Feature | null;
   query: string;
   visibleCommands: Command[];
   searchResults: SearchResult[];
+  featureEntries: SearchResult[];
   menuFocusIndex: number;
   activeMenuId: string | undefined;
   actionInputRef: React.RefObject<HTMLInputElement | null>;
@@ -22,15 +24,23 @@ interface CommandPaletteProps {
   onFocus: () => void;
   onKeyDown: (event: React.KeyboardEvent<HTMLInputElement>) => void;
   onRunCommand: (command: Command) => void;
+  onCreateFeature: (feature: Feature) => void;
   onSelectResult: (id: string) => void;
 }
+
+// DOM id of a row. The active row's id is what aria-activedescendant points at.
+const commandDomId = (command: string) => `action-${command.replaceAll(" ", "-")}`;
+const resultDomId = (id: string) => `result-${id}`;
+const NEW_ROW_ID = "new";
 
 export function CommandPalette({
   menuOpen,
   searchMode,
+  featureMenu,
   query,
   visibleCommands,
   searchResults,
+  featureEntries,
   menuFocusIndex,
   activeMenuId,
   actionInputRef,
@@ -39,13 +49,22 @@ export function CommandPalette({
   onFocus,
   onKeyDown,
   onRunCommand,
+  onCreateFeature,
   onSelectResult,
 }: CommandPaletteProps) {
-  const activeLabel = activeMenuId
-    ? searchMode
-      ? `result-${activeMenuId}`
-      : `action-${activeMenuId.toLowerCase().replaceAll(" ", "-")}`
+  const activeDomId = activeMenuId
+    ? activeMenuId === NEW_ROW_ID
+      ? commandDomId(`new-${featureMenu ?? ""}`)
+      : searchMode || featureMenu
+        ? resultDomId(activeMenuId)
+        : commandDomId(activeMenuId)
     : undefined;
+
+  const placeholder = searchMode
+    ? "Search created features…"
+    : featureMenu
+      ? `Filter ${featureMeta[featureMenu].frame.title} or create one…`
+      : "Run a command or search…";
 
   return (
     <>
@@ -61,12 +80,12 @@ export function CommandPalette({
           ref={actionInputRef}
           aria-label="Open actions"
           aria-controls="action-menu"
-          aria-activedescendant={menuOpen && activeMenuId ? activeLabel : undefined}
+          aria-activedescendant={menuOpen && activeDomId ? activeDomId : undefined}
           value={query}
           onChange={(event) => onQueryChange(event.target.value)}
           onFocus={onFocus}
           onKeyDown={onKeyDown}
-          placeholder={searchMode ? "Search created features…" : "Run a command or search…"}
+          placeholder={placeholder}
         />
         <kbd>⌘K</kbd>
       </motion.div>
@@ -95,16 +114,18 @@ export function CommandPalette({
             <p className="menu-label">
               {searchMode
                 ? "Search created features"
-                : query
-                  ? "Matching actions"
-                  : "Create or search"}
+                : featureMenu
+                  ? `${featureMeta[featureMenu].frame.title} · Esc to go back`
+                  : query
+                    ? "Matching actions"
+                    : "Create or search"}
             </p>
             {searchMode ? (
               searchResults.length ? (
                 searchResults.map((frame, index) => (
                   <button
                     key={frame.id}
-                    id={`result-${frame.id}`}
+                    id={resultDomId(frame.id)}
                     role="menuitem"
                     aria-selected={index === menuFocusIndex}
                     type="button"
@@ -125,12 +146,50 @@ export function CommandPalette({
               ) : (
                 <p className="empty-command">No matching features</p>
               )
+            ) : featureMenu ? (
+              <>
+                <button
+                  id={commandDomId(`new-${featureMenu}`)}
+                  role="menuitem"
+                  aria-selected={menuFocusIndex === 0}
+                  type="button"
+                  className={menuFocusIndex === 0 ? "menu-child selected" : "menu-child"}
+                  onMouseEnter={() => {}}
+                  onClick={() => onCreateFeature(featureMenu)}
+                >
+                  <span className="command-glyph">+</span>
+                  <span>
+                    <b>New {featureMeta[featureMenu].frame.title}</b>
+                    <small>{featureMeta[featureMenu].description}</small>
+                  </span>
+                  <kbd>↵</kbd>
+                </button>
+                {featureEntries.map((entry, index) => (
+                  <button
+                    key={entry.id}
+                    id={resultDomId(entry.id)}
+                    role="menuitem"
+                    aria-selected={index + 1 === menuFocusIndex}
+                    type="button"
+                    className={index + 1 === menuFocusIndex ? "menu-child selected" : "menu-child"}
+                    onMouseEnter={() => {}}
+                    onClick={() => onSelectResult(entry.id)}
+                  >
+                    <span className="command-glyph">{featureMeta[featureMenu].glyph}</span>
+                    <span>
+                      <b>{entry.title}</b>
+                      <small>Open existing</small>
+                    </span>
+                    <kbd>↵</kbd>
+                  </button>
+                ))}
+              </>
             ) : visibleCommands.length ? (
               visibleCommands.map((command, index) =>
                 command === "Search" ? (
                   <button
                     key={command}
-                    id="action-search"
+                    id={commandDomId(command)}
                     role="menuitem"
                     aria-selected={index === menuFocusIndex}
                     type="button"
@@ -148,7 +207,7 @@ export function CommandPalette({
                 ) : (
                   <button
                     key={command}
-                    id={`action-${command.replaceAll(" ", "-")}`}
+                    id={commandDomId(command)}
                     role="menuitem"
                     aria-selected={index === menuFocusIndex}
                     type="button"

@@ -1,11 +1,12 @@
 import type { Feature, Theme } from "../types";
-import { featureMeta } from "../constants";
+import { featureMeta, visibleFeatures } from "../constants";
 import "../components.css";
 
 interface DockProps {
   rightItemRefs: Record<string, HTMLButtonElement | null>;
   profileRef: React.RefObject<HTMLButtonElement | null>;
   framesCountByFeature: Record<Feature, number>;
+  todoOpenCount: number;
   activeFeature: Feature;
   theme: Theme;
   onToggleTheme: () => void;
@@ -17,13 +18,14 @@ export function Dock({
   rightItemRefs,
   profileRef,
   framesCountByFeature,
+  todoOpenCount,
   activeFeature,
   theme,
   onToggleTheme,
   setRightFocusIndex,
   onFeaturePress,
 }: DockProps) {
-  const features = Object.keys(featureMeta) as Feature[];
+  const features = visibleFeatures;
 
   return (
     <div className="dock">
@@ -90,7 +92,9 @@ export function Dock({
                 <small>
                   {feature === "pomodoro"
                     ? "Open timer"
-                    : `${framesCountByFeature[feature]} entries`}
+                    : feature === "todo list"
+                      ? `${todoOpenCount} open`
+                      : `${framesCountByFeature[feature]} entries`}
                 </small>
               </span>
               <span className="dock-chevron" aria-hidden="true">

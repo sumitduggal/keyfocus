@@ -11,6 +11,8 @@ import CodeTool from "@editorjs/code";
 import LinkTool from "@editorjs/link";
 import Marker from "@editorjs/marker";
 import type { WorkspaceFrame } from "../types";
+import type { TodoItem } from "../todo";
+import { TodoFrame } from "./TodoFrame";
 
 export function Mainframe({
   frame,
@@ -18,12 +20,18 @@ export function Mainframe({
   frameRef,
   noteBody,
   onNoteChange,
+  todoItems,
+  onTodoChange,
+  onTitleChange,
 }: {
   frame: WorkspaceFrame;
   active: boolean;
   frameRef: RefCallback<HTMLElement>;
   noteBody?: string;
   onNoteChange?: (value: string) => void;
+  todoItems?: TodoItem[];
+  onTodoChange?: (items: TodoItem[]) => void;
+  onTitleChange?: (title: string) => void;
 }) {
   const note = noteBody ?? "";
   const editorHost = useRef<HTMLDivElement | null>(null);
@@ -180,7 +188,17 @@ export function Mainframe({
             {frame.eyebrow}
             <span className="frame-code">// frm-{frame.feature.slice(0, 3).toUpperCase()}</span>
           </p>
-          <h1>{frame.title}</h1>
+          <h1>
+            <input
+              className="frame-title-input"
+              aria-label="List name"
+              value={frame.title}
+              onChange={(event) => onTitleChange?.(event.target.value)}
+              onBlur={(event) => {
+                if (event.target.value.trim() === "") onTitleChange?.("Untitled");
+              }}
+            />
+          </h1>
         </div>
         <span className="frame-status">
           <span className="frame-status-dot" aria-hidden="true" />
@@ -262,6 +280,10 @@ export function Mainframe({
             </button>
           </div>
           <p className="frame-foot">Take a five-minute break when the interval ends</p>
+        </div>
+      ) : frame.feature === "todo list" ? (
+        <div className="frame-body">
+          <TodoFrame items={todoItems ?? []} onChange={onTodoChange ?? (() => undefined)} />
         </div>
       ) : frame.feature === "notes" ? (
         <div className="frame-body note-body">

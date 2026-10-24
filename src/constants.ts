@@ -52,7 +52,7 @@ export const featureMeta: Record<Feature, FeatureMeta> = {
       eyebrow: "TODO LIST",
       title: "Todo List",
       description: "A focused list for the next few things worth finishing.",
-      details: ["Draft the outline", "Review the numbers", "Share the update"],
+      details: [],
     },
   },
   pomodoro: {
@@ -67,13 +67,13 @@ export const featureMeta: Record<Feature, FeatureMeta> = {
   },
 };
 
-export const commandNames: Command[] = [...(Object.keys(featureMeta) as Feature[]), "Search"];
+// Features shown in the dock, ⌘K and the flyout. Hidden features keep their metadata so they can return.
+export const visibleFeatures: Feature[] = ["pomodoro", "todo list"];
+
+export const commandNames: Command[] = [...visibleFeatures, "Search"];
 
 export const initialFrame: WorkspaceFrame = {
+  ...featureMeta.pomodoro.frame,
   id: "main",
-  feature: "notes",
-  eyebrow: "NOTES",
-  title: "Notes",
-  description: "A lightweight place for thoughts, references, and ideas.",
-  details: ["Launch idea", "Research reference", "Things to explore"],
+  feature: "pomodoro",
 };

@@ -2,12 +2,13 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { KeyboardEvent } from "react";
 import { useReducedMotion } from "motion/react";
 import type { Command, Feature, Side, Theme, WorkspaceFrame } from "./types";
-import { featureMeta, commandNames, initialFrame } from "./constants";
+import { featureMeta, commandNames, initialFrame, visibleFeatures } from "./constants";
 import { Mainframe } from "./components/Mainframe";
 import { Stack } from "./components/Stack";
 import { Dock } from "./components/Dock";
 import { FeaturePanel } from "./components/FeaturePanel";
 import { CommandPalette } from "./components/CommandPalette";
+import { loadTodoLists, openTodoCount, saveTodoLists, type TodoItem } from "./todo";
 import "./App.css";
 import "./components.css";
 
@@ -62,6 +63,8 @@ function App() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [menuFocusIndex, setMenuFocusIndex] = useState(0);
+  // Feature picked in ⌘K: the palette lists its existing frames and a New row.
+  const [featureMenu, setFeatureMenu] = useState<Feature | null>(null);
   const [searchMode, setSearchMode] = useState(false);
   const [rightFocusIndex, setRightFocusIndex] = useState(0);
   const [featurePanel, setFeaturePanel] = useState<Feature | null>(null);
@@ -73,6 +76,10 @@ function App() {
       ? (JSON.parse(saved) as Record<string, string>)
       : { main: "# Notes\n\nStart writing in Markdown…\n\n- [ ] Capture the next idea" };
   });
+
+  const [todoLists, setTodoLists] = useState<Record<string, TodoItem[]>>(() =>
+    loadTodoLists(localStorage),
+  );
 
   const frameRefs = useRef<Record<string, HTMLElement | null>>({});
   const stackRefs = useRef<Record<string, HTMLElement | null>>({});
@@ -89,6 +96,14 @@ function App() {
   const reduceMotion = useReducedMotion() ?? false;
 
   const activeFrame = frames.find((frame) => frame.id === activeFrameId) ?? frames[0];
+
+  // Focus lands on a frame's first item (e.g. a todo row) rather than its container.
+  const focusActiveFrame = useCallback(() => {
+    const frame = frameRefs.current[activeFrame.id];
+    // Keep focus where the person is, e.g. while typing the frame's name.
+    if (frame?.contains(document.activeElement)) return;
+    (frame?.querySelector<HTMLElement>("[data-autofocus]") ?? frame)?.focus();
+  }, [activeFrame.id]);
   const stackedFrames = frames.filter((frame) => frame.id !== activeFrame.id);
   const visibleCommands = useMemo(
     () => commandNames.filter((command) => command.toLowerCase().includes(query.toLowerCase())),
@@ -107,12 +122,39 @@ function App() {
     () => (featurePanel ? frames.filter((frame) => frame.feature === featurePanel) : []),
     [featurePanel, frames],
   );
+  const featureMenuEntries = useMemo(
+    () =>
+      featureMenu
+        ? frames.filter(
+            (frame) =>
+              frame.feature === featureMenu &&
+              frame.title.toLowerCase().includes(query.toLowerCase()),
+          )
+        : [],
+    [featureMenu, frames, query],
+  );
+  // Row count and ids for the list the palette is currently showing.
+  const menuRowCount = searchMode
+    ? searchResults.length
+    : featureMenu
+      ? featureMenuEntries.length + 1
+      : visibleCommands.length;
   const activeMenuId = searchMode
     ? searchResults[menuFocusIndex]?.id
-    : visibleCommands[menuFocusIndex];
+    : featureMenu
+      ? menuFocusIndex === 0
+        ? "new"
+        : featureMenuEntries[menuFocusIndex - 1]?.id
+      : visibleCommands[menuFocusIndex];
+
+  const todoOpenCount = frames.reduce(
+    (total, frame) =>
+      frame.feature === "todo list" ? total + openTodoCount(todoLists[frame.id] ?? []) : total,
+    0,
+  );
 
   const framesCountByFeature = Object.fromEntries(
-    (Object.keys(featureMeta) as Feature[]).map((feature) => [
+    visibleFeatures.map((feature) => [
       feature,
       frames.filter((frame) => frame.feature === feature).length,
     ]),
@@ -146,7 +188,7 @@ function App() {
   };
 
   const focusDockItem = () => {
-    const features = Object.keys(featureMeta) as Feature[];
+    const features = visibleFeatures;
     const id =
       rightFocusIndex === 0
         ? "profile"
@@ -178,51 +220,69 @@ function App() {
     }
     const newFrame = { ...featureMeta[command].frame, feature: command, id: crypto.randomUUID() };
     setFrames((current) => [newFrame, ...current]);
-    setActiveFrameId(newFrame.id);
+    showFrame(newFrame.id);
+  };
+
+  // Picking a feature opens its sub-list; creating a frame is a separate row inside it.
+  const chooseCommand = (command: Command) => {
+    if (command === "Search") {
+      runCommand(command);
+      return;
+    }
+    setFeatureMenu(command);
+    setQuery("");
+    setMenuFocusIndex(0);
+    // The clicked row unmounts, so keep keyboard focus in the palette input.
+    actionInputRef.current?.focus();
+  };
+
+  const showFrame = (id: string) => {
+    setActiveFrameId(id);
     setFocusedSide("main");
     setWithinSide(true);
     setMenuOpen(false);
-    setQuery("");
     setSearchMode(false);
+    setFeatureMenu(null);
+    setQuery("");
   };
 
   const commandKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
-    if (searchMode) {
-      if (event.key === "ArrowDown" || event.key === "ArrowUp") {
-        event.preventDefault();
-        if (!searchResults.length) return;
-        const delta = event.key === "ArrowDown" ? 1 : -1;
-        setMenuFocusIndex(
-          (current) => (current + delta + searchResults.length) % searchResults.length,
-        );
-      }
-      if (event.key === "Enter" && searchResults[menuFocusIndex]) {
-        const result = searchResults[menuFocusIndex];
-        setActiveFrameId(result.id);
-        setFocusedSide("main");
-        setWithinSide(true);
-        setMenuOpen(false);
-        setSearchMode(false);
+    if (event.key === "Escape") {
+      if (featureMenu && !searchMode) {
+        // Back to the command list only; the global Escape would also close the palette.
+        event.stopPropagation();
+        setFeatureMenu(null);
         setQuery("");
+        setMenuFocusIndex(0);
+        return;
       }
-      if (event.key === "Escape") {
-        setMenuOpen(false);
-        setSearchMode(false);
-      }
+      setMenuOpen(false);
+      setSearchMode(false);
       return;
     }
     if (event.key === "ArrowDown" || event.key === "ArrowUp") {
       event.preventDefault();
-      if (!visibleCommands.length) return;
+      if (!menuRowCount) return;
       const delta = event.key === "ArrowDown" ? 1 : -1;
-      setMenuFocusIndex(
-        (current) => (current + delta + visibleCommands.length) % visibleCommands.length,
-      );
+      setMenuFocusIndex((current) => (current + delta + menuRowCount) % menuRowCount);
+      return;
     }
-    if (event.key === "Enter" && visibleCommands[menuFocusIndex]) {
-      runCommand(visibleCommands[menuFocusIndex]);
+    if (event.key !== "Enter") return;
+    if (searchMode) {
+      const result = searchResults[menuFocusIndex];
+      if (result) showFrame(result.id);
+      return;
     }
-    if (event.key === "Escape") setMenuOpen(false);
+    if (featureMenu) {
+      if (menuFocusIndex === 0) {
+        runCommand(featureMenu);
+      } else {
+        const entry = featureMenuEntries[menuFocusIndex - 1];
+        if (entry) showFrame(entry.id);
+      }
+      return;
+    }
+    if (visibleCommands[menuFocusIndex]) chooseCommand(visibleCommands[menuFocusIndex]);
   };
 
   useEffect(() => {
@@ -232,6 +292,9 @@ function App() {
     localStorage.setItem("focus-space-note-bodies", JSON.stringify(noteBodies));
   }, [noteBodies]);
   useEffect(() => {
+    saveTodoLists(localStorage, todoLists);
+  }, [todoLists]);
+  useEffect(() => {
     document.documentElement.dataset.theme = theme;
     localStorage.setItem("focus-space-theme", theme);
   }, [theme]);
@@ -240,13 +303,13 @@ function App() {
     stackRefs.current[stackedFrames[stackFocusIndex]?.id]?.focus();
   }, [focusedSide, stackFocusIndex, stackedFrames, withinSide]);
   useEffect(() => {
-    if (!withinSide) sideRefs.current[focusedSide]?.focus();
-  }, [focusedSide, withinSide]);
+    if (withinSide) return;
+    if (focusedSide === "main") focusActiveFrame();
+    else sideRefs.current[focusedSide]?.focus();
+  }, [focusActiveFrame, focusedSide, withinSide]);
   useEffect(() => {
-    if (focusedSide === "main" && withinSide && !menuOpen) {
-      frameRefs.current[activeFrameId]?.focus();
-    }
-  }, [activeFrameId, focusedSide, frames, menuOpen, withinSide]);
+    if (focusedSide === "main" && withinSide && !menuOpen) focusActiveFrame();
+  }, [activeFrameId, focusActiveFrame, focusedSide, frames, menuOpen, withinSide]);
   useEffect(() => {
     if (!featurePanel) return;
     setEntryFocusIndex(0);
@@ -263,6 +326,7 @@ function App() {
         setWithinSide(true);
         setMenuOpen(true);
         setSearchMode(false);
+        setFeatureMenu(null);
         setMenuFocusIndex(0);
         actionInputRef.current?.focus();
         return;
@@ -294,6 +358,9 @@ function App() {
         event.preventDefault();
         const nextFrames = stackedFrames.filter((frame) => frame.id !== removed.id);
         setFrames((current) => current.filter((frame) => frame.id !== removed.id));
+        setTodoLists((current) =>
+          Object.fromEntries(Object.entries(current).filter(([id]) => id !== removed.id)),
+        );
         if (nextFrames.length) {
           const nextIndex = Math.min(stackFocusIndex, nextFrames.length - 1);
           setStackFocusIndex(nextIndex);
@@ -339,7 +406,7 @@ function App() {
         (event.key === "ArrowUp" || event.key === "ArrowDown")
       ) {
         event.preventDefault();
-        const count = Object.keys(featureMeta).length + 3;
+        const count = visibleFeatures.length + 3;
         const delta = event.key === "ArrowUp" ? -1 : 1;
         const next = Math.max(0, Math.min(count - 1, rightFocusIndex + delta));
         setRightFocusIndex(next);
@@ -350,7 +417,7 @@ function App() {
               ? "logout"
               : next === count - 2
                 ? "settings"
-                : `feature-${(Object.keys(featureMeta) as Feature[])[next - 1]}`;
+                : `feature-${visibleFeatures[next - 1]}`;
         rightItemRefs.current[id]?.focus();
         return;
       }
@@ -389,9 +456,9 @@ function App() {
       if (
         focusedSide === "right" &&
         rightFocusIndex >= 1 &&
-        rightFocusIndex <= Object.keys(featureMeta).length
+        rightFocusIndex <= visibleFeatures.length
       ) {
-        const feature = (Object.keys(featureMeta) as Feature[])[rightFocusIndex - 1];
+        const feature = visibleFeatures[rightFocusIndex - 1];
         if (feature === "pomodoro") openFeatureDirectly(feature);
         else openFeaturePanel(feature);
       }
@@ -529,6 +596,15 @@ function App() {
                 frame={activeFrame}
                 active
                 noteBody={noteBodies[activeFrame.id]}
+                todoItems={todoLists[activeFrame.id]}
+                onTitleChange={(title) =>
+                  setFrames((current) =>
+                    current.map((frame) => (frame.id === activeFrame.id ? { ...frame, title } : frame)),
+                  )
+                }
+                onTodoChange={(items) =>
+                  setTodoLists((current) => ({ ...current, [activeFrame.id]: items }))
+                }
                 onNoteChange={(value) =>
                   setNoteBodies((current) => ({ ...current, [activeFrame.id]: value }))
                 }
@@ -553,6 +629,7 @@ function App() {
               rightItemRefs={rightItemRefs.current}
               profileRef={profileRef}
               framesCountByFeature={framesCountByFeature}
+              todoOpenCount={todoOpenCount}
               activeFeature={activeFrame.feature}
               theme={theme}
               onToggleTheme={toggleTheme}
@@ -592,6 +669,12 @@ function App() {
               feature: frame.feature,
               title: frame.title,
             }))}
+            featureMenu={featureMenu}
+            featureEntries={featureMenuEntries.map((frame) => ({
+              id: frame.id,
+              feature: frame.feature,
+              title: frame.title,
+            }))}
             menuFocusIndex={menuFocusIndex}
             activeMenuId={activeMenuId}
             actionInputRef={actionInputRef}
@@ -606,15 +689,9 @@ function App() {
               setMenuOpen(true);
             }}
             onKeyDown={commandKeyDown}
-            onRunCommand={runCommand}
-            onSelectResult={(id) => {
-              setActiveFrameId(id);
-              setFocusedSide("main");
-              setWithinSide(true);
-              setMenuOpen(false);
-              setSearchMode(false);
-              setQuery("");
-            }}
+            onRunCommand={chooseCommand}
+            onCreateFeature={runCommand}
+            onSelectResult={showFrame}
           />
         </div>
 
