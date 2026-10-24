@@ -8,6 +8,7 @@ import type { Habit } from "../habits";
 import { TodoFrame } from "./TodoFrame";
 import { HabitsFrame } from "./HabitsFrame";
 import { RemindersFrame } from "./RemindersFrame";
+import { BookmarksFrame } from "./BookmarksFrame";
 import { POMODORO_DURATION_KEY } from "../constants";
 import { setStored } from "../storage";
 import { loadSettings, playAlert } from "../settings";
@@ -333,6 +334,10 @@ export function Mainframe({
       ) : frame.feature === "reminders" ? (
         <div className="frame-body">
           <RemindersFrame key={frame.id} frameId={frame.id} />
+        </div>
+      ) : frame.feature === "bookmarks" ? (
+        <div className="frame-body">
+          <BookmarksFrame key={frame.id} />
         </div>
       ) : frame.feature === "habits" ? (
         <div className="frame-body">

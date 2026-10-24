@@ -333,7 +333,7 @@ function App() {
       runCommand(command);
       return;
     }
-    if (command === "habits" || command === "reminders") {
+    if (singleFrameFeatures.includes(command)) {
       openFeatureDirectly(command);
       setMenuOpen(false);
       setQuery("");

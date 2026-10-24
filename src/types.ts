@@ -1,4 +1,4 @@
-export type Feature = "habits" | "reminders" | "focus music" | "notes" | "todo list" | "pomodoro";
+export type Feature = "habits" | "reminders" | "focus music" | "notes" | "todo list" | "pomodoro" | "bookmarks";
 
 export type Command = Feature | "Search";
 

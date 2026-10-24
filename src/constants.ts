@@ -51,6 +51,16 @@ export const featureMeta: Record<Feature, FeatureMeta> = {
       details: [],
     },
   },
+  bookmarks: {
+    glyph: "⚐",
+    description: "Save and organize links",
+    frame: {
+      eyebrow: "BOOKMARKS",
+      title: "Bookmarks",
+      description: "Links worth keeping, in collections you can search.",
+      details: [],
+    },
+  },
   pomodoro: {
     glyph: "◉",
     description: "Start a timed session",
@@ -64,10 +74,10 @@ export const featureMeta: Record<Feature, FeatureMeta> = {
 };
 
 // Features shown in the dock, ⌘K and the flyout. Hidden features keep their metadata so they can return.
-export const visibleFeatures: Feature[] = ["pomodoro", "todo list", "habits", "reminders"];
+export const visibleFeatures: Feature[] = ["pomodoro", "todo list", "habits", "reminders", "bookmarks"];
 
 // These open their one frame instead of listing frames to pick from or create.
-export const singleFrameFeatures: Feature[] = ["pomodoro", "habits", "reminders"];
+export const singleFrameFeatures: Feature[] = ["pomodoro", "habits", "reminders", "bookmarks"];
 
 export const commandNames: Command[] = [...visibleFeatures, "Search"];
 
