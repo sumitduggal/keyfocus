@@ -23,46 +23,7 @@ import {
   type TodoSort,
   type TodoViewState,
 } from "../todo";
-
-interface Suggestion {
-  value: string;
-  label: string;
-  hint: string;
-}
-
-const PRIORITY_SUGGESTIONS: Suggestion[] = [
-  { value: "!high", label: "high", hint: "do first" },
-  { value: "!medium", label: "medium", hint: "default" },
-  { value: "!low", label: "low", hint: "when there is time" },
-];
-
-const WEEKDAYS = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
-
-const shortDate = (date: Date) =>
-  date.toLocaleDateString("en-GB", { day: "numeric", month: "short" });
-
-const addDays = (date: Date, days: number) => {
-  const next = new Date(date);
-  next.setDate(next.getDate() + days);
-  return next;
-};
-
-// Today, tomorrow, then the next six weekdays, matching how the parser resolves @weekday.
-function dateSuggestions(today: Date): Suggestion[] {
-  const suggestions: Suggestion[] = [
-    { value: "@today", label: "today", hint: shortDate(today) },
-    { value: "@tomorrow", label: "tomorrow", hint: shortDate(addDays(today, 1)) },
-  ];
-  for (let offset = 2; offset <= 7; offset++) {
-    const day = addDays(today, offset);
-    const name = WEEKDAYS[day.getDay()];
-    suggestions.push({ value: `@${name}`, label: name, hint: shortDate(day) });
-  }
-  return suggestions;
-}
-
-// The token under the cursor: the last whitespace-separated word of the draft.
-const currentToken = (draft: string) => draft.split(/\s+/).pop() ?? "";
+import { PRIORITY_SUGGESTIONS, currentToken, dateSuggestions, type Suggestion } from "../suggestions";
 
 // Item text is edited in place and saved as you type. The stored text is shown when not editing,
 // so undo and other changes always show what is saved. Leaving the field blank keeps the saved text.

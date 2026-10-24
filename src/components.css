@@ -2400,3 +2400,623 @@
     transform: translateX(-50%);
   }
 }
+
+/* ===== HABITS ===== */
+.habit-add {
+  display: flex;
+  gap: 8px;
+}
+
+.habit-add select,
+.habit-target select {
+  min-height: 40px;
+  padding: 0 8px;
+  border: 1px solid var(--border-strong);
+  border-radius: 4px;
+  background: var(--surface-2);
+  color: var(--text);
+  font: 10px/1 var(--font-mono-stack);
+  letter-spacing: 0.08em;
+}
+
+.habit-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.habit-row {
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--surface) 70%, transparent);
+}
+
+.habit-main {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.habit-name {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: none;
+  color: var(--text);
+  font: 12px/1.2 var(--font-mono-stack);
+  letter-spacing: 0.06em;
+}
+
+.habit-name:focus {
+  box-shadow: 0 1px 0 var(--accent);
+}
+
+.habit-progress {
+  color: var(--accent);
+  font: 700 11px/1 var(--font-display);
+  letter-spacing: 0.12em;
+}
+
+.habit-days {
+  display: flex;
+  gap: 3px;
+}
+
+.habit-day {
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: 1px solid var(--border-strong);
+  border-radius: 3px;
+  background: none;
+  color: var(--text-faint);
+  font: 9px/1 var(--font-mono-stack);
+  cursor: pointer;
+}
+
+.habit-day:disabled {
+  cursor: default;
+  opacity: 0.45;
+}
+
+.habit-day.is-today {
+  border-color: var(--accent-soft);
+}
+
+.habit-day.is-done {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--text);
+}
+
+.habit-more,
+.habit-actions button,
+.habit-archived button {
+  padding: 4px 8px;
+  border: 1px solid var(--border-strong);
+  border-radius: 3px;
+  background: none;
+  color: var(--text-faint);
+  font: 9px/1 var(--font-mono-stack);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.habit-detail {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+}
+
+.habit-detail p {
+  margin: 0 0 8px;
+  color: var(--text-faint);
+  font: 10px/1.4 var(--font-mono-stack);
+  letter-spacing: 0.1em;
+}
+
+.habit-detail p b {
+  color: var(--text);
+}
+
+.habit-target {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-faint);
+  font: 9px/1 var(--font-mono-stack);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.habit-map {
+  display: flex;
+  gap: 2px;
+  margin: 10px 0;
+  overflow-x: auto;
+}
+
+.habit-map-week {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.habit-cell {
+  width: 9px;
+  height: 9px;
+  border-radius: 2px;
+  background: color-mix(in srgb, var(--border) 60%, transparent);
+}
+
+.habit-cell.is-done {
+  background: var(--accent);
+}
+
+.habit-cell.is-future {
+  opacity: 0.25;
+}
+
+.habit-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.habit-archived .habit-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.habit-undo button {
+  margin-left: 8px;
+  padding: 3px 8px;
+  border: 1px solid var(--accent);
+  border-radius: 3px;
+  background: none;
+  color: var(--accent);
+  font: inherit;
+  cursor: pointer;
+}
+
+/* Habit options open as a popup under the More button, so the list never shifts. */
+.habit-more-wrap {
+  position: relative;
+}
+
+.habit-popup {
+  position: absolute;
+  z-index: 20;
+  top: calc(100% + 6px);
+  right: 0;
+  width: 280px;
+  padding: 12px;
+  box-sizing: border-box;
+  border: 1px solid var(--border-strong);
+  border-radius: 6px;
+  background: var(--surface);
+  box-shadow: var(--shadow-menu);
+}
+
+.habit-popup:focus {
+  outline: 0;
+}
+
+.habit-popup {
+  width: 240px;
+  padding: 10px;
+}
+
+.habit-popup p {
+  font-size: 11px;
+}
+
+.habit-popup .habit-target {
+  font-size: 9px;
+}
+
+.habit-popup .habit-target select {
+  min-height: 26px;
+  padding: 0 6px;
+  font-size: 11px;
+}
+
+.habit-popup .habit-actions {
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.habit-popup .habit-actions button {
+  padding: 4px 8px;
+  font-size: 9px;
+}
+
+.habit-popup .habit-cell {
+  width: 8px;
+  height: 8px;
+}
+
+/* ===== REMINDERS ===== */
+.reminder-group h2 {
+  margin: 14px 0 0;
+  color: var(--text-faint);
+  font: 9px/1 var(--font-mono-stack);
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+}
+
+.reminder-group.is-overdue h2,
+.reminder-row.is-overdue .reminder-when {
+  color: var(--accent);
+}
+
+.reminder-row .habit-name small {
+  display: block;
+  margin-top: 3px;
+  color: var(--text-faint);
+  font-size: 9px;
+  letter-spacing: 0.08em;
+}
+
+.reminder-check {
+  flex: none;
+  width: 20px;
+  min-width: 20px;
+  height: 20px;
+  min-height: 20px;
+  border: 1px solid var(--accent);
+  border-radius: 4px;
+}
+
+.reminder-check:hover,
+.reminder-check:focus-visible {
+  background: var(--accent-soft);
+}
+
+.reminder-popup {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.reminder-field {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 4px;
+}
+
+.reminder-field input {
+  min-height: 26px;
+  padding: 0 6px;
+  box-sizing: border-box;
+  border: 1px solid var(--border-strong);
+  border-radius: 4px;
+  background: var(--surface-2);
+  color: var(--text);
+  font: 11px/1 var(--font-mono-stack);
+  text-transform: none;
+}
+
+.reminder-popup .habit-actions button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+/* Everything that just fired, stacked in one banner above the page. */
+.reminder-banner {
+  position: fixed;
+  z-index: 40;
+  top: 16px;
+  left: 50%;
+  display: flex;
+  width: min(420px, calc(100vw - 32px));
+  flex-direction: column;
+  gap: 8px;
+  transform: translateX(-50%);
+}
+
+.reminder-banner-item {
+  padding: 10px 12px;
+  border: 1px solid var(--accent);
+  border-radius: 6px;
+  background: var(--surface);
+  box-shadow: var(--shadow-menu);
+  color: var(--text);
+  font: 12px/1.3 var(--font-mono-stack);
+}
+
+.reminder-banner-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.reminder-banner-actions button {
+  padding: 4px 8px;
+  border: 1px solid var(--border-strong);
+  border-radius: 3px;
+  background: none;
+  color: var(--text-faint);
+  font: 9px/1 var(--font-mono-stack);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.reminder-banner-actions button:first-child {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* ===== ICONS ===== */
+.icon-button {
+  flex: none;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 1px solid var(--border-strong);
+  border-radius: 6px;
+  background: none;
+  color: var(--accent);
+  font: 26px/1 var(--font-mono-stack);
+  cursor: pointer;
+}
+
+.icon-button:hover {
+  border-color: var(--accent);
+}
+
+.icon-popup {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 6px;
+  width: 308px;
+  left: 0;
+  right: auto;
+}
+
+.icon-popup button {
+  height: 44px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  background: none;
+  color: var(--text);
+  font: 28px/1 var(--font-mono-stack);
+  cursor: pointer;
+}
+
+.icon-popup button:hover,
+.icon-popup button.is-selected {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* Priority, Snooze and Edit share one size so they line up in a reminder row. */
+.reminder-row .habit-more-wrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.reminder-row .todo-priority,
+.reminder-row .habit-more {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  width: 64px;
+  height: 28px;
+  min-height: 28px;
+  padding: 0;
+  border-radius: 4px;
+  font: 9px/1 var(--font-mono-stack);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+/* The delete × on done reminders and archived habits is a full-size target. */
+.habit-archived button[aria-label^="Delete"] {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  font-size: 16px;
+  letter-spacing: 0;
+}
+
+.habit-archived button[aria-label^="Delete"]:hover {
+  border-color: var(--danger);
+  color: var(--danger);
+}
+
+/* Habit options popup: stats, target, history and actions in evenly spaced sections. */
+.habit-popup.habit-options {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  width: 268px;
+  padding: 14px;
+}
+
+.habit-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.habit-stats div {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+}
+
+.habit-stats span,
+.habit-popup-row > span {
+  color: var(--text-faint);
+  font: 9px/1 var(--font-mono-stack);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.habit-stats b {
+  color: var(--accent);
+  font: 700 18px/1 var(--font-display);
+  letter-spacing: 0.08em;
+}
+
+.habit-popup-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.habit-options select {
+  min-height: 28px;
+  padding: 0 8px;
+  border: 1px solid var(--border-strong);
+  border-radius: 4px;
+  background: var(--surface-2);
+  color: var(--text);
+  font: 11px/1 var(--font-mono-stack);
+}
+
+.habit-history {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+}
+
+.habit-history .habit-map {
+  margin: 0;
+  padding-bottom: 2px;
+}
+
+.habit-toggle {
+  display: flex;
+}
+
+.habit-toggle button {
+  height: 24px;
+  padding: 0 10px;
+  border: 1px solid var(--border-strong);
+  background: none;
+  color: var(--text-faint);
+  font: 9px/1 var(--font-mono-stack);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.habit-toggle button:first-child {
+  border-radius: 4px 0 0 4px;
+}
+
+.habit-toggle button:last-child {
+  margin-left: -1px;
+  border-radius: 0 4px 4px 0;
+}
+
+.habit-toggle button[aria-pressed="true"] {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--text);
+}
+
+.habit-popup-foot {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+}
+
+.habit-popup-foot button {
+  height: 30px;
+  border: 1px solid var(--border-strong);
+  border-radius: 4px;
+  background: none;
+  color: var(--text-muted);
+  font: 9px/1 var(--font-mono-stack);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.habit-popup-foot button:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.habit-popup-foot button.is-danger {
+  color: var(--danger);
+}
+
+.habit-popup-foot button.is-danger:hover {
+  border-color: var(--danger);
+  color: var(--danger);
+}
+
+/* Habit nudge: a time field in the popup, and a missed nudge row in the Overdue list. */
+.habit-nudge-field {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.habit-options input[type="time"] {
+  min-height: 28px;
+  padding: 0 6px;
+  border: 1px solid var(--border-strong);
+  border-radius: 4px;
+  background: var(--surface-2);
+  color: var(--text);
+  font: 11px/1 var(--font-mono-stack);
+}
+
+.habit-nudge-field button {
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 1px solid var(--border-strong);
+  border-radius: 4px;
+  background: none;
+  color: var(--text-faint);
+  cursor: pointer;
+}
+
+.icon-static {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  color: var(--accent);
+  font: 26px/1 var(--font-mono-stack);
+}
+
+.nudge-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.reminder-row .nudge-actions .habit-more {
+  width: auto;
+  padding: 0 10px;
+}

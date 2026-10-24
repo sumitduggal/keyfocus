@@ -8,7 +8,7 @@ export const featureMeta: Record<Feature, FeatureMeta> = {
       eyebrow: "HABITS",
       title: "Habits",
       description: "Small practices, made visible and easy to return to.",
-      details: ["Morning stretch", "Read for 20 minutes", "Walk after lunch"],
+      details: [],
     },
   },
   reminders: {
@@ -18,11 +18,7 @@ export const featureMeta: Record<Feature, FeatureMeta> = {
       eyebrow: "REMINDERS",
       title: "Reminders",
       description: "Time-aware prompts that stay close to your current context.",
-      details: [
-        "Call Alex · Today",
-        "Send the proposal · Tomorrow",
-        "Renew the membership · Friday",
-      ],
+      details: [],
     },
   },
   "focus music": {
@@ -68,7 +64,10 @@ export const featureMeta: Record<Feature, FeatureMeta> = {
 };
 
 // Features shown in the dock, ⌘K and the flyout. Hidden features keep their metadata so they can return.
-export const visibleFeatures: Feature[] = ["pomodoro", "todo list"];
+export const visibleFeatures: Feature[] = ["pomodoro", "todo list", "habits", "reminders"];
+
+// These open their one frame instead of listing frames to pick from or create.
+export const singleFrameFeatures: Feature[] = ["pomodoro", "habits", "reminders"];
 
 export const commandNames: Command[] = [...visibleFeatures, "Search"];
 

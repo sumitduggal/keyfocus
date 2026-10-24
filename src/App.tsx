@@ -9,6 +9,7 @@ import {
   commandNames,
   featureMeta,
   initialFrame,
+  singleFrameFeatures,
   visibleFeatures,
 } from "./constants";
 import { setStored } from "./storage";
@@ -18,6 +19,9 @@ import { Dock } from "./components/Dock";
 import { FeaturePanel } from "./components/FeaturePanel";
 import { CommandPalette } from "./components/CommandPalette";
 import { Weather } from "./components/Weather";
+import { loadHabits, saveHabits, toggleDay, type Habit } from "./habits";
+import { initReminders, registerHabitSource, removeFrameReminders, restoreFrameReminders } from "./reminders-store";
+import { HudReminders, ReminderBanner } from "./components/ReminderBanner";
 import {
   loadTodoLists,
   loadTodoViews,
@@ -123,6 +127,9 @@ function App() {
 
   const [todoLists, setTodoLists] = useState<Record<string, TodoItem[]>>(() =>
     loadTodoLists(localStorage),
+  );
+  const [habitLists, setHabitLists] = useState<Record<string, Habit[]>>(() =>
+    loadHabits(localStorage),
   );
   const [todoViews, setTodoViews] = useState<Record<string, TodoViewState>>(() =>
     loadTodoViews(localStorage),
@@ -323,6 +330,12 @@ function App() {
       runCommand(command);
       return;
     }
+    if (command === "habits" || command === "reminders") {
+      openFeatureDirectly(command);
+      setMenuOpen(false);
+      setQuery("");
+      return;
+    }
     setFeatureMenu(command);
     setQuery("");
     setMenuFocusIndex(0);
@@ -368,6 +381,8 @@ function App() {
     const position = frames.findIndex((frame) => frame.id === id);
     const removedFrame = frames[position];
     const removedList = todoLists[id];
+    const removedHabits = habitLists[id];
+    const removedReminders = removeFrameReminders(id);
     const trashId = crypto.randomUUID();
     setTrash((current) =>
       addTrashEntry(current, {
@@ -390,6 +405,8 @@ function App() {
           return restored;
         });
         if (removedList) setTodoLists((current) => ({ ...current, [id]: removedList }));
+        if (removedHabits) setHabitLists((current) => ({ ...current, [id]: removedHabits }));
+        if (removedReminders) restoreFrameReminders(id, removedReminders);
         setTrash((current) => removeTrashEntry(current, trashId));
       },
     });
@@ -397,6 +414,9 @@ function App() {
     const next = remaining[0] ?? { ...initialFrame };
     setFrames(remaining.length ? remaining : [next]);
     setTodoLists((current) =>
+      Object.fromEntries(Object.entries(current).filter(([frameId]) => frameId !== id)),
+    );
+    setHabitLists((current) =>
       Object.fromEntries(Object.entries(current).filter(([frameId]) => frameId !== id)),
     );
     setTodoViews((current) =>
@@ -407,7 +427,7 @@ function App() {
       setFocusedSide("main");
       setWithinSide(true);
     }
-  }, [activeFrameId, frames, todoLists]);
+  }, [activeFrameId, frames, habitLists, todoLists]);
 
   const promoteStackFrame = (index: number) => {
     const selectedFrame = stackedFrames[index];
@@ -526,6 +546,25 @@ function App() {
   useEffect(() => {
     saveTodoLists(localStorage, todoLists);
   }, [todoLists]);
+  // The reminder scheduler reads habits for nudges and ticks one when its nudge is answered.
+  const habitListsRef = useRef(habitLists);
+  useEffect(() => {
+    habitListsRef.current = habitLists;
+  }, [habitLists]);
+  useEffect(() => {
+    initReminders();
+    registerHabitSource({
+      get: () => habitListsRef.current,
+      tick: (frameId, habitId, day) =>
+        setHabitLists((current) => ({
+          ...current,
+          [frameId]: toggleDay(current[frameId] ?? [], habitId, day, new Date()),
+        })),
+    });
+  }, []);
+  useEffect(() => {
+    saveHabits(localStorage, habitLists);
+  }, [habitLists]);
   useEffect(() => {
     saveTodoViews(localStorage, todoViews);
   }, [todoViews]);
@@ -763,7 +802,7 @@ function App() {
         rightFocusIndex <= visibleFeatures.length
       ) {
         const feature = visibleFeatures[rightFocusIndex - 1];
-        if (feature === "pomodoro") openFeatureDirectly(feature);
+        if (singleFrameFeatures.includes(feature)) openFeatureDirectly(feature);
         else openFeaturePanel(feature);
       }
     };
@@ -822,6 +861,7 @@ function App() {
 
           <div className="hud-status">
             <Weather />
+            <HudReminders />
             <HudClock />
           </div>
         </header>
@@ -897,6 +937,10 @@ function App() {
                 active
                 noteBody={noteBodies[activeFrame.id]}
                 todoItems={todoLists[activeFrame.id]}
+                habitItems={habitLists[activeFrame.id]}
+                onHabitsChange={(habits) =>
+                  setHabitLists((current) => ({ ...current, [activeFrame.id]: habits }))
+                }
                 onDelete={() => deleteFrame(activeFrame.id)}
                 todoView={todoViews[activeFrame.id] ?? { filter: "all", sort: "manual" }}
                 onTodoViewChange={(view) =>
@@ -939,7 +983,7 @@ function App() {
               onToggleTheme={toggleTheme}
               setRightFocusIndex={setRightFocusIndex}
               onFeaturePress={(feature) => {
-                if (feature === "pomodoro") openFeatureDirectly(feature);
+                if (singleFrameFeatures.includes(feature)) openFeatureDirectly(feature);
                 else openFeaturePanel(feature);
               }}
             />
@@ -1015,6 +1059,8 @@ function App() {
             onSelectResult={showFrame}
           />
         </div>
+
+        <ReminderBanner />
 
         <nav className="side-tabs" aria-label="Sections">
           {sideTabs.map(({ side, label }) => (

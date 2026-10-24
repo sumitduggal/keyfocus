@@ -4,7 +4,10 @@ import type EditorJS from "@editorjs/editorjs";
 import type { OutputData } from "@editorjs/editorjs";
 import type { WorkspaceFrame } from "../types";
 import type { TodoItem, TodoViewState } from "../todo";
+import type { Habit } from "../habits";
 import { TodoFrame } from "./TodoFrame";
+import { HabitsFrame } from "./HabitsFrame";
+import { RemindersFrame } from "./RemindersFrame";
 import { POMODORO_DURATION_KEY } from "../constants";
 import { setStored } from "../storage";
 
@@ -72,6 +75,8 @@ export function Mainframe({
   onNoteChange,
   todoItems,
   onTodoChange,
+  habitItems,
+  onHabitsChange,
   onTitleChange,
   onDelete,
   todoView,
@@ -84,6 +89,8 @@ export function Mainframe({
   onNoteChange?: (value: string) => void;
   todoItems?: TodoItem[];
   onTodoChange?: (items: TodoItem[]) => void;
+  habitItems?: Habit[];
+  onHabitsChange?: (habits: Habit[]) => void;
   onTitleChange?: (title: string) => void;
   onDelete?: () => void;
   todoView?: TodoViewState;
@@ -331,6 +338,18 @@ export function Mainframe({
             onViewChange={onTodoViewChange ?? (() => undefined)}
             onChange={onTodoChange ?? (() => undefined)}
             onDeleteList={onDelete}
+          />
+        </div>
+      ) : frame.feature === "reminders" ? (
+        <div className="frame-body">
+          <RemindersFrame key={frame.id} frameId={frame.id} />
+        </div>
+      ) : frame.feature === "habits" ? (
+        <div className="frame-body">
+          <HabitsFrame
+            key={frame.id}
+            habits={habitItems ?? []}
+            onChange={onHabitsChange ?? (() => undefined)}
           />
         </div>
       ) : frame.feature === "notes" ? (

@@ -775,3 +775,19 @@
   outline-offset: 3px;
   box-shadow: var(--shadow-card-active), var(--glow);
 }
+
+.hud-reminders {
+  max-width: 260px;
+  gap: 8px;
+}
+
+.hud-reminders span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.hud-reminders b {
+  font-size: 11px;
+  letter-spacing: 0.14em;
+}
