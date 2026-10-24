@@ -68,6 +68,31 @@ test('clicking a field outside the command bar closes it and leaves focus in tha
   await expect(page.getByLabel('New item')).toBeFocused()
 })
 
+test('the command bar sits in the footer, centred on it, and the menu opens above it', async ({ page }) => {
+  for (const width of [1440, 1100]) {
+    await page.setViewportSize({ width, height: 900 })
+    const bar = page.locator('.hud-bottom .command-wrap')
+    await expect(bar).toBeVisible()
+    const barBox = (await bar.boundingBox())!
+    const footerBox = (await page.locator('.hud-bottom').boundingBox())!
+    expect(Math.abs(barBox.x + barBox.width / 2 - (footerBox.x + footerBox.width / 2))).toBeLessThan(2)
+    expect(barBox.y).toBeGreaterThan(footerBox.y)
+    expect(barBox.y + barBox.height).toBeLessThanOrEqual(footerBox.y + footerBox.height)
+  }
+  await page.keyboard.press('Control+k')
+  const menu = page.getByRole('menu')
+  await expect(menu).toBeVisible()
+  const menuBox = (await menu.boundingBox())!
+  const barBox = (await page.locator('.command-wrap').boundingBox())!
+  expect(menuBox.y + menuBox.height).toBeLessThanOrEqual(barBox.y + 1)
+})
+
+test('on a narrow screen the command bar floats instead, since the footer is hidden', async ({ page }) => {
+  await page.setViewportSize({ width: 500, height: 800 })
+  await expect(page.locator('.command-wrap')).toBeVisible()
+  await expect(page.locator('.hud-bottom .command-wrap')).toHaveCount(0)
+})
+
 test('command palette opens a feature', async ({ page }) => {
   await page.keyboard.press('Control+k')
   await page.getByRole('menuitem', { name: /Habits/ }).first().click()

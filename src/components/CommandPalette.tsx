@@ -1,3 +1,5 @@
+import { useSyncExternalStore } from "react";
+import { createPortal } from "react-dom";
 import { motion } from "motion/react";
 import type { Command, Feature } from "../types";
 import { featureMeta } from "../constants";
@@ -8,7 +10,17 @@ interface SearchResult {
   title: string;
 }
 
+// Where the footer is shown, the bar sits in it. Below that the footer is hidden and the bar floats.
+const FOOTER_QUERY = "(min-width: 760px)";
+const subscribeFooter = (onChange: () => void) => {
+  const query = window.matchMedia(FOOTER_QUERY);
+  query.addEventListener("change", onChange);
+  return () => query.removeEventListener("change", onChange);
+};
+const footerShown = () => window.matchMedia(FOOTER_QUERY).matches;
+
 interface CommandPaletteProps {
+  barHost: HTMLElement | null;
   menuOpen: boolean;
   searchMode: boolean;
   featureMenu: Feature | null;
@@ -40,6 +52,7 @@ const resultDomId = (id: string) => `result-${id}`;
 const NEW_ROW_ID = "new";
 
 export function CommandPalette({
+  barHost,
   menuOpen,
   searchMode,
   featureMenu,
@@ -78,29 +91,34 @@ export function CommandPalette({
       ? `Filter ${featureMeta[featureMenu].frame.title} or create one…`
       : "Run a command or search…";
 
+  const inFooter = useSyncExternalStore(subscribeFooter, footerShown);
+  const bar = (
+    <motion.div
+      className="command-wrap"
+      animate={menuOpen ? { scaleX: 1.04, scaleY: 1.04 } : { scaleX: 1, scaleY: 1 }}
+      transition={reduceMotion ? { duration: 0 } : { duration: 0.18, ease: "easeOut" }}
+    >
+      <span className="command-mark" aria-hidden="true">
+        ⌖
+      </span>
+      <input
+        ref={actionInputRef}
+        aria-label="Open actions"
+        aria-controls="action-menu"
+        aria-activedescendant={menuOpen && activeDomId ? activeDomId : undefined}
+        value={query}
+        onChange={(event) => onQueryChange(event.target.value)}
+        onFocus={onFocus}
+        onKeyDown={onKeyDown}
+        placeholder={placeholder}
+      />
+      <kbd>⌘K</kbd>
+    </motion.div>
+  );
+
   return (
     <>
-      <motion.div
-        className="command-wrap"
-        animate={menuOpen ? { scaleX: 1.04, scaleY: 1.04 } : { scaleX: 1, scaleY: 1 }}
-        transition={reduceMotion ? { duration: 0 } : { duration: 0.18, ease: "easeOut" }}
-      >
-        <span className="command-mark" aria-hidden="true">
-          ⌖
-        </span>
-        <input
-          ref={actionInputRef}
-          aria-label="Open actions"
-          aria-controls="action-menu"
-          aria-activedescendant={menuOpen && activeDomId ? activeDomId : undefined}
-          value={query}
-          onChange={(event) => onQueryChange(event.target.value)}
-          onFocus={onFocus}
-          onKeyDown={onKeyDown}
-          placeholder={placeholder}
-        />
-        <kbd>⌘K</kbd>
-      </motion.div>
+      {inFooter && barHost ? createPortal(bar, barHost) : bar}
 
       {menuOpen && (
         <motion.div

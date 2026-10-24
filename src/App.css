@@ -1125,3 +1125,67 @@
     opacity: 0.45;
   }
 }
+
+/* The command bar lives in the middle of the footer: three columns, with the bar centred on the
+   whole footer whatever the widths of the hints and the status. Below 760px the footer is hidden
+   and the bar floats as before. */
+@media (min-width: 760px) {
+  .hud-bottom {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 440px) minmax(0, 1fr);
+  }
+
+  .key-hints {
+    flex-wrap: nowrap;
+    min-width: 0;
+    overflow: hidden;
+  }
+
+  .hud-footer-readout {
+    justify-self: end;
+    white-space: nowrap;
+  }
+
+  .command-slot {
+    display: flex;
+    justify-content: center;
+    min-width: 0;
+  }
+
+  .command-slot .command-wrap {
+    position: static;
+    translate: none;
+    width: 100%;
+    height: 38px;
+    min-height: 38px;
+  }
+
+  /* The footer below the canvas holds the bar, so the menu needs no gap for it. */
+  .menu-layer {
+    inset: 0;
+  }
+
+  .main-side {
+    padding-bottom: 18px;
+  }
+}
+
+/* The bar is 440px wide and centred, so each side of the footer gets (width - 552px) / 2. The key
+   hints give way, last first, as that shrinks. */
+@media (min-width: 760px) and (max-width: 1599px) {
+  .key-hints span:nth-child(n + 4) {
+    display: none;
+  }
+}
+
+@media (min-width: 760px) and (max-width: 1203px) {
+  .key-hints span:nth-child(3) {
+    display: none;
+  }
+}
+
+@media (min-width: 760px) and (max-width: 974px) {
+  .key-hints span:nth-child(n + 2) {
+    display: none;
+  }
+}

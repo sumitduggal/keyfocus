@@ -127,6 +127,8 @@ function App() {
     setStored(DOCK_COLLAPSED_KEY, dockCollapsed ? "1" : "0");
   }, [dockCollapsed]);
   // The stack of earlier frames can shrink to a rail the same way.
+  // The footer holds the command bar, which the palette draws into this slot.
+  const [barHost, setBarHost] = useState<HTMLElement | null>(null);
   const [stackCollapsed, setStackCollapsed] = useState(() => {
     try {
       return localStorage.getItem(STACK_COLLAPSED_KEY) === "1";
@@ -1139,6 +1141,7 @@ function App() {
           )}
 
           <CommandPalette
+            barHost={barHost}
             menuOpen={menuOpen}
             searchMode={searchMode}
             query={query}
@@ -1254,6 +1257,7 @@ function App() {
               <kbd>Esc</kbd> Reset
             </span>
           </div>
+          <div className="command-slot" ref={setBarHost} />
           <div className="hud-footer-readout">
             <span>{pad(stackedFrames.length)} stacked</span>
             <span className="sep">//</span>
