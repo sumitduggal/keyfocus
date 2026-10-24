@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useLayoutEffect, useRef } from "react";
 import type { Theme } from "../types";
 import { alertSounds, playAlert } from "../settings";
 import type { Settings } from "../settings";
@@ -22,6 +22,18 @@ export function SettingsPanel({
 }: SettingsPanelProps) {
   const panelRef = useRef<HTMLElement | null>(null);
 
+  // Center on the Settings button, then keep the whole panel inside its container.
+  useLayoutEffect(() => {
+    const panel = panelRef.current;
+    const container = panel?.offsetParent;
+    if (!panel || !container) return;
+    const margin = 12;
+    const half = panel.offsetHeight / 2;
+    const wanted = anchorY === null ? container.clientHeight / 2 : anchorY - container.getBoundingClientRect().top;
+    const max = container.clientHeight - half - margin;
+    panel.style.top = `${Math.max(half + margin, Math.min(max, wanted))}px`;
+  }, [anchorY]);
+
   useEffect(() => {
     panelRef.current?.focus();
     const closeWhenFocusLeaves = (event: FocusEvent) => {
@@ -35,7 +47,6 @@ export function SettingsPanel({
     <aside
       ref={panelRef}
       className="feature-aside settings-aside"
-      style={{ top: anchorY ?? "50%" }}
       aria-label="Settings"
       tabIndex={-1}
       onKeyDown={(event) => {

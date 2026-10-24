@@ -1395,6 +1395,10 @@
   gap: 6px;
 }
 
+.settings-aside {
+  width: 260px;
+}
+
 .settings-row button,
 .settings-row select {
   padding: 6px 10px;
@@ -1402,7 +1406,9 @@
   border-radius: 4px;
   background: var(--surface-2);
   color: var(--text);
-  font: 12px/1.2 inherit;
+  font-family: inherit;
+  font-size: 12px;
+  line-height: 1.2;
   cursor: pointer;
 }
 
