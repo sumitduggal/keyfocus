@@ -247,9 +247,6 @@ export function Mainframe({
 
       {frame.feature === "pomodoro" ? (
         <div className="frame-body pomodoro-view">
-          <p className="frame-description">
-            A focused work interval with a short reset afterward.
-          </p>
           <div
             className="pomodoro-dial"
             style={{ "--progress": `${progress * 360}deg` } as CSSProperties}

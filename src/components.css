@@ -1,13 +1,11 @@
-/* ===== MAIN FRAME ===== */
+/* Every frame takes 75% of the main side's width and at least 75% of its height, growing with content. */
 .main-frame-position {
   position: relative;
   z-index: 2;
+  display: flex;
   flex: 0 0 auto;
-  width: min(560px, 100%);
-}
-
-.main-frame-position.note-position {
-  width: min(740px, 100%);
+  width: 75%;
+  min-height: 75%;
 }
 
 .workspace-frame {
@@ -1223,7 +1221,7 @@
   width: 198px;
   aspect-ratio: 1;
   place-items: center;
-  margin: 8px auto 14px;
+  margin: 32px auto;
   border-radius: 50%;
   background: conic-gradient(
     var(--accent) var(--progress),
