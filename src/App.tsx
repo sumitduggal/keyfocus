@@ -566,6 +566,20 @@ function App() {
       }
       if (featurePanel) return;
       if (menuOpen || event.target instanceof HTMLInputElement) return;
+      // Option+1-9 bring that stacked frame into the main side. Reads the physical key, because
+      // Option changes the typed character on macOS.
+      if (event.altKey && /^Digit[1-9]$/.test(event.code) && !event.metaKey && !event.ctrlKey) {
+        const selectedFrame = stackedFrames[Number(event.code.slice(-1)) - 1];
+        if (!selectedFrame) return;
+        event.preventDefault();
+        const previousMain = activeFrame;
+        setFrames((current) => promoteFrames(current, selectedFrame, previousMain));
+        setActiveFrameId(selectedFrame.id);
+        setStackFocusIndex(-1);
+        setFocusedSide("main");
+        setWithinSide(true);
+        return;
+      }
       if (
         focusedSide === "left" &&
         withinSide &&
