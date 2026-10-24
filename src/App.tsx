@@ -13,6 +13,14 @@ import "./components.css";
 
 const pad = (value: number) => String(value).padStart(2, "0");
 
+// Mobile tab bar (below 760px). Each tab switches the same side focus that Alt+arrow uses.
+const sideTabs: { side: Side; label: string }[] = [
+  { side: "left", label: "Frames" },
+  { side: "main", label: "Active" },
+  { side: "right", label: "Features" },
+];
+const sideOrder = sideTabs.map((tab) => tab.side);
+
 function HudClock() {
   const [now, setNow] = useState(() => new Date());
 
@@ -299,10 +307,9 @@ function App() {
       }
       if (event.altKey && (event.key === "ArrowLeft" || event.key === "ArrowRight")) {
         event.preventDefault();
-        const sides: Side[] = ["left", "main", "right"];
         const offset = event.key === "ArrowLeft" ? -1 : 1;
-        const next = Math.max(0, Math.min(sides.length - 1, sides.indexOf(focusedSide) + offset));
-        const nextSide = sides[next];
+        const next = Math.max(0, Math.min(sideOrder.length - 1, sideOrder.indexOf(focusedSide) + offset));
+        const nextSide = sideOrder[next];
         const enteringLeft = nextSide === "left" && stackedFrames.length > 0;
         setFocusedSide(nextSide);
         setWithinSide(enteringLeft);
@@ -610,6 +617,22 @@ function App() {
             }}
           />
         </div>
+
+        <nav className="side-tabs" aria-label="Sections">
+          {sideTabs.map(({ side, label }) => (
+            <button
+              key={side}
+              type="button"
+              aria-current={focusedSide === side}
+              onClick={() => {
+                setFocusedSide(side);
+                setWithinSide(false);
+              }}
+            >
+              {label}
+            </button>
+          ))}
+        </nav>
 
         <footer className="hud-bottom">
           <div className="key-hints">

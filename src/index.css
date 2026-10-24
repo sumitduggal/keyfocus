@@ -28,75 +28,79 @@
 }
 
 :root {
-  --font-ui: "SF Pro Display", "Helvetica Neue", Inter, ui-sans-serif, system-ui, sans-serif;
-  --font-mono-stack:
-    "SF Mono", "JetBrains Mono", "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  --font-ui: Inter, "Helvetica Neue", Arial, ui-sans-serif, system-ui, sans-serif;
+  --font-mono-stack: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  --font-display: Rajdhani, "Arial Narrow", sans-serif;
   font-family: var(--font-ui);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
 }
 
 /* Theme tokens. `data-theme` on <html> picks the palette; component CSS should
-   only reference these variables, never a raw color. */
+   only reference these variables, never a raw color. Values follow docs/design/DESIGN.md:
+   navy-black ground, cyan accent, amber reserved for warnings. */
 :root,
 [data-theme="dark"] {
   color-scheme: dark;
-  --bg: #000000;
-  --bg-deep: #000000;
-  --panel: #030605;
-  --surface: #050a08;
-  --surface-2: #08100e;
-  --border: #182723;
-  --border-strong: #2a423c;
-  --text: #e4dcc6;
-  --text-muted: #9aa79e;
-  --text-faint: #667c73;
-  --accent: #48d9ff;
-  --accent-soft: rgba(72, 217, 255, 0.14);
-  --accent-text: #8cecff;
-  --accent-contrast: #031416;
-  --warm: #d9a566;
-  --warm-soft: rgba(217, 165, 102, 0.12);
-  --danger: #ff9a83;
-  --overlay: rgba(1, 4, 3, 0.78);
-  --grid-line: rgba(86, 190, 225, 0.07);
-  --scan-line: rgba(255, 255, 255, 0.015);
-  --glow: 0 0 24px rgba(99, 230, 255, 0.16);
+  --bg: #03070c;
+  --bg-deep: #03070c;
+  --panel: rgba(6, 18, 30, 0.84);
+  --surface: #071a2a;
+  --surface-2: #0a2236;
+  --border: rgba(62, 200, 255, 0.18);
+  --border-strong: rgba(62, 200, 255, 0.35);
+  --text: #d6ecf7;
+  --text-muted: #9fc3d8;
+  --text-faint: #6d8ba0;
+  --accent: #3ec8ff;
+  --accent-soft: rgba(62, 200, 255, 0.14);
+  --accent-text: #8fdcff;
+  --accent-contrast: #03101a;
+  --warm: #f2b45c;
+  --warm-soft: rgba(242, 180, 92, 0.12);
+  --danger: #ff8a7a;
+  --shade: #000000;
+  --overlay: rgba(3, 7, 12, 0.8);
+  --grid-line: rgba(62, 200, 255, 0.06);
+  --scan-line: rgba(255, 255, 255, 0.012);
+  --glow: 0 0 24px rgba(62, 200, 255, 0.25);
   --shadow-card: 0 1px 0 rgba(255, 255, 255, 0.025), 0 18px 50px rgba(0, 0, 0, 0.5);
   --shadow-card-active:
     0 1px 0 rgba(255, 255, 255, 0.04), 0 24px 80px rgba(0, 0, 0, 0.62),
-    0 0 0 1px rgba(99, 230, 255, 0.08);
-  --shadow-menu: 0 24px 80px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(99, 230, 255, 0.06);
+    0 0 0 1px rgba(62, 200, 255, 0.12);
+  --shadow-menu: 0 24px 80px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(62, 200, 255, 0.1);
 }
 
+/* Light palette from docs/design/Light.dc.html. */
 [data-theme="light"] {
   color-scheme: light;
-  --bg: #ded8c8;
-  --bg-deep: #d3ccb9;
-  --panel: #e9e3d4;
-  --surface: #f3eddd;
-  --surface-2: #e7e0ce;
-  --border: #c8bfa9;
-  --border-strong: #a79c82;
-  --text: #18201c;
-  --text-muted: #51605a;
-  --text-faint: #7d8a82;
-  --accent: #0a7a86;
-  --accent-soft: rgba(10, 122, 134, 0.09);
-  --accent-text: #07636d;
-  --accent-contrast: #f3f8f7;
-  --warm: #95621f;
-  --warm-soft: rgba(149, 98, 31, 0.1);
+  --bg: #f4f8fb;
+  --bg-deep: #f4f8fb;
+  --panel: rgba(255, 255, 255, 0.92);
+  --surface: #ffffff;
+  --surface-2: #eaf2f8;
+  --border: rgba(10, 111, 168, 0.25);
+  --border-strong: rgba(10, 111, 168, 0.45);
+  --text: #0b2233;
+  --text-muted: #2c4a5e;
+  --text-faint: #4a6478;
+  --accent: #0a6fa8;
+  --accent-soft: rgba(10, 111, 168, 0.1);
+  --accent-text: #0a6fa8;
+  --accent-contrast: #ffffff;
+  --warm: #9a5b00;
+  --warm-soft: rgba(154, 91, 0, 0.1);
   --danger: #b2402a;
-  --overlay: rgba(222, 216, 200, 0.82);
-  --grid-line: rgba(40, 70, 60, 0.07);
-  --scan-line: rgba(20, 40, 30, 0.018);
-  --glow: 0 0 22px rgba(10, 122, 134, 0.14);
-  --shadow-card: 0 1px 0 rgba(255, 255, 255, 0.4), 0 16px 40px rgba(60, 50, 30, 0.12);
+  --shade: #ffffff;
+  --overlay: rgba(244, 248, 251, 0.82);
+  --grid-line: rgba(10, 111, 168, 0.06);
+  --scan-line: rgba(10, 111, 168, 0.015);
+  --glow: 0 0 22px rgba(10, 111, 168, 0.18);
+  --shadow-card: 0 1px 0 rgba(255, 255, 255, 0.6), 0 16px 40px rgba(10, 111, 168, 0.1);
   --shadow-card-active:
-    0 1px 0 rgba(255, 255, 255, 0.5), 0 22px 60px rgba(60, 50, 30, 0.18),
-    0 0 0 1px rgba(10, 122, 134, 0.1);
-  --shadow-menu: 0 22px 60px rgba(60, 50, 30, 0.22), 0 0 0 1px rgba(10, 122, 134, 0.08);
+    0 1px 0 rgba(255, 255, 255, 0.6), 0 22px 60px rgba(10, 111, 168, 0.16),
+    0 0 0 1px rgba(10, 111, 168, 0.14);
+  --shadow-menu: 0 22px 60px rgba(10, 111, 168, 0.2), 0 0 0 1px rgba(10, 111, 168, 0.1);
 }
 
 html,
@@ -118,4 +122,10 @@ button {
 ::selection {
   color: var(--accent-contrast);
   background: var(--accent);
+}
+
+/* Visible focus on every control (DESIGN.md rule). */
+:where(button, input, label, [role="button"], [tabindex]):focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }

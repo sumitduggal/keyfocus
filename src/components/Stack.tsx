@@ -41,7 +41,7 @@ export function Stack({
           className={index === stackFocusIndex ? "stack-item previewed" : "stack-item"}
           key={frame.id}
           animate={{
-            y: index * 82,
+            y: index * 104,
             x: index * 5,
             opacity: 1 - Math.min(index, 4) * 0.08,
           }}
