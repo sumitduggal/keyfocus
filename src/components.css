@@ -3205,3 +3205,44 @@
     transition: outline-color 0.15s ease, box-shadow 0.18s ease, border-color 0.18s ease;
   }
 }
+
+/* Radio stations: grouped by country, each row with a favourite star. */
+.now-playing-country-name {
+  margin: 10px 0 4px;
+  color: var(--text-faint);
+  font: 9px/1 var(--font-mono-stack);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+.now-playing-station {
+  display: flex;
+  align-items: stretch;
+  gap: 4px;
+}
+
+.now-playing-station > button:first-child {
+  flex: 1;
+  min-width: 0;
+}
+
+.now-playing-country .now-playing-tracks {
+  max-height: none;
+  overflow: visible;
+}
+
+.now-playing-tracks .now-playing-star {
+  flex: none;
+  width: 28px;
+  padding: 0;
+  border-color: transparent;
+  color: var(--text-faint);
+  font-size: 14px;
+  letter-spacing: 0;
+  text-align: center;
+}
+
+.now-playing-tracks .now-playing-star:hover,
+.now-playing-tracks .now-playing-star.is-saved {
+  color: var(--accent);
+}

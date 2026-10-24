@@ -2,6 +2,7 @@ import { useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore } fr
 import type { KeyboardEvent } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { useFadeUp, usePopup, usePress } from "../motion";
+import { groupByCountry, isFavourite, loadFavourites, saveFavourites, toggleFavourite } from "../radio-favourites";
 import { BUILT_IN_SOUNDS, type SoundId } from "../music";
 import {
   getMusicState,
@@ -27,6 +28,7 @@ interface RadioResult {
   url_resolved: string;
   geo_lat: number | null;
   geo_long: number | null;
+  country: string;
 }
 
 async function fetchStations(params: string): Promise<RadioResult[]> {
@@ -37,7 +39,7 @@ async function fetchStations(params: string): Promise<RadioResult[]> {
 
 // Only https streams play from an https page.
 const toStations = (found: RadioResult[]): Station[] =>
-  found.filter((s) => s.url_resolved.startsWith("https://")).slice(0, 12).map((s) => ({ name: s.name.trim(), url: s.url_resolved }));
+  found.filter((s) => s.url_resolved.startsWith("https://")).slice(0, 12).map((s) => ({ name: s.name.trim(), url: s.url_resolved, country: s.country?.trim() || undefined }));
 
 const searchStations = async (name: string) => toStations(await fetchStations(`name=${encodeURIComponent(name)}&limit=30&order=votes&reverse=true`));
 
@@ -49,6 +51,61 @@ async function nearbyStations(lat: number, lon: number): Promise<Station[]> {
   const found = await fetchStations(`has_geo_info=true&geo_lat=${lat}&geo_long=${lon}&order=geo_distance&limit=60`);
   const located = found.filter((s) => s.geo_lat != null && s.geo_long != null);
   return toStations(located.sort((a, b) => distance(a, lat, lon) - distance(b, lat, lon)));
+}
+
+// Stations grouped under their country, each with a star to save it to the favourites.
+function StationGroups({
+  stations,
+  favourites,
+  playingUrl,
+  order,
+  onPlay,
+  onToggle,
+}: {
+  stations: Station[];
+  favourites: Station[];
+  playingUrl: string | undefined;
+  order: "alphabetical" | "first-seen";
+  onPlay: (station: Station) => void;
+  onToggle: (station: Station) => void;
+}) {
+  return (
+    <>
+      {groupByCountry(stations, order).map((group) => (
+        <div key={group.country} className="now-playing-country">
+          <p className="now-playing-country-name">{group.country}</p>
+          <ol className="now-playing-tracks">
+            {group.stations.map((station) => {
+              const saved = isFavourite(favourites, station.url);
+              return (
+                <li key={station.url} className="now-playing-station">
+                  <button
+                    type="button"
+                    aria-current={playingUrl === station.url}
+                    className={playingUrl === station.url ? "is-selected" : ""}
+                    title={station.name}
+                    onClick={() => onPlay(station)}
+                  >
+                    {station.name}
+                  </button>
+                  <button
+                    type="button"
+                    className={`now-playing-star${saved ? " is-saved" : ""}`}
+                    aria-pressed={saved}
+                    aria-label={saved ? `Remove ${station.name} from favourites` : `Save ${station.name} to favourites`}
+                    title={saved ? "Remove from favourites" : "Save to favourites"}
+                    onClick={() => onToggle(station)}
+                  >
+                    {saved ? "★" : "☆"}
+                  </button>
+                </li>
+              );
+            })}
+          </ol>
+        </div>
+      ))}
+    </>
+  );
 }
 
 // Always-available player in the right-hand control panel. Playback is app-wide.
@@ -68,6 +125,10 @@ export function NowPlaying() {
   const [query, setQuery] = useState("");
   const [stations, setStations] = useState<Station[]>([]);
   const [radioStatus, setRadioStatus] = useState("");
+  const [favourites, setFavourites] = useState<Station[]>(() => loadFavourites(localStorage));
+  useEffect(() => {
+    saveFavourites(localStorage, favourites);
+  }, [favourites]);
   useEffect(() => {
     initMusic();
   }, []);
@@ -275,21 +336,30 @@ export function NowPlaying() {
           </form>
           {radioStatus && <p className="now-playing-label" role="status">{radioStatus}</p>}
           {stations.length > 0 && (
-            <ol className="now-playing-tracks">
-              {stations.map((station) => (
-                <li key={station.url}>
-                  <button
-                    type="button"
-                    aria-current={music.station?.url === station.url}
-                    className={music.station?.url === station.url ? "is-selected" : ""}
-                    title={station.name}
-                    onClick={() => playStation(station)}
-                  >
-                    {station.name}
-                  </button>
-                </li>
-              ))}
-            </ol>
+            <>
+              <p className="now-playing-label">Results</p>
+              <StationGroups
+                stations={stations}
+                favourites={favourites}
+                playingUrl={music.station?.url}
+                order="first-seen"
+                onPlay={playStation}
+                onToggle={(station) => setFavourites((current) => toggleFavourite(current, station))}
+              />
+            </>
+          )}
+          {favourites.length > 0 && (
+            <>
+              <p className="now-playing-label">Favourites</p>
+              <StationGroups
+                stations={favourites}
+                favourites={favourites}
+                playingUrl={music.station?.url}
+                order="alphabetical"
+                onPlay={playStation}
+                onToggle={(station) => setFavourites((current) => toggleFavourite(current, station))}
+              />
+            </>
           )}
             </>
           )}

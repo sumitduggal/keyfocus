@@ -14,6 +14,7 @@ import {
 export interface Station {
   name: string;
   url: string;
+  country?: string;
 }
 
 export interface PlayerState extends MusicSettings {
