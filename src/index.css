@@ -71,36 +71,38 @@
   --shadow-menu: 0 24px 80px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(62, 200, 255, 0.1);
 }
 
-/* Light palette from docs/design/Light.dc.html. */
+/* Light palette, softened from docs/design/Light.dc.html: a dimmed blue-grey ground and no pure
+   white, so large areas stay easy on the eyes. Text and accent keep at least 4.5:1 contrast on
+   every surface (checked on bg, surface and surface-2). */
 [data-theme="light"] {
   color-scheme: light;
-  --bg: #f4f8fb;
-  --bg-deep: #f4f8fb;
-  --panel: rgba(255, 255, 255, 0.92);
-  --surface: #ffffff;
-  --surface-2: #eaf2f8;
-  --border: rgba(10, 111, 168, 0.25);
-  --border-strong: rgba(10, 111, 168, 0.45);
-  --text: #0b2233;
-  --text-muted: #2c4a5e;
-  --text-faint: #4a6478;
-  --accent: #0a6fa8;
-  --accent-soft: rgba(10, 111, 168, 0.1);
-  --accent-text: #0a6fa8;
+  --bg: #e3e9ee;
+  --bg-deep: #e3e9ee;
+  --panel: rgba(238, 242, 245, 0.92);
+  --surface: #eef2f5;
+  --surface-2: #dde5ec;
+  --border: rgba(10, 99, 153, 0.25);
+  --border-strong: rgba(10, 99, 153, 0.45);
+  --text: #1c2b38;
+  --text-muted: #33495b;
+  --text-faint: #4f6376;
+  --accent: #0a6399;
+  --accent-soft: rgba(10, 99, 153, 0.1);
+  --accent-text: #0a6399;
   --accent-contrast: #ffffff;
-  --warm: #9a5b00;
-  --warm-soft: rgba(154, 91, 0, 0.1);
-  --danger: #b2402a;
-  --shade: #ffffff;
-  --overlay: rgba(244, 248, 251, 0.82);
-  --grid-line: rgba(10, 111, 168, 0.06);
-  --scan-line: rgba(10, 111, 168, 0.015);
-  --glow: 0 0 22px rgba(10, 111, 168, 0.18);
-  --shadow-card: 0 1px 0 rgba(255, 255, 255, 0.6), 0 16px 40px rgba(10, 111, 168, 0.1);
+  --warm: #8a5200;
+  --warm-soft: rgba(138, 82, 0, 0.1);
+  --danger: #a8382a;
+  --shade: #e3e9ee;
+  --overlay: rgba(227, 233, 238, 0.82);
+  --grid-line: rgba(10, 99, 153, 0.06);
+  --scan-line: rgba(10, 99, 153, 0.015);
+  --glow: 0 0 18px rgba(10, 99, 153, 0.12);
+  --shadow-card: 0 1px 0 rgba(255, 255, 255, 0.4), 0 14px 34px rgba(10, 99, 153, 0.07);
   --shadow-card-active:
-    0 1px 0 rgba(255, 255, 255, 0.6), 0 22px 60px rgba(10, 111, 168, 0.16),
-    0 0 0 1px rgba(10, 111, 168, 0.14);
-  --shadow-menu: 0 22px 60px rgba(10, 111, 168, 0.2), 0 0 0 1px rgba(10, 111, 168, 0.1);
+    0 1px 0 rgba(255, 255, 255, 0.4), 0 20px 50px rgba(10, 99, 153, 0.11),
+    0 0 0 1px rgba(10, 99, 153, 0.12);
+  --shadow-menu: 0 20px 50px rgba(10, 99, 153, 0.14), 0 0 0 1px rgba(10, 99, 153, 0.09);
 }
 
 html,
