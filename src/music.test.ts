@@ -27,10 +27,10 @@ describe("loadMusicSettings", () => {
     expect(loadMusicSettings(fakeStorage({ [MUSIC_SETTINGS_KEY]: "{bad" }))).toEqual(DEFAULT_MUSIC_SETTINGS);
   });
 
-  it("keeps valid saved values", () => {
+  it("keeps valid saved values, except the sound layer", () => {
     const stored = JSON.stringify({ sound: "rain", soundVolume: 0.4, trackIndex: 2, trackVolume: 0.7, loop: true });
     expect(loadMusicSettings(fakeStorage({ [MUSIC_SETTINGS_KEY]: stored }))).toEqual({
-      sound: "rain",
+      sound: null,
       soundVolume: 0.4,
       trackIndex: 2,
       trackVolume: 0.7,
@@ -50,11 +50,18 @@ describe("loadMusicSettings", () => {
 });
 
 describe("saveMusicSettings", () => {
-  it("round-trips through storage", () => {
+  it("remembers volumes, last track and loop", () => {
     const storage = fakeStorage();
-    const settings = { ...DEFAULT_MUSIC_SETTINGS, sound: "brown" as const, loop: true };
+    const settings = { ...DEFAULT_MUSIC_SETTINGS, trackIndex: 2, trackVolume: 0.3, soundVolume: 0.7, loop: true };
     saveMusicSettings(storage, settings);
     expect(loadMusicSettings(storage)).toEqual(settings);
+  });
+
+  it("never remembers the built-in sound layer", () => {
+    const storage = fakeStorage();
+    saveMusicSettings(storage, { ...DEFAULT_MUSIC_SETTINGS, sound: "rain" });
+    expect(loadMusicSettings(storage).sound).toBeNull();
+    expect(JSON.parse(storage.read(MUSIC_SETTINGS_KEY)!).sound).toBeNull();
   });
 });
 

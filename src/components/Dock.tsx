@@ -1,5 +1,6 @@
 import type { Feature, Theme } from "../types";
 import { featureMeta, visibleFeatures } from "../constants";
+import { NowPlaying } from "./NowPlaying";
 import "../components.css";
 
 interface DockProps {
@@ -108,6 +109,8 @@ export function Dock({
       </div>
 
       <div className="dock-foot">
+        <NowPlaying />
+
         <button
           ref={(node) => {
             rightItemRefs.settings = node;

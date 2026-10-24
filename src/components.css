@@ -2139,3 +2139,181 @@
   letter-spacing: 0.1em;
   text-transform: uppercase;
 }
+
+/* Now playing: a slim row in the right-hand control panel, expandable for the full player. */
+.now-playing {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 10px;
+  padding: 4px 6px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--surface) 60%, transparent);
+}
+
+.now-playing-row {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 4px;
+}
+
+.now-playing-row button {
+  display: grid;
+  flex: 0 0 auto;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  border: 1px solid var(--border-strong);
+  border-radius: 4px;
+  background: transparent;
+  color: var(--text-muted);
+  font: 10px/1 var(--font-mono-stack);
+  cursor: pointer;
+}
+
+.now-playing-row button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.now-playing-row .now-playing-play {
+  border-color: var(--accent);
+  color: var(--accent-text);
+}
+
+.now-playing-title {
+  min-width: 0;
+  flex: 1;
+  margin: 0;
+  overflow: hidden;
+  color: var(--text);
+  font: 10px/1.2 var(--font-mono-stack);
+  letter-spacing: 0.06em;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.now-playing-body {
+  display: grid;
+  gap: 10px;
+  padding: 4px 2px 6px;
+}
+
+.now-playing-controls,
+.now-playing-sounds {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.now-playing-controls button,
+.now-playing-sounds button,
+.now-playing-tracks button {
+  min-height: 32px;
+  padding: 0 8px;
+  border: 1px solid var(--border-strong);
+  border-radius: 4px;
+  background: transparent;
+  color: var(--text-muted);
+  font: 10px/1 var(--font-mono-stack);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.now-playing-controls .is-selected,
+.now-playing-sounds .is-selected,
+.now-playing-tracks .is-selected {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--accent-text);
+}
+
+.now-playing-label {
+  margin: 0;
+  color: var(--text-faint);
+  font: 9px/1 var(--font-mono-stack);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.now-playing-tracks {
+  display: grid;
+  gap: 4px;
+  max-height: 140px;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+}
+
+.now-playing-tracks button {
+  width: 100%;
+  text-align: left;
+}
+
+.now-playing-hint {
+  margin: 0;
+  color: var(--text-faint);
+  font: 10px/1.4 var(--font-mono-stack);
+  letter-spacing: 0.06em;
+}
+
+.now-playing-slider {
+  display: grid;
+  gap: 4px;
+  color: var(--text-faint);
+  font: 9px/1 var(--font-mono-stack);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.now-playing-slider input {
+  width: 100%;
+  min-height: 24px;
+  accent-color: var(--accent);
+}
+
+/* Music options popup, opened from the slim row. Fixed so the dock's scroll does not clip it. */
+.now-playing-popup {
+  position: fixed;
+  z-index: 20;
+  right: 268px;
+  bottom: 120px;
+  width: 280px;
+  max-height: 60vh;
+  padding: 12px;
+  overflow-y: auto;
+  border: 1px solid var(--border-strong);
+  border-radius: 6px;
+  background: var(--panel);
+  box-shadow: var(--shadow-menu);
+}
+
+.now-playing-popup:focus {
+  outline: 0;
+}
+
+.now-playing-popup-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+  color: var(--text-muted);
+  font: 10px/1 var(--font-mono-stack);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.now-playing-popup-head button {
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--border-strong);
+  border-radius: 4px;
+  background: transparent;
+  color: var(--text-muted);
+  font: 14px/1 var(--font-mono-stack);
+  cursor: pointer;
+}

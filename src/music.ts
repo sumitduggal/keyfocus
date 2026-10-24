@@ -30,8 +30,6 @@ export const DEFAULT_MUSIC_SETTINGS: MusicSettings = {
   loop: false,
 };
 
-const SOUND_IDS: string[] = BUILT_IN_SOUNDS.map((sound) => sound.id);
-
 const clamp = (value: unknown, fallback: number, min: number, max: number) =>
   typeof value === "number" && Number.isFinite(value) ? Math.min(max, Math.max(min, value)) : fallback;
 
@@ -41,9 +39,9 @@ export function loadMusicSettings(storage: Pick<Storage, "getItem">): MusicSetti
     const raw = storage.getItem(MUSIC_SETTINGS_KEY);
     if (raw === null) return { ...DEFAULT_MUSIC_SETTINGS };
     const saved = JSON.parse(raw) as Partial<Record<keyof MusicSettings, unknown>>;
-    const sound = typeof saved.sound === "string" && SOUND_IDS.includes(saved.sound) ? (saved.sound as SoundId) : null;
+    // The built-in sound layer is never remembered: every visit starts with no sound selected.
     return {
-      sound,
+      sound: null,
       soundVolume: clamp(saved.soundVolume, DEFAULT_MUSIC_SETTINGS.soundVolume, 0, 1),
       trackIndex: Math.round(clamp(saved.trackIndex, 0, 0, Number.MAX_SAFE_INTEGER)),
       trackVolume: clamp(saved.trackVolume, DEFAULT_MUSIC_SETTINGS.trackVolume, 0, 1),
@@ -56,7 +54,8 @@ export function loadMusicSettings(storage: Pick<Storage, "getItem">): MusicSetti
 
 export function saveMusicSettings(storage: Pick<Storage, "setItem">, settings: MusicSettings): void {
   try {
-    storage.setItem(MUSIC_SETTINGS_KEY, JSON.stringify(settings));
+    // Volumes, last track and loop are remembered; the sound layer is not.
+    storage.setItem(MUSIC_SETTINGS_KEY, JSON.stringify({ ...settings, sound: null }));
   } catch {
     // Storage can be full or blocked; the settings simply reset on reload.
   }
