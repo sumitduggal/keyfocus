@@ -109,7 +109,6 @@ export function CommandPalette({
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: reduceMotion ? 0 : 0.12 }}
-          onMouseDown={(event) => event.target === event.currentTarget}
         >
           <motion.div
             className="menu"

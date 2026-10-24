@@ -645,6 +645,22 @@ function App() {
     else featureAsideRef.current?.focus();
   }, [featureEntries, featurePanel]);
 
+  // Clicking anywhere outside the command bar and its menu closes it, back to the top level.
+  useEffect(() => {
+    if (!menuOpen) return;
+    const closeOnOutsideClick = (event: MouseEvent) => {
+      if ((event.target as Element).closest(".command-wrap, .menu")) return;
+      // Leave focus where the click puts it, instead of sending it back to the main frame.
+      keepBarFocus.current = true;
+      setMenuOpen(false);
+      setSearchMode(false);
+      setFeatureMenu(null);
+      setTrashMenu(false);
+    };
+    document.addEventListener("mousedown", closeOnOutsideClick);
+    return () => document.removeEventListener("mousedown", closeOnOutsideClick);
+  }, [menuOpen]);
+
   useEffect(() => {
     const track = (event: FocusEvent) => setBarActive(event.target === actionInputRef.current);
     document.addEventListener("focusin", track);

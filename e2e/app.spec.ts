@@ -31,6 +31,43 @@ test('command palette opens with ⌘K, searches and closes with Escape', async (
   await expect(page.getByRole('menu')).toBeHidden()
 })
 
+test('clicking outside the command bar closes it', async ({ page }) => {
+  await page.keyboard.press('Control+k')
+  await expect(page.getByRole('menu')).toBeVisible()
+  // The menu's backdrop covers the page, so click at a point on it, as a person would.
+  await page.mouse.click(120, 300)
+  await expect(page.getByRole('menu')).toBeHidden()
+})
+
+test('clicking outside closes a feature sub-menu back to the top level', async ({ page }) => {
+  await page.keyboard.press('Control+k')
+  await page.getByRole('menuitem', { name: /Todo List/ }).first().click()
+  await expect(page.getByText(/Todo List · Esc to go back/)).toBeVisible()
+  await page.locator('.hud-top').click({ position: { x: 5, y: 5 } })
+  await expect(page.getByRole('menu')).toBeHidden()
+  await page.keyboard.press('Control+k')
+  await expect(page.getByText('Create or search')).toBeVisible()
+})
+
+test('clicking inside the command bar or its menu keeps it open', async ({ page }) => {
+  await page.keyboard.press('Control+k')
+  await page.getByLabel('Open actions').fill('hab')
+  await page.getByLabel('Open actions').click()
+  await expect(page.getByRole('menu')).toBeVisible()
+  await page.getByRole('menu').getByText('Matching actions').click()
+  await expect(page.getByRole('menu')).toBeVisible()
+})
+
+test('clicking a field outside the command bar closes it and leaves focus in that field', async ({ page }) => {
+  await newFrame(page, 'Todo List', 'Todo List')
+  await page.keyboard.press('Control+k')
+  await expect(page.getByRole('menu')).toBeVisible()
+  await page.locator('.hud-top').click({ position: { x: 5, y: 5 } })
+  await expect(page.getByRole('menu')).toBeHidden()
+  await page.getByLabel('New item').click()
+  await expect(page.getByLabel('New item')).toBeFocused()
+})
+
 test('command palette opens a feature', async ({ page }) => {
   await page.keyboard.press('Control+k')
   await page.getByRole('menuitem', { name: /Habits/ }).first().click()
