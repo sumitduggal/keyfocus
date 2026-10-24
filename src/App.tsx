@@ -944,6 +944,10 @@ function App() {
               todoOverdueCount={todoOverdueCount}
               activeFeature={activeFrame.feature}
               onOpenSettings={() => {
+                if (settingsOpen) {
+                  setSettingsOpen(false);
+                  return;
+                }
                 const rect = rightItemRefs.current.settings?.getBoundingClientRect();
                 setSettingsAnchorY(rect ? rect.top + rect.height / 2 : null);
                 setFeaturePanel(null);

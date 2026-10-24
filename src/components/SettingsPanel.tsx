@@ -37,7 +37,10 @@ export function SettingsPanel({
   useEffect(() => {
     panelRef.current?.focus();
     const closeWhenFocusLeaves = (event: FocusEvent) => {
-      if (panelRef.current && !panelRef.current.contains(event.target as Node)) onClose(false);
+      const target = event.target as Element;
+      // The Settings button toggles the panel itself.
+      if (target.closest?.("[data-settings-toggle]")) return;
+      if (panelRef.current && !panelRef.current.contains(target)) onClose(false);
     };
     document.addEventListener("focusin", closeWhenFocusLeaves);
     return () => document.removeEventListener("focusin", closeWhenFocusLeaves);

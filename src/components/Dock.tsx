@@ -110,6 +110,7 @@ export function Dock({
           }}
           type="button"
           className="dock-item is-quiet"
+          data-settings-toggle
           onFocus={() => setRightFocusIndex(features.length + 1)}
           onClick={() => {
             onOpenSettings();
