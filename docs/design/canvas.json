@@ -1,0 +1,16 @@
+{
+  "v": 3,
+  "createdOnFiles": { "v": 1, "at": "2026-10-24T09:52:00Z" },
+  "title": "KeyFocus: God's Eye View Style",
+  "launch": { "view": "canvas" },
+  "pages": [],
+  "boards": {
+    "Main.dc.html": { "x": 0, "y": 0, "w": 1440, "h": 900, "expand": "fill", "is_interactive": true, "title": "Desktop dark" },
+    "Light.dc.html": { "x": 1520, "y": 0, "w": 1440, "h": 900, "expand": "fill", "is_interactive": true, "title": "Desktop light" },
+    "Tablet.dc.html": { "x": 0, "y": 1000, "w": 1024, "h": 768, "title": "Tablet 1024" },
+    "Mobile.dc.html": { "x": 1120, "y": 1000, "w": 390, "h": 844, "title": "Mobile 390" }
+  },
+  "order": ["Main.dc.html", "Light.dc.html", "Tablet.dc.html", "Mobile.dc.html"],
+  "notes": {},
+  "designSystems": []
+}

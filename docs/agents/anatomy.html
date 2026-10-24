@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<meta charset="utf-8">
+<title>Keyfocus — anatomy</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{min-height:100%;background:#000;color:#e4dcc6;font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+  body{display:grid;place-items:center;padding:16px}
+  .card{position:relative;width:min(760px,calc(100vw - 32px));aspect-ratio:1;border:1px solid #42554e;background:#000;overflow:hidden}
+  .card.light{background:#f3eddd;border-color:#a79c82;color:#18201c;box-shadow:0 0 0 1px rgba(10,122,134,.06),0 16px 40px rgba(60,50,30,.12)}
+  svg{width:100%;height:100%;display:block}
+  .corners{position:absolute;inset:0;pointer-events:none;display:flex;flex-direction:column;justify-content:space-between;padding:10px 12px}
+  .top,.bottom{display:flex;justify-content:space-between;gap:8px;color:#9aa79e;font-size:9px;letter-spacing:.08em;text-transform:uppercase}
+  .top .lit{color:#63e6ff;font-weight:bold}
+  .card.light .corners{color:#51605a}
+  .card.light .top .lit{color:#0a7a86}
+  .hint{font-size:10px;color:#667c73;margin-top:6px;letter-spacing:.08em}
+  .card.light .hint{color:#7d8a82}
+  .readout{position:absolute;right:12px;bottom:12px;text-align:right;font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:#9aa79e;line-height:1.4;max-width:40%}
+  .card.light .readout{color:#51605a}
+  .readout b{color:#e4dcc6}
+  .card.light .readout b{color:#18201c}
+  .overlay{position:absolute;inset:0;display:none;flex-direction:column;background:rgba(1,4,3,.78);border-top:1px solid #2a423c;border-bottom:1px solid #2a423c;padding:10px 14px;z-index:20}
+  .card.light .overlay{background:rgba(222,216,200,.82);border-color:#a79c82}
+  .overlay .row{display:flex;gap:10px;align-items:center;margin:6px 0;font-size:12px}
+  .overlay .mark{width:10px;height:10px;border:1px solid #63e6ff;border-radius:2px;flex:0 0 auto}
+  .overlay .sel .mark{background:#63e6ff}
+  .card.light .overlay .mark{border-color:#0a7a86}
+  .card.light .overlay .sel .mark{background:#0a7a86}
+  .overlay small{color:#9aa79e;letter-spacing:.1em;text-transform:uppercase;font-size:10px}
+  .card.light .overlay small{color:#51605a}
+  button#reset{position:absolute;left:12px;bottom:40px;background:transparent;border:1px solid #2a423c;color:#e4dcc6;font:inherit;font-size:11px;padding:4px 10px;border-radius:3px;cursor:pointer;letter-spacing:.1em;text-transform:uppercase}
+  button#reset:hover{border-color:#63e6ff;color:#63e6ff}
+  .card.light button#reset{border-color:#a79c82;color:#51605a}
+  .card.light button#reset:hover{border-color:#0a7a86;color:#0a7a86}
+</style>
+<div class="card" id="card">
+  <svg id="svg"></svg>
+  <div class="corners">
+    <div class="top"><span id="n">KEYFOCUS</span><span class="lit" id="m">ANATOMY</span></div>
+  <div class="bottom"><span>ALT ←/→ SIDE · ↑/↓ SELECT · ENTER PROMOTE · ⌘K PALETTE</span></div>
+  </div>
+  <div class="readout" id="readout" aria-live="polite"></div>
+  <div class="overlay" id="overlay"></div>
+  <button id="reset">reset</button>
+</div>
+<script>
+const W=760,H=760,CX=W/2,CY=H/2+10,S=5;
+const svg=document.getElementById('svg');
+const readout=document.getElementById('readout');
+const overlay=document.getElementById('overlay');
+const resetBtn=document.getElementById('reset');
+svg.setAttribute('width',W);svg.setAttribute('height',H);
+  svg.setAttribute('viewBox','0 0 760 760');
+  svg.setAttribute('role','img');
+  svg.setAttribute('aria-label','Interactive isometric machine explaining the Keyfocus focus space');
+
+let theme='dark';
+function setTheme(t){theme=t;document.getElementById('card').className='card'+(t==='light'?' light':'');}
+const P={
+ dark:{bg:'#000000',top:'#1a2622',a:'#111b17',b:'#0b110f',line:'#42554e',lit:'#63e6ff',text:'#e4dcc6',muted:'#b4c0b8',faint:'#84958a',keybg:'#091210',accent:'#9cf2ff'},
+ light:{bg:'#f3eddd',top:'#e7e0ce',a:'#d9cfb7',b:'#c8bfa9',line:'#a79c82',lit:'#0a7a86',text:'#18201c',muted:'#51605a',faint:'#7d8a82',keybg:'#e7e0ce',accent:'#07636d'},
+};
+function C(){return P[theme];}
+function acText(){return theme==='dark'?'#9cf2ff':'#07636d';}
+
+// world -> screen isometric (x right, y depth back, z up)
+function iso(x,y,z){
+  const a=Math.PI/6;
+  return [CX+(x-y)*Math.cos(a)*S, CY+(x+y)*Math.sin(a)*S-z*S];
+}
+function poly(pts,fill){
+  const el=document.createElementNS('http://www.w3.org/2000/svg','polygon');
+  el.setAttribute('points',pts.map(p=>p.join(',')).join(' '));
+  el.setAttribute('fill',fill);svg.appendChild(el);return el;
+}
+function face(pts,fill){poly(pts,fill);}
+// extruded block: top, left side, right side (drawn back to front)
+function block(x,y,z,w,d,h,ton){
+  const t=C();
+  const top=ton.top,s1=ton.s1,s2=ton.s2;
+  const c0=iso(x,y,z+h),c1=iso(x+w,y,z+h),c2=iso(x+w,y+d,z+h),c3=iso(x,y+d,z+h);
+  const b0=iso(x,y,z),b1=iso(x+w,y,z),b2=iso(x+w,y+d,z),b3=iso(x,y+d,z);
+  poly([c0,c1,c2,c3],top);
+  poly([b0,c0,c3,b3],s1);
+  poly([c1,b1,b2,c2],s2);
+}
+function line(x1,y1,x2,y2,col,w=0.8){
+  const el=document.createElementNS('http://www.w3.org/2000/svg','line');
+  el.setAttribute('x1',x1);el.setAttribute('y1',y1);el.setAttribute('x2',x2);el.setAttribute('y2',y2);
+  el.setAttribute('stroke',col);el.setAttribute('stroke-width',w);svg.appendChild(el);
+}
+function circ(x,y,r,col){
+  const el=document.createElementNS('http://www.w3.org/2000/svg','circle');
+  el.setAttribute('cx',x);el.setAttribute('cy',y);el.setAttribute('r',r);el.setAttribute('fill',col);svg.appendChild(el);
+}
+function text(x,y,s,col,size,anchor='middle'){
+  const el=document.createElementNS('http://www.w3.org/2000/svg','text');
+  el.setAttribute('x',x);el.setAttribute('y',y);el.setAttribute('fill',col);
+  el.setAttribute('font-size',size);el.setAttribute('font-family','ui-monospace,SFMono-Regular,Menlo,monospace');
+  el.setAttribute('text-anchor',anchor);el.textContent=s;svg.appendChild(el);return el;
+}
+function label(x,y,z,s,col,size){const p=iso(x,y,z);text(p[0],p[1],s,col,size);}
+
+const FEATURES=[
+ {key:'notes',glyph:'✎',label:'NOTES'},
+ {key:'reminders',glyph:'◷',label:'REMINDERS'},
+ {key:'habits',glyph:'↻',label:'HABITS'},
+ {key:'todo list',glyph:'☑',label:'TODO LIST'},
+ {key:'focus music',glyph:'♪',label:'FOCUS MUSIC'},
+ {key:'pomodoro',glyph:'◉',label:'POMODORO'},
+];
+const EXTRA=['profile','settings','logout'];
+const allFrames=[{key:'notes',label:'NOTES',glyph:'✎'},{key:'reminders',label:'REMINDERS',glyph:'◷'},{key:'habits',label:'HABITS',glyph:'↻'},{key:'todo list',label:'TODO LIST',glyph:'☑'}];
+const commands=FEATURES.map(f=>f.label).concat(['SEARCH']);
+
+const state={
+  side:'main',within:false,stackIndex:0,active:0,frameOrder:[0,1,2,3],
+  menuOpen:false,searchMode:false,menuIdx:0,featurePanel:null,entryIdx:0,
+  lit:'main',query:'',
+};
+const stackedFrames=()=>state.frameOrder.slice(1).map((i)=>allFrames[i]);
+const matchingFrames=()=>state.frameOrder.map((i)=>allFrames[i]).filter((frame)=>`${frame.label} ${frame.key}`.toLowerCase().includes(state.query.toLowerCase()));
+
+function draw(){
+  clear();
+  const t=C();
+  // Turntable rim beneath the three working stations.
+  const ring=[];
+  for(let ag=0;ag<=Math.PI*2;ag+=0.12){const p=iso(42*Math.cos(ag),42*Math.sin(ag),0);ring.push(p.join(','));}
+  const re=document.createElementNS('http://www.w3.org/2000/svg','polygon');
+  re.setAttribute('points',ring.join(' '));re.setAttribute('fill','none');re.setAttribute('stroke',t.line);re.setAttribute('stroke-width','0.7');svg.appendChild(re);
+
+  // ---- LEFT BANK: frame stack drum ----
+  const lx=-50,ly=10,lz=2;
+  block(lx,ly,lz,14,30,5,{top:t.top,s1:t.a,s2:t.b});
+  label(lx+12,ly-6,lz+27,'FRAME STACK',t.muted,8);
+  const cardD=2,cardW=10,cardH=4;
+  stackedFrames().forEach((f,i)=>{
+    const zz=lz+2+i*(cardH+1.4);
+    const focused = state.side==='left'&&state.within&&state.stackIndex===i;
+    const lit = state.lit==='stack'+i && focused;
+    const col = lit?t.lit:(focused?t.line:t.a);
+    block(lx+2,ly+16-i*(cardH+1.4),zz,cardW,cardD,cardH,{top:col,s1:t.a,s2:t.b});
+    face([iso(lx+3,ly+17-i*(cardH+1.4),zz+cardH),iso(lx+7,ly+17-i*(cardH+1.4),zz+cardH),iso(lx+7,ly+17-i*(cardH+1.4),zz+cardH+1.2),iso(lx+3,ly+17-i*(cardH+1.4),zz+cardH+1.2)],t.faint);
+    const sp=iso(lx+12,ly+14-i*(cardH+1.4),zz+cardH+2);
+    text(sp[0],sp[1],f.glyph+' '+f.label, focused?t.text:t.muted, 7.5);
+    const pp=iso(lx+5,ly+14-i*(cardH+1.4),zz+cardH+2);
+    circ(pp[0],pp[1],1.2, focused?t.lit:t.faint);
+  });
+  if(state.side==='left'&&state.within){
+    const si=state.stackIndex;const zz=lz+2+si*(cardH+1.4);
+    const sp=iso(lx-3,ly+16-si*(cardH+1.4)+cardH/2,zz+cardH/2);
+    face([iso(lx-4,ly+14-si*(cardH+1.4),zz),iso(lx-1,ly+14-si*(cardH+1.4),zz),iso(lx-1,ly+14-si*(cardH+1.4)+cardW,zz),iso(lx-4,ly+14-si*(cardH+1.4)+cardW,zz)], t.line);
+    const ep=iso(lx-5,ly+14-si*(cardH+1.4)+cardW/2,zz+cardH/2);
+    line(sp[0],sp[1],ep[0],ep[1],t.lit,1);
+  }
+
+  // ---- CENTRE WINDOW: active frame ----
+  const wx=0,wy=-14,wz=0;
+  block(wx-24,wy-18,wz,48,36,4,{top:t.top,s1:t.a,s2:t.b});
+  const activeLit = state.side==='main'&&state.lit==='main'&&!state.menuOpen&&!state.featurePanel;
+  const acol = activeLit?t.lit:(state.side==='main'?t.line:t.a);
+  block(wx-17,wy-9,wz+1,34,16,3,{top:acol,s1:t.a,s2:t.b});
+  label(wx-12,wy-5,wz+4,allFrames[state.frameOrder[0]].label,activeLit?t.text:t.muted,6.5);
+  block(wx-12,wy+1,wz+1,24,1,0.7,{top:t.a,s1:t.a,s2:t.b});
+  block(wx-12,wy+4,wz+1,16,1,0.7,{top:t.a,s1:t.a,s2:t.b});
+
+  // ---- RIGHT BANK: dock ----
+  const rx=50,ry=-10,rz=2;
+  block(rx,ry,rz,14,30,5,{top:t.top,s1:t.a,s2:t.b});
+  label(rx+11,ry-6,rz+27,'CONTROL',t.muted,8);
+  FEATURES.forEach((f,i)=>{
+    const yy=ry+3+i*3.2;
+    const sel = state.side==='right'&&state.within&&!state.menuOpen&&!state.featurePanel&&state.menuIdx===i;
+    const col = sel?t.lit:t.a;
+    block(rx+1,yy,rz,12,2.4,0.8,{top:col,s1:t.a,s2:t.b});
+    const sp=iso(rx+3,yy+1,rz+3);
+    text(sp[0],sp[1],f.glyph+'  '+f.label, sel?t.text:t.muted, 7);
+    const cp=iso(rx+18,yy+1,rz+3);
+    const count=state.frameOrder.filter((index)=>allFrames[index].key===f.key).length;
+    text(cp[0],cp[1],String(count),t.faint,7);
+  });
+  EXTRA.forEach((e,i)=>{
+    const yy=ry+3+FEATURES.length*3.2+i*3;
+    block(rx+1,yy,rz,12,2,0.8,{top:t.a,s1:t.a,s2:t.b});
+    const sp=iso(rx+3,yy+1,rz+3);
+    text(sp[0],sp[1],e.toUpperCase(),t.faint,7);
+  });
+
+  // ---- OVERLAYS ----
+  if(state.menuOpen){
+    const ox=-26,oy=-24,oz=22;
+    block(ox,oy,oz,52,48,5,{top:t.bg,s1:t.a,s2:t.b});
+    label(ox+3,oy+3,oz+5,'RUN A COMMAND OR SEARCH…',t.muted,7);
+    block(ox+3,oy+9,oz+6,46,3,4,{top:t.keybg,s1:t.a,s2:t.b});
+    const isp=iso(ox+6,oy+10,oz+6+4);
+    text(isp[0],isp[1],state.query||'▍',t.text,8);
+    const menuItems=state.searchMode?matchingFrames().map((frame)=>frame.label):commands;
+    menuItems.forEach((c,j)=>{
+      const yy=oy+14+j*4.6;
+      const sel=j===state.menuIdx;
+      block(ox+3,yy,oz+7,46,3,3.5,{top:sel?t.lit:t.a,s1:t.a,s2:t.b});
+      const sp=iso(ox+6,yy+1,oz+7+3.5);
+      text(sp[0],sp[1],c,sel?t.text:t.muted,7.5);
+    });
+    label(ox+3,oy+40,oz+10,'⌘K command   Esc reset',t.faint,6.5);
+  }
+  readout.textContent=`${state.side.toUpperCase()} SIDE · ${state.within?'ITEM FOCUS':'SIDE FOCUS'} · ${state.menuOpen?'COMMAND PALETTE OPEN':state.featurePanel?`${state.featurePanel.toUpperCase()} FEATURE PANEL`:`${state.frameOrder.length} FRAMES · ACTIVE ${allFrames[state.frameOrder[0]].label}`}`;
+  if(state.featurePanel){
+    const fx=54,fy=-10,fz=0;
+    block(fx,fy,fz,18,32,7,{top:t.bg,s1:t.a,s2:t.b});
+    label(fx+2,fy+2,fz+8,'FEATURES',t.muted,7);
+    FEATURES.forEach((f,j)=>{
+      const yy=fy+7+j*4;
+      const sel=j===state.entryIdx;
+      block(fx+2,yy,fz+1,13,2.5,3,{top:sel?t.lit:t.a,s1:t.a,s2:t.b});
+      const sp=iso(fx+3,yy+1,fz+1+3);
+      text(sp[0],sp[1],f.label,sel?t.text:t.muted,7);
+    });
+    label(fx+2,fy+30,fz+8,'Esc close',t.faint,6.5);
+  }
+
+  block(-36,-38,-2,72,4,1.2,{top:t.a,s1:t.a,s2:t.b});
+  block(-36,34,-2,72,4,1.2,{top:t.a,s1:t.a,s2:t.b});
+  corner(-36,-38,-2,'tl');corner(36,-38,-2,'tr');corner(-36,34,-2,'bl');corner(36,34,-2,'br');
+
+}
+function clear(){while(svg.firstChild)svg.removeChild(svg.firstChild);}
+function corner(x,y,z,which){
+  const t=C();const l=5;const p0=iso(x,y,z);
+  if(which==='tl'){line(p0[0],p0[1],p0[0]+l*S,p0[1],t.line);line(p0[0],p0[1],p0[0],p0[1]+l*S,t.line);}
+  else if(which==='tr'){line(p0[0],p0[1],p0[0]-l*S,p0[1],t.line);line(p0[0],p0[1],p0[0],p0[1]+l*S,t.line);}
+  else if(which==='bl'){line(p0[0],p0[1],p0[0]+l*S,p0[1],t.line);line(p0[0],p0[1],p0[0],p0[1]-l*S,t.line);}
+  else {line(p0[0],p0[1],p0[0]-l*S,p0[1],t.line);line(p0[0],p0[1],p0[0],p0[1]-l*S,t.line);}
+}
+
+function nav(key){
+  if(state.menuOpen){
+    const items=state.searchMode?matchingFrames():commands;
+    if(key==='ArrowDown'&&items.length){state.menuIdx=(state.menuIdx+1)%items.length;}
+    else if(key==='ArrowUp'&&items.length){state.menuIdx=(state.menuIdx-1+items.length)%items.length;}
+    else if(key==='Enter'){
+      if(state.searchMode){const chosen=items[state.menuIdx];if(chosen){const id=allFrames.indexOf(chosen);state.frameOrder=[id,...state.frameOrder.filter((frameId)=>frameId!==id)];state.active=id;}closeMenu();}
+      else{const c=commands[state.menuIdx];if(c==='SEARCH'){state.searchMode=true;state.query='';state.menuIdx=0;}else{runCommand(c);closeMenu();}}
+    }
+    else if(key==='Escape'){closeMenu();}
+    draw();return;
+  }
+  if(key==='ArrowUp'||key==='ArrowDown'){
+    if(state.side==='left'&&state.within){
+      const delta=key==='ArrowDown'?1:-1;
+      state.stackIndex=Math.max(0,Math.min(stackedFrames().length-1,state.stackIndex+delta));
+      state.lit='stack'+state.stackIndex;
+    }else if(state.side==='right'&&state.within){
+      const delta=key==='ArrowDown'?1:-1;
+      state.menuIdx=Math.max(0,Math.min(FEATURES.length+EXTRA.length-1,state.menuIdx+delta));
+    }
+    draw();return;
+  }
+  if(key==='Enter'){
+    if(state.side==='left'&&state.within&&state.stackIndex>=0){promote(state.stackIndex);}
+    else if(state.side==='right'&&state.within){
+      if(state.menuIdx<FEATURES.length){openFeature(FEATURES[state.menuIdx].key);}
+    }else if(state.side==='main'){state.lit='main';}
+    draw();return;
+  }
+  if(key==='Escape'){resetState();}
+}
+function closeMenu(){state.menuOpen=false;state.searchMode=false;state.query='';}
+function runCommand(c){
+  const feature=FEATURES.find((item)=>item.label===c);
+  if(feature){const index=allFrames.push({key:feature.key,label:feature.label,glyph:feature.glyph})-1;state.frameOrder=[index,...state.frameOrder];}
+  closeMenu();state.side='main';state.within=true;state.lit='main';state.active=state.frameOrder[0];
+}
+function openFeature(key){state.side='right';state.within=true;state.featurePanel=key;state.entryIdx=0;state.lit='right';}
+function promote(i){const selected=state.frameOrder[i+1];state.frameOrder=[selected,...state.frameOrder.filter((item)=>item!==selected)];state.active=selected;state.side='main';state.within=false;state.stackIndex=-1;state.lit='main';}
+function resetState(){state.side='main';state.within=false;state.stackIndex=-1;state.menuOpen=false;state.searchMode=false;state.query='';state.featurePanel=null;state.lit='main';draw();}
+
+window.addEventListener('keydown',(e)=>{
+  if(e.altKey&&(e.key==='ArrowLeft'||e.key==='ArrowRight')){e.preventDefault();
+    const sides=['left','main','right'];const off=e.key==='ArrowLeft'?-1:1;
+    const next=Math.max(0,Math.min(2,sides.indexOf(state.side)+off));
+    state.side=sides[next];
+    state.within=(next===0)&&stackedFrames().length>0;
+    state.stackIndex=state.within?0:-1;
+    state.lit=state.within?'stack0':(state.side==='main'?'main':'right');
+    draw();return;}
+  if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==='k'){e.preventDefault();state.menuOpen=true;state.menuIdx=0;state.query='';draw();return;}
+  if(state.menuOpen&&state.searchMode){
+    if(e.key==='Backspace'){e.preventDefault();state.query=state.query.slice(0,-1);state.menuIdx=0;draw();return;}
+    if(e.key.length===1&&!e.metaKey&&!e.ctrlKey){state.query+=e.key;state.menuIdx=0;draw();return;}
+  }
+  if(e.key==='t'){theme=theme==='dark'?'light':'dark';setTheme(theme);draw();return;}
+  nav(e.key);draw();
+});
+resetBtn.addEventListener('click',resetState);
+setTheme('dark');
+draw();
+</script>

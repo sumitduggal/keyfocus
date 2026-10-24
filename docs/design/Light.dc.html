@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>KeyFocus Light</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=JetBrains+Mono:wght@400;500;600&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#f4f8fb;color:#0b2233;font-family:"JetBrains Mono",ui-monospace,monospace;font-size:12px}
+button,input,select{font:inherit;color:inherit}
+.app{position:relative;width:100%;height:900px;min-height:640px;background:#f4f8fb;overflow:hidden;display:grid;grid-template-columns:300px 1fr 300px;grid-template-rows:72px 1fr auto auto;grid-template-areas:"top top top" "left stage right" "cmd cmd cmd" "dock dock dock"}
+.topo{position:absolute;inset:0;pointer-events:none;opacity:.5}
+.lbl{font-family:Rajdhani,sans-serif;font-weight:700;letter-spacing:.18em;font-size:12px;color:#0a6fa8;text-transform:uppercase;margin:0}
+.muted{color:#4a6478}
+.chip{border:1px solid rgba(10,111,168,.45);border-radius:3px;padding:4px 9px;font-size:11px;letter-spacing:.08em;color:#0a6fa8;background:transparent;cursor:pointer;min-height:32px}
+.chip[aria-pressed="true"]{background:#0a6fa8;color:#fff;border-color:#0a6fa8}
+.btn{border:1px solid rgba(10,111,168,.5);background:#fff;border-radius:4px;padding:9px 14px;cursor:pointer;letter-spacing:.1em;font-size:11px;min-height:40px;color:#0b2233}
+.btn.primary{background:#0a6fa8;color:#fff;border-color:#0a6fa8;font-weight:600}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid #0a6fa8;outline-offset:2px}
+.panel{background:rgba(255,255,255,.92);border:1px solid rgba(10,111,168,.25);border-radius:6px;padding:14px}
+.topbar{grid-area:top;display:flex;align-items:center;gap:18px;padding:0 20px;border-bottom:1px solid rgba(10,111,168,.25);background:#fff;z-index:2}
+.brand b{font-family:Rajdhani,sans-serif;font-weight:600;letter-spacing:.3em;font-size:18px}
+.brand small{display:block;color:#4a6478;letter-spacing:.14em;font-size:10px;margin-top:2px}
+.tiles{display:flex;margin:0 auto;border:1px solid rgba(10,111,168,.3);border-radius:4px;overflow:hidden}
+.tile{padding:6px 14px;border-right:1px solid rgba(10,111,168,.2);min-width:90px}
+.tile:last-child{border-right:0}
+.tile span{display:block;color:#4a6478;font-size:9px;letter-spacing:.14em}
+.tile strong{font-weight:500;font-size:12px}
+.status{text-align:right;white-space:nowrap}
+.status .big{font-family:Rajdhani,sans-serif;font-weight:700;color:#0a6fa8;font-size:20px;letter-spacing:.14em}
+.status .clock{color:#4a6478;font-size:10px}
+.left{grid-area:left;display:flex;flex-direction:column;gap:10px;padding:14px;overflow:auto}
+.frame{display:block;width:100%;text-align:left;background:#fff;border:1px solid rgba(10,111,168,.25);border-radius:4px;padding:10px 12px;cursor:pointer}
+.frame[aria-current="true"]{border-color:#0a6fa8;background:rgba(10,111,168,.08)}
+.frame .meta{display:flex;justify-content:space-between;color:#4a6478;font-size:10px;letter-spacing:.1em}
+.frame .t{font-family:Rajdhani,sans-serif;font-weight:700;font-size:15px;letter-spacing:.12em;margin:6px 0 2px}
+.frame p{margin:0;color:#2c4a5e;font-size:11px;line-height:1.5}
+.stage{grid-area:stage;position:relative;display:grid;place-items:center;overflow:hidden}
+.card{position:relative;width:min(620px,92%);background:#fff;border:1px solid rgba(10,111,168,.35);border-radius:6px;padding:26px 28px;box-shadow:0 8px 30px rgba(10,111,168,.12)}
+.timer{position:relative;width:min(300px,70%);aspect-ratio:1;margin:18px auto;border-radius:50%;display:grid;place-items:center;background:radial-gradient(circle,#eaf5fb 55%,#d6e9f4 100%);box-shadow:inset 0 0 0 1px rgba(10,111,168,.35)}
+.prog{position:absolute;inset:-8px;width:calc(100% + 16px);height:calc(100% + 16px);transform:rotate(-90deg)}
+.time{font-family:"JetBrains Mono",monospace;font-size:64px;font-weight:500;color:#0a6fa8}
+.seg{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+.acts{display:flex;gap:10px;justify-content:center;margin-top:18px;flex-wrap:wrap}
+.cmd{grid-area:cmd;display:flex;align-items:center;gap:10px;margin:0 20px 10px;border:1px solid rgba(10,111,168,.35);border-radius:4px;padding:0 14px;min-height:46px;background:#fff}
+.cmd input{flex:1;background:transparent;border:0;padding:12px 0;min-width:0}
+.right{grid-area:right;display:flex;flex-direction:column;gap:12px;padding:14px;overflow:auto}
+.feat{display:flex;align-items:center;gap:12px;width:100%;background:transparent;border:0;border-bottom:1px dashed rgba(10,111,168,.2);padding:10px 4px;cursor:pointer;text-align:left;min-height:48px}
+.feat[aria-current="true"]{background:rgba(10,111,168,.1);box-shadow:inset 3px 0 0 #0a6fa8}
+.feat .n{width:24px;color:#4a6478;font-size:10px}
+.feat .nm{font-family:Rajdhani,sans-serif;font-weight:700;letter-spacing:.12em;font-size:14px}
+.feat .sub{color:#4a6478;font-size:10px}
+.dock{grid-area:dock;display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:10px 18px;border-top:1px solid rgba(10,111,168,.25);background:#fff;font-size:10px;color:#2c4a5e;letter-spacing:.08em}
+.k{border:1px solid rgba(10,111,168,.4);padding:2px 6px;border-radius:3px;color:#0b2233;margin-right:6px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</helmet>
+
+<div class="app" style="--accent: {{accent}}">
+<header class="topbar">
+  <div class="brand"><b>KEYFOCUS</b><small>FOCUS SPACE // CANVAS 01</small></div>
+  <div class="tiles" aria-label="Session status">
+    <div class="tile"><span>MODE</span><strong>DEEP FOCUS</strong></div>
+    <div class="tile"><span>FRAMES</span><strong>04</strong></div>
+    <div class="tile"><span>ACTIVE</span><strong>POMODORO</strong></div>
+  </div>
+  <div class="status"><div class="big">NORMAL</div><div class="clock">SYSTEM STATUS &middot; 24-OCT-2026 // 20:57</div></div>
+</header>
+
+<aside class="left" aria-label="Frame stack">
+  <div style="display:flex;justify-content:space-between;align-items:center"><h2 class="lbl">Frame stack</h2><span class="chip" aria-label="3 frames">03</span></div>
+  <button class="frame" aria-current="false"><div class="meta"><span>01 &middot; NOTES</span></div><div class="t">MAIN CONTENT</div><p>This is your current working frame.</p></button>
+  <button class="frame" aria-current="false"><div class="meta"><span>02 &middot; NOTES</span></div><div class="t">NOTES</div><p>A lightweight place for thoughts and ideas.</p></button>
+  <button class="frame" aria-current="true"><div class="meta"><span>03 &middot; HABITS</span></div><div class="t">HABITS</div><p>Small practices, made visible.</p></button>
+</aside>
+
+<main class="stage" aria-label="Focus timer">
+  <section class="card" aria-labelledby="pomo-title">
+    <span style="font-size:11px;letter-spacing:.12em" class="muted">POMODORO // FRM-POM</span>
+    <h1 id="pomo-title" style="font-family:Rajdhani,sans-serif;font-weight:700;letter-spacing:.2em;font-size:34px;margin:4px 0 0">POMODORO</h1>
+    <div class="timer" role="timer" aria-label="12 minutes, standby"><svg class="prog" viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="48" fill="none" stroke="rgba(10,111,168,.2)" stroke-width="1.2"/><circle cx="50" cy="50" r="48" fill="none" stroke="#0a6fa8" stroke-width="2" stroke-linecap="round" stroke-dasharray="301.6" stroke-dashoffset="0"/></svg><div style="text-align:center"><div class="time">12:00</div><div class="muted" style="letter-spacing:.2em;font-size:11px">STANDBY</div></div></div>
+    <div class="seg" role="group" aria-label="Interval length">
+      <button class="chip" aria-pressed="false">15 MIN</button><button class="chip" aria-pressed="false">25 MIN</button><button class="chip" aria-pressed="true">CUSTOM 12</button>
+    </div>
+    <div class="acts"><button class="btn primary">START FOCUS</button><button class="btn">RESET</button></div>
+  </section>
+</main>
+
+<form class="cmd" role="search" onsubmit="return false">
+  <label for="cmdin" class="sr">Run a command or search</label>
+  <span aria-hidden="true" style="color:#0a6fa8">&#x2315;</span>
+  <input id="cmdin" type="search" placeholder="RUN A COMMAND OR SEARCH...">
+  <span class="k" style="margin:0">&#x2318;K</span>
+</form>
+
+<aside class="right" aria-label="Features">
+  <h2 class="lbl">Features</h2>
+  <button class="feat"><span class="n">01</span><div><div class="nm">HABITS</div><div class="sub">1 entries</div></div></button>
+  <button class="feat"><span class="n">02</span><div><div class="nm">REMINDERS</div><div class="sub">0 entries</div></div></button>
+  <button class="feat"><span class="n">03</span><div><div class="nm">FOCUS MUSIC</div><div class="sub">0 entries</div></div></button>
+  <button class="feat"><span class="n">04</span><div><div class="nm">NOTES</div><div class="sub">2 entries</div></div></button>
+  <button class="feat"><span class="n">05</span><div><div class="nm">TODO LIST</div><div class="sub">0 entries</div></div></button>
+  <button class="feat" aria-current="true"><span class="n">06</span><div><div class="nm">POMODORO</div><div class="sub">Open timer</div></div></button>
+</aside>
+
+<footer class="dock" aria-label="Keyboard shortcuts">
+  <span><span class="k">&#x2318;K</span>COMMAND</span>
+  <span><span class="k">ALT</span><span class="k">&#x2190;</span><span class="k">&#x2192;</span>SIDE</span>
+  <span><span class="k">&#x2191;</span><span class="k">&#x2193;</span>SELECT</span>
+  <span><span class="k">&#x21B5;</span>PROMOTE</span>
+  <span><span class="k">ESC</span>RESET</span>
+</footer>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#0a6fa8"},"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+renderVals() {
+return { accent: this.props.accent ?? '#0a6fa8' };
+}
+}
+</script>
+</body>
+</html>

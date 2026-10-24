@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>KeyFocus Tablet</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=JetBrains+Mono:wght@400;500;600&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#03070c;color:#d6ecf7;font-family:"JetBrains Mono",ui-monospace,monospace;font-size:12px}
+button,input{font:inherit;color:inherit}
+.app{width:1024px;height:768px;background:#03070c;display:grid;grid-template-columns:240px 1fr;grid-template-rows:56px 1fr 84px;grid-template-areas:"top top" "left stage" "dock dock";overflow:hidden}
+.lbl{font-family:Rajdhani,sans-serif;font-weight:700;letter-spacing:.18em;font-size:12px;color:var(--accent);text-transform:uppercase;margin:0}
+.muted{color:#6d8ba0}
+.chip{border:1px solid rgba(62,200,255,.35);border-radius:3px;padding:4px 9px;font-size:11px;letter-spacing:.08em;color:var(--accent);background:transparent;cursor:pointer;min-height:40px}
+.chip[aria-pressed="true"]{background:rgba(62,200,255,.18);color:#eaf9ff;border-color:var(--accent)}
+.btn{border:1px solid rgba(62,200,255,.45);background:rgba(62,200,255,.08);border-radius:4px;padding:9px 14px;cursor:pointer;letter-spacing:.1em;font-size:11px;min-height:44px;color:#eaf9ff}
+.btn.primary{background:var(--accent);color:#03101a;border-color:var(--accent);font-weight:600}
+button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.topbar{grid-area:top;display:flex;align-items:center;gap:14px;padding:0 16px;border-bottom:1px solid rgba(62,200,255,.2);background:rgba(3,10,18,.92)}
+.brand b{font-family:Rajdhani,sans-serif;font-weight:600;letter-spacing:.28em;font-size:16px}
+.topbar .sp{flex:1}
+.left{grid-area:left;display:flex;flex-direction:column;gap:10px;padding:12px;overflow:auto;border-right:1px solid rgba(62,200,255,.15)}
+.frame{display:block;width:100%;text-align:left;background:rgba(6,18,30,.8);border:1px solid rgba(62,200,255,.18);border-radius:4px;padding:10px;cursor:pointer;min-height:44px}
+.frame[aria-current="true"]{border-color:var(--accent);background:rgba(62,200,255,.12)}
+.frame .t{font-family:Rajdhani,sans-serif;font-weight:700;font-size:14px;letter-spacing:.12em}
+.frame .m{color:#6d8ba0;font-size:10px}
+.stage{grid-area:stage;display:grid;place-items:center;padding:12px;min-height:0}
+.card{width:min(440px,100%);background:rgba(4,14,24,.9);border:1px solid rgba(62,200,255,.35);border-radius:6px;padding:20px;text-align:center}
+.timer{position:relative;width:220px;aspect-ratio:1;margin:12px auto;border-radius:50%;display:grid;place-items:center;background:radial-gradient(circle,#0a2236 55%,#04121f 100%);box-shadow:inset 0 0 0 1px rgba(62,200,255,.35)}
+.prog{position:absolute;inset:-8px;width:calc(100% + 16px);height:calc(100% + 16px);transform:rotate(-90deg)}
+.time{font-family:"JetBrains Mono",monospace;font-size:50px;color:var(--accent)}
+.seg{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+.acts{display:flex;gap:10px;justify-content:center;margin-top:14px}
+.dock{grid-area:dock;display:flex;align-items:center;gap:10px;overflow-x:auto;padding:10px 14px;border-top:1px solid rgba(62,200,255,.2);background:rgba(3,10,18,.94)}
+.feat{flex:0 0 auto;display:flex;flex-direction:column;justify-content:center;gap:2px;background:rgba(6,18,30,.8);border:1px solid rgba(62,200,255,.18);border-radius:4px;padding:8px 12px;min-width:120px;min-height:52px;cursor:pointer;text-align:left}
+.feat[aria-current="true"]{border-color:var(--accent);background:rgba(62,200,255,.14)}
+.feat .nm{font-family:Rajdhani,sans-serif;font-weight:700;letter-spacing:.12em;font-size:13px}
+.feat .sub{color:#6d8ba0;font-size:10px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</helmet>
+
+<div class="app" style="--accent: {{accent}}">
+<header class="topbar">
+  <div class="brand"><b>KEYFOCUS</b></div>
+  <span class="sp"></span>
+  <span class="muted" style="font-size:10px;letter-spacing:.1em">FRAMES 04 &middot; POMODORO</span>
+</header>
+
+<aside class="left" aria-label="Frame stack">
+  <h2 class="lbl">Frame stack</h2>
+  <button class="frame" aria-current="false"><div class="m">01 &middot; NOTES</div><div class="t">MAIN CONTENT</div></button>
+  <button class="frame" aria-current="false"><div class="m">02 &middot; NOTES</div><div class="t">NOTES</div></button>
+  <button class="frame" aria-current="true"><div class="m">03 &middot; HABITS</div><div class="t">HABITS</div></button>
+</aside>
+
+<main class="stage" aria-label="Focus timer">
+  <section class="card" aria-labelledby="t-title">
+    <span class="muted" style="font-size:11px;letter-spacing:.12em">POMODORO // FRM-POM</span>
+    <h1 id="t-title" style="font-family:Rajdhani,sans-serif;font-weight:700;letter-spacing:.2em;font-size:28px;margin:4px 0 0;color:#eaf9ff">POMODORO</h1>
+    <div class="timer" role="timer" aria-label="12 minutes, standby"><svg class="prog" viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="48" fill="none" stroke="rgba(62,200,255,.15)" stroke-width="1.2"/><circle cx="50" cy="50" r="48" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-dasharray="301.6" stroke-dashoffset="0"/></svg><div><div class="time">12:00</div><div class="muted" style="letter-spacing:.2em;font-size:10px">STANDBY</div></div></div>
+    <div class="seg" role="group" aria-label="Interval length">
+      <button class="chip" aria-pressed="false">15 MIN</button><button class="chip" aria-pressed="false">25 MIN</button><button class="chip" aria-pressed="true">CUSTOM 12</button>
+    </div>
+    <div class="acts"><button class="btn primary">START FOCUS</button><button class="btn">RESET</button></div>
+  </section>
+</main>
+
+<nav class="dock" aria-label="Features">
+  <button class="feat"><span class="nm">HABITS</span><span class="sub">1 entries</span></button>
+  <button class="feat"><span class="nm">REMINDERS</span><span class="sub">0 entries</span></button>
+  <button class="feat"><span class="nm">FOCUS MUSIC</span><span class="sub">0 entries</span></button>
+  <button class="feat"><span class="nm">NOTES</span><span class="sub">2 entries</span></button>
+  <button class="feat"><span class="nm">TODO LIST</span><span class="sub">0 entries</span></button>
+  <button class="feat" aria-current="true"><span class="nm">POMODORO</span><span class="sub">Open timer</span></button>
+</nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#3ec8ff"},"$preview":{"width":1024,"height":768}}'>
+class Component extends DCLogic {
+renderVals() {
+return { accent: this.props.accent ?? '#3ec8ff' };
+}
+}
+</script>
+</body>
+</html>

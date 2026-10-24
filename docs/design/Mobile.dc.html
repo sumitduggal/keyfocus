@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>KeyFocus Mobile</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=JetBrains+Mono:wght@400;500;600&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#03070c;color:#d6ecf7;font-family:"JetBrains Mono",ui-monospace,monospace;font-size:12px}
+button{font:inherit;color:inherit}
+.app{width:390px;height:844px;background:#03070c;display:flex;flex-direction:column;overflow:hidden}
+.lbl{font-family:Rajdhani,sans-serif;font-weight:700;letter-spacing:.18em;font-size:12px;color:var(--accent);text-transform:uppercase;margin:0}
+.muted{color:#6d8ba0}
+.top{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid rgba(62,200,255,.2);background:rgba(3,10,18,.94)}
+.top b{font-family:Rajdhani,sans-serif;font-weight:600;letter-spacing:.24em;font-size:15px}
+.tag{border:1px solid rgba(62,200,255,.35);border-radius:3px;padding:6px 8px;font-size:10px;color:var(--accent)}
+.main{flex:1;overflow:auto;padding:14px 16px;display:flex;flex-direction:column;gap:14px}
+.card{background:rgba(4,14,24,.9);border:1px solid rgba(62,200,255,.35);border-radius:6px;padding:16px;text-align:center}
+.timer{position:relative;width:200px;aspect-ratio:1;margin:12px auto;border-radius:50%;display:grid;place-items:center;background:radial-gradient(circle,#0a2236 55%,#04121f 100%);box-shadow:inset 0 0 0 1px rgba(62,200,255,.35)}
+.prog{position:absolute;inset:-8px;width:calc(100% + 16px);height:calc(100% + 16px);transform:rotate(-90deg)}
+.time{font-family:"JetBrains Mono",monospace;font-size:46px;color:var(--accent)}
+.seg{display:flex;gap:6px;justify-content:center;flex-wrap:wrap}
+.chip{border:1px solid rgba(62,200,255,.35);border-radius:3px;padding:8px 10px;font-size:11px;letter-spacing:.06em;color:var(--accent);background:transparent;min-height:44px}
+.chip[aria-pressed="true"]{background:rgba(62,200,255,.18);color:#eaf9ff;border-color:var(--accent)}
+.btn{border:1px solid rgba(62,200,255,.45);background:rgba(62,200,255,.08);border-radius:4px;padding:10px 14px;letter-spacing:.1em;font-size:11px;min-height:48px;color:#eaf9ff;flex:1}
+.btn.primary{background:var(--accent);color:#03101a;border-color:var(--accent);font-weight:600}
+.frame{display:block;width:100%;text-align:left;background:rgba(6,18,30,.8);border:1px solid rgba(62,200,255,.18);border-radius:4px;padding:10px 12px;min-height:44px}
+.frame[aria-current="true"]{border-color:var(--accent);background:rgba(62,200,255,.12)}
+.frame .t{font-family:Rajdhani,sans-serif;font-weight:700;font-size:14px;letter-spacing:.12em}
+.frame .m{color:#6d8ba0;font-size:10px}
+.nav{display:grid;grid-template-columns:repeat(3,1fr);border-top:1px solid rgba(62,200,255,.2);background:rgba(3,10,18,.96)}
+.nav button{background:transparent;border:0;padding:12px 4px;min-height:56px;color:#9fc3d8;font-size:10px;letter-spacing:.1em;cursor:pointer}
+.nav button[aria-current="true"]{color:var(--accent);box-shadow:inset 0 2px 0 var(--accent)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</helmet>
+
+<div class="app" style="--accent: {{accent}}">
+<header class="top">
+  <b>KEYFOCUS</b>
+  <span class="tag">NORMAL &middot; 04 FRAMES</span>
+</header>
+
+<main class="main" aria-label="Focus timer">
+  <section class="card" aria-labelledby="m-title">
+    <span class="muted" style="font-size:10px;letter-spacing:.12em">POMODORO // FRM-POM</span>
+    <h1 id="m-title" style="font-family:Rajdhani,sans-serif;font-weight:700;letter-spacing:.2em;font-size:24px;margin:4px 0 0;color:#eaf9ff">POMODORO</h1>
+    <div class="timer" role="timer" aria-label="12 minutes, standby"><svg class="prog" viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="48" fill="none" stroke="rgba(62,200,255,.15)" stroke-width="1.2"/><circle cx="50" cy="50" r="48" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-dasharray="301.6" stroke-dashoffset="0"/></svg><div><div class="time">12:00</div><div class="muted" style="letter-spacing:.2em;font-size:10px">STANDBY</div></div></div>
+    <div class="seg" role="group" aria-label="Interval length">
+      <button class="chip" aria-pressed="false">15 MIN</button><button class="chip" aria-pressed="false">25 MIN</button><button class="chip" aria-pressed="true">CUSTOM 12</button>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:14px"><button class="btn primary">START FOCUS</button><button class="btn">RESET</button></div>
+  </section>
+
+  <h2 class="lbl">Frame stack</h2>
+  <button class="frame" aria-current="false"><div class="m">01 &middot; NOTES</div><div class="t">MAIN CONTENT</div></button>
+  <button class="frame" aria-current="false"><div class="m">02 &middot; NOTES</div><div class="t">NOTES</div></button>
+  <button class="frame" aria-current="true"><div class="m">03 &middot; HABITS</div><div class="t">HABITS</div></button>
+</main>
+
+<nav class="nav" aria-label="Sections">
+  <button aria-current="false">FRAMES</button>
+  <button aria-current="true">TIMER</button>
+  <button aria-current="false">FEATURES</button>
+</nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#3ec8ff"},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+renderVals() {
+return { accent: this.props.accent ?? '#3ec8ff' };
+}
+}
+</script>
+</body>
+</html>
