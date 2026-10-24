@@ -98,14 +98,20 @@ export function FeaturePanel({
                 onFocus={() => {}}
                 onClick={() => onEntryClick(frame)}
               >
-                <b>{frame.title}</b>
-                <small>{frame.description}</small>
+                <span className="feature-entry-index">{String(index + 1).padStart(2, "0")}</span>
+                <span className="feature-entry-copy">
+                  <b>{frame.title}</b>
+                  <small>{frame.description}</small>
+                </span>
               </button>
             ))
-          : featureMeta[featurePanel].frame.details.map((entry) => (
+          : featureMeta[featurePanel].frame.details.map((entry, index) => (
               <button key={entry} type="button">
-                <b>{entry}</b>
-                <small>New entry</small>
+                <span className="feature-entry-index">{String(index + 1).padStart(2, "0")}</span>
+                <span className="feature-entry-copy">
+                  <b>{entry}</b>
+                  <small>New entry</small>
+                </span>
               </button>
             ))}
       </div>

@@ -1,7 +1,7 @@
 import { useCallback } from "react";
 import { motion } from "motion/react";
 import type { WorkspaceFrame } from "../types";
-import { StackPreview } from "./Mainframe";
+import { featureMeta } from "../constants";
 
 interface StackProps {
   stackedFrames: WorkspaceFrame[];
@@ -27,29 +27,28 @@ export function Stack({
 
   return (
     <div className="frame-stack">
+      {stackedFrames.length === 0 && (
+        <div className="stack-empty" aria-hidden="true">
+          <span className="stack-empty-scope" />
+          <b>No stacked frames</b>
+          <small>Promote a frame from the command palette to build context here.</small>
+          <span className="stack-empty-code">STACK // 00</span>
+        </div>
+      )}
+
       {stackedFrames.map((frame, index) => (
         <motion.div
           className={index === stackFocusIndex ? "stack-item previewed" : "stack-item"}
           key={frame.id}
           animate={{
-            y: index * 73,
-            rotateY: index % 2 ? -14 : -8,
-            rotateZ: index % 2 ? 2 : -2,
-            z: -index * 24,
-            scale:
-              index === stackFocusIndex
-                ? index === 0 || index === stackedFrames.length - 2
-                  ? 1.5
-                  : 3
-                : 1,
+            y: index * 82,
+            x: index * 5,
+            opacity: 1 - Math.min(index, 4) * 0.08,
           }}
           transition={
-            reduceMotion ? { duration: 0 } : { type: "spring", stiffness: 330, damping: 30 }
+            reduceMotion ? { duration: 0 } : { type: "spring", stiffness: 320, damping: 32 }
           }
-          style={{
-            zIndex:
-              index === stackFocusIndex ? stackedFrames.length + 1 : stackedFrames.length - index,
-          }}
+          style={{ zIndex: stackedFrames.length - index }}
         >
           <div
             ref={(node) => {
@@ -62,7 +61,18 @@ export function Stack({
             onFocus={() => handleFocus(index)}
             onClick={() => handleFocus(index)}
           >
-            <StackPreview frame={frame} />
+            <span className="stack-line">
+              <span className="stack-index">{String(index + 1).padStart(2, "0")}</span>
+              <span className="stack-feature">
+                <i aria-hidden="true">{featureMeta[frame.feature].glyph}</i>
+                {frame.feature}
+              </span>
+              <span className="stack-target" aria-hidden="true">
+                ◎
+              </span>
+            </span>
+            <b>{frame.title}</b>
+            <small>{frame.description}</small>
           </div>
         </motion.div>
       ))}

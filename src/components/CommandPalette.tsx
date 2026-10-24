@@ -51,9 +51,12 @@ export function CommandPalette({
     <>
       <motion.div
         className="command-wrap"
-        animate={menuOpen ? { scaleX: 1.2, scaleY: 1.2 } : { scaleX: 1, scaleY: 1 }}
+        animate={menuOpen ? { scaleX: 1.04, scaleY: 1.04 } : { scaleX: 1, scaleY: 1 }}
         transition={reduceMotion ? { duration: 0 } : { duration: 0.18, ease: "easeOut" }}
       >
+        <span className="command-mark" aria-hidden="true">
+          ⌖
+        </span>
         <input
           ref={actionInputRef}
           aria-label="Open actions"
@@ -63,7 +66,7 @@ export function CommandPalette({
           onChange={(event) => onQueryChange(event.target.value)}
           onFocus={onFocus}
           onKeyDown={onKeyDown}
-          placeholder={searchMode ? "Search created features…" : "Choose an action…"}
+          placeholder={searchMode ? "Search created features…" : "Run a command or search…"}
         />
         <kbd>⌘K</kbd>
       </motion.div>

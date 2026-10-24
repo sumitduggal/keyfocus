@@ -11,6 +11,29 @@ import { CommandPalette } from "./components/CommandPalette";
 import "./App.css";
 import "./components.css";
 
+const pad = (value: number) => String(value).padStart(2, "0");
+
+function HudClock() {
+  const [now, setNow] = useState(() => new Date());
+
+  useEffect(() => {
+    const tick = window.setInterval(() => setNow(new Date()), 1000);
+    return () => window.clearInterval(tick);
+  }, []);
+
+  const stamp = now
+    .toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })
+    .toUpperCase()
+    .replaceAll(" ", "-");
+  const clock = now.toLocaleTimeString("en-GB", { hour12: false });
+
+  return (
+    <div className="hud-status-time">
+      {stamp} <span>//</span> {clock}
+    </div>
+  );
+}
+
 function App() {
   const [frames, setFrames] = useState<WorkspaceFrame[]>(() => {
     const saved = localStorage.getItem("focus-space-frames");
@@ -384,7 +407,47 @@ function App() {
 
   return (
     <main className="app">
-      <div className="stage" aria-live="polite">
+      <div className="stage">
+        <div className="hud-backdrop" aria-hidden="true" />
+        <span className="hud-corner tl" aria-hidden="true" />
+        <span className="hud-corner tr" aria-hidden="true" />
+        <span className="hud-corner bl" aria-hidden="true" />
+        <span className="hud-corner br" aria-hidden="true" />
+
+        <header className="hud-top">
+          <div className="brand">
+            <span className="brand-mark" aria-hidden="true">
+              <i />
+            </span>
+            <span className="brand-copy">
+              <span className="brand-title">Keyfocus</span>
+              <span className="brand-sub">Focus space // canvas 01</span>
+            </span>
+          </div>
+
+          <div className="hud-readout" aria-hidden="true">
+            <span>
+              <i>Mode</i>Deep focus
+            </span>
+            <span>
+              <i>Frames</i>
+              {pad(frames.length)}
+            </span>
+            <span>
+              <i>Active</i>
+              {activeFrame.feature}
+            </span>
+          </div>
+
+          <div className="hud-status">
+            <div className="hud-status-line">
+              <span>System status</span>
+              <b>Normal</b>
+            </div>
+            <HudClock />
+          </div>
+        </header>
+
         <div className="canvas">
           <aside
             ref={(node) => {
@@ -396,7 +459,11 @@ function App() {
             aria-label="Latest frames"
             tabIndex={0}
           >
-            <p className="side-label">Latest frames</p>
+            <div className="side-head">
+              <p className="side-label">Frame stack</p>
+              <span className="side-count">{pad(stackedFrames.length)}</span>
+            </div>
+            <p className="side-sub">Recent context // newest first</p>
             <Stack
               stackedFrames={stackedFrames}
               stackFocusIndex={stackFocusIndex}
@@ -408,6 +475,20 @@ function App() {
                 setStackFocusIndex(index);
               }}
             />
+            <div className="side-readout">
+              <div>
+                <span>Total frames</span>
+                <b>{pad(frames.length)}</b>
+              </div>
+              <div>
+                <span>Active surface</span>
+                <b>{activeFrame.feature}</b>
+              </div>
+              <div>
+                <span>Channel</span>
+                <b>Local</b>
+              </div>
+            </div>
           </aside>
 
           <section
@@ -424,6 +505,12 @@ function App() {
             aria-label="Main frame"
             tabIndex={0}
           >
+            <div className="scope" aria-hidden="true">
+              <span className="terrain-contours" />
+              <span className="terrain-glow terrain-glow-a" />
+              <span className="terrain-glow terrain-glow-b" />
+            </div>
+
             <div
               className={
                 activeFrame.feature === "notes"
@@ -459,6 +546,7 @@ function App() {
               rightItemRefs={rightItemRefs.current}
               profileRef={profileRef}
               framesCountByFeature={framesCountByFeature}
+              activeFeature={activeFrame.feature}
               theme={theme}
               onToggleTheme={toggleTheme}
               setRightFocusIndex={setRightFocusIndex}
@@ -522,6 +610,36 @@ function App() {
             }}
           />
         </div>
+
+        <footer className="hud-bottom">
+          <div className="key-hints">
+            <span>
+              <kbd>⌘K</kbd> Command
+            </span>
+            <span>
+              <kbd>Alt</kbd>
+              <kbd>←</kbd>
+              <kbd>→</kbd> Side
+            </span>
+            <span>
+              <kbd>↑</kbd>
+              <kbd>↓</kbd> Select
+            </span>
+            <span>
+              <kbd>↵</kbd> Promote
+            </span>
+            <span>
+              <kbd>Esc</kbd> Reset
+            </span>
+          </div>
+          <div className="hud-footer-readout">
+            <span>{pad(stackedFrames.length)} stacked</span>
+            <span className="sep">//</span>
+            <span>{activeFrame.feature} live</span>
+            <span className="sep">//</span>
+            <span>local only</span>
+          </div>
+        </footer>
       </div>
     </main>
   );

@@ -13,6 +13,7 @@
   --color-accent-text: var(--accent-text);
   --color-accent-soft: var(--accent-soft);
   --color-accent-contrast: var(--accent-contrast);
+  --color-warm: var(--warm);
   --color-border: var(--border);
   --color-border-strong: var(--border-strong);
   --color-overlay: var(--overlay);
@@ -27,55 +28,75 @@
 }
 
 :root {
-  font-family:
-    Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-ui: "SF Pro Display", "Helvetica Neue", Inter, ui-sans-serif, system-ui, sans-serif;
+  --font-mono-stack:
+    "SF Mono", "JetBrains Mono", "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-family: var(--font-ui);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
 }
 
-/* Theme tokens. `data-theme` on <html> picks the palette; App.css should only
-   reference these variables, never a raw color. */
+/* Theme tokens. `data-theme` on <html> picks the palette; component CSS should
+   only reference these variables, never a raw color. */
 :root,
 [data-theme="dark"] {
   color-scheme: dark;
-  --bg: #0e0f12;
-  --panel: #131418;
-  --surface: #17181d;
-  --surface-2: #1d1f25;
-  --border: #26282f;
-  --border-strong: #33353d;
-  --text: #e9eaee;
-  --text-muted: #9a9da7;
-  --text-faint: #6b6e78;
-  --accent: #7c8cff;
-  --accent-soft: rgba(124, 140, 255, 0.16);
-  --accent-text: #97a3ff;
-  --accent-contrast: #0e0f12;
-  --overlay: rgba(0, 0, 0, 0.55);
-  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.4);
-  --shadow-card-active: 0 6px 28px rgba(0, 0, 0, 0.5);
-  --shadow-menu: 0 10px 30px rgba(0, 0, 0, 0.55);
+  --bg: #000000;
+  --bg-deep: #000000;
+  --panel: #030605;
+  --surface: #050a08;
+  --surface-2: #08100e;
+  --border: #182723;
+  --border-strong: #2a423c;
+  --text: #e4dcc6;
+  --text-muted: #9aa79e;
+  --text-faint: #667c73;
+  --accent: #48d9ff;
+  --accent-soft: rgba(72, 217, 255, 0.14);
+  --accent-text: #8cecff;
+  --accent-contrast: #031416;
+  --warm: #d9a566;
+  --warm-soft: rgba(217, 165, 102, 0.12);
+  --danger: #ff9a83;
+  --overlay: rgba(1, 4, 3, 0.78);
+  --grid-line: rgba(86, 190, 225, 0.07);
+  --scan-line: rgba(255, 255, 255, 0.015);
+  --glow: 0 0 24px rgba(99, 230, 255, 0.16);
+  --shadow-card: 0 1px 0 rgba(255, 255, 255, 0.025), 0 18px 50px rgba(0, 0, 0, 0.5);
+  --shadow-card-active:
+    0 1px 0 rgba(255, 255, 255, 0.04), 0 24px 80px rgba(0, 0, 0, 0.62),
+    0 0 0 1px rgba(99, 230, 255, 0.08);
+  --shadow-menu: 0 24px 80px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(99, 230, 255, 0.06);
 }
 
 [data-theme="light"] {
   color-scheme: light;
-  --bg: #eceef1;
-  --panel: #f4f4f2;
-  --surface: #ffffff;
-  --surface-2: #f2f3f5;
-  --border: #e2e4e9;
-  --border-strong: #cfd2d9;
-  --text: #16181d;
-  --text-muted: #5d6169;
-  --text-faint: #8a8e97;
-  --accent: #4f5fe0;
-  --accent-soft: rgba(79, 95, 224, 0.1);
-  --accent-text: #4050d0;
-  --accent-contrast: #ffffff;
-  --overlay: rgba(15, 17, 22, 0.32);
-  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.04), 0 8px 24px rgba(0, 0, 0, 0.05);
-  --shadow-card-active: 0 8px 30px rgba(0, 0, 0, 0.12);
-  --shadow-menu: 0 10px 30px rgba(0, 0, 0, 0.16);
+  --bg: #ded8c8;
+  --bg-deep: #d3ccb9;
+  --panel: #e9e3d4;
+  --surface: #f3eddd;
+  --surface-2: #e7e0ce;
+  --border: #c8bfa9;
+  --border-strong: #a79c82;
+  --text: #18201c;
+  --text-muted: #51605a;
+  --text-faint: #7d8a82;
+  --accent: #0a7a86;
+  --accent-soft: rgba(10, 122, 134, 0.09);
+  --accent-text: #07636d;
+  --accent-contrast: #f3f8f7;
+  --warm: #95621f;
+  --warm-soft: rgba(149, 98, 31, 0.1);
+  --danger: #b2402a;
+  --overlay: rgba(222, 216, 200, 0.82);
+  --grid-line: rgba(40, 70, 60, 0.07);
+  --scan-line: rgba(20, 40, 30, 0.018);
+  --glow: 0 0 22px rgba(10, 122, 134, 0.14);
+  --shadow-card: 0 1px 0 rgba(255, 255, 255, 0.4), 0 16px 40px rgba(60, 50, 30, 0.12);
+  --shadow-card-active:
+    0 1px 0 rgba(255, 255, 255, 0.5), 0 22px 60px rgba(60, 50, 30, 0.18),
+    0 0 0 1px rgba(10, 122, 134, 0.1);
+  --shadow-menu: 0 22px 60px rgba(60, 50, 30, 0.22), 0 0 0 1px rgba(10, 122, 134, 0.08);
 }
 
 html,
@@ -85,6 +106,16 @@ body,
   min-height: 100%;
   margin: 0;
 }
+
+body {
+  background: var(--bg-deep);
+}
+
 button {
   font: inherit;
+}
+
+::selection {
+  color: var(--accent-contrast);
+  background: var(--accent);
 }

@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useRef, useState } from "react";
-import type { RefCallback } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import type { CSSProperties, RefCallback } from "react";
 import EditorJS, { type OutputData } from "@editorjs/editorjs";
 import Header from "@editorjs/header";
 import List from "@editorjs/list";
@@ -28,7 +28,9 @@ export function Mainframe({
   const note = noteBody ?? "";
   const editorHost = useRef<HTMLDivElement | null>(null);
   const editorInstance = useRef<EditorJS | null>(null);
-  const initialNote = useRef(note).current;
+  // Freeze the body for the life of one frame; switching frames loads that frame's saved body.
+  // oxlint-disable-next-line react-hooks/exhaustive-deps
+  const initialNote = useMemo(() => note, [frame.id]);
   const noteChangeRef = useRef(onNoteChange);
   noteChangeRef.current = onNoteChange;
 
@@ -40,54 +42,68 @@ export function Mainframe({
     } catch {
       parsed = undefined;
     }
-    const editor = new EditorJS({
-      holder: editorHost.current,
-      autofocus: true,
-      data: parsed?.blocks
-        ? parsed
-        : {
-            blocks: initialNote
-              .split("\n")
-              .filter(Boolean)
-              .map((text) => ({ type: "paragraph", data: { text } })),
-          },
-      tools: {
-        header: Header,
-        list: List,
-        quote: Quote,
-        checklist: Checklist,
-        image: {
-          class: ImageTool,
-          config: {
-            uploader: {
-              uploadByFile: async (file: File) =>
-                ({
-                  success: 1,
-                  file: {
-                    url: await new Promise<string>((resolve) => {
-                      const reader = new FileReader();
-                      reader.onload = () => resolve(String(reader.result));
-                      reader.readAsDataURL(file);
-                    }),
-                  },
-                }) as const,
+    const host = editorHost.current;
+    host.replaceChildren();
+    const container = document.createElement("div");
+    container.className = "note-editor-mount";
+    host.appendChild(container);
+    let editor: EditorJS;
+    try {
+      editor = new EditorJS({
+        holder: container,
+        autofocus: true,
+        data: parsed?.blocks
+          ? parsed
+          : {
+              blocks: initialNote
+                .split("\n")
+                .filter(Boolean)
+                .map((text) => ({ type: "paragraph", data: { text } })),
+            },
+        tools: {
+          header: Header,
+          list: List,
+          quote: Quote,
+          checklist: Checklist,
+          image: {
+            class: ImageTool,
+            config: {
+              uploader: {
+                uploadByFile: async (file: File) =>
+                  ({
+                    success: 1,
+                    file: {
+                      url: await new Promise<string>((resolve) => {
+                        const reader = new FileReader();
+                        reader.onload = () => resolve(String(reader.result));
+                        reader.readAsDataURL(file);
+                      }),
+                    },
+                  }) as const,
+              },
             },
           },
+          inlineCode: InlineCode,
+          code: CodeTool,
+          linkTool: LinkTool,
+          marker: Marker,
         },
-        inlineCode: InlineCode,
-        code: CodeTool,
-        linkTool: LinkTool,
-        marker: Marker,
-      },
-      onChange: async () => {
-        const output = await editor.save();
-        noteChangeRef.current?.(JSON.stringify(output));
-      },
-    });
+        onChange: async () => {
+          const instance = editorInstance.current;
+          if (!instance) return;
+          const output = await instance.save();
+          noteChangeRef.current?.(JSON.stringify(output));
+        },
+      });
+    } catch (error) {
+      console.error("KEYFOCUS editor init failed", error);
+      return;
+    }
     editorInstance.current = editor;
     return () => {
       editor.isReady.then(() => editor.destroy()).catch(() => undefined);
       editorInstance.current = null;
+      container.remove();
     };
   }, [frame.id, frame.feature, initialNote]);
 
@@ -139,6 +155,9 @@ export function Mainframe({
     startButton.current?.focus();
   }, []);
 
+  const totalSeconds = Math.max(1, pomodoroDuration * 60);
+  const progress = Math.min(1, Math.max(0, 1 - pomodoroSeconds / totalSeconds));
+
   return (
     <section
       ref={frameRef}
@@ -149,12 +168,51 @@ export function Mainframe({
       aria-current={active ? "page" : undefined}
       tabIndex={-1}
     >
-      <p className="frame-eyebrow">{frame.eyebrow}</p>
-      <h1>{frame.title}</h1>
+      <span className="frame-corner tl" aria-hidden="true" />
+      <span className="frame-corner tr" aria-hidden="true" />
+      <span className="frame-corner bl" aria-hidden="true" />
+      <span className="frame-corner br" aria-hidden="true" />
+
+      <header className="frame-head">
+        <div>
+          <p className="frame-eyebrow">
+            <span className="eyebrow-mark" aria-hidden="true" />
+            {frame.eyebrow}
+            <span className="frame-code">// frm-{frame.feature.slice(0, 3).toUpperCase()}</span>
+          </p>
+          <h1>{frame.title}</h1>
+        </div>
+        <span className="frame-status">
+          <span className="frame-status-dot" aria-hidden="true" />
+          {active ? "Active" : "Standby"}
+        </span>
+      </header>
+
       {frame.feature === "pomodoro" ? (
-        <div className="pomodoro-view">
+        <div className="frame-body pomodoro-view">
           <p className="frame-description">
-            A focused 25-minute work interval with a short reset afterward.
+            A focused work interval with a short reset afterward.
+          </p>
+          <div
+            className="pomodoro-dial"
+            style={{ "--progress": `${progress * 360}deg` } as CSSProperties}
+          >
+            <div className="pomodoro-dial-inner">
+              <div className="pomodoro-clock" aria-live="polite">
+                {String(Math.floor(pomodoroSeconds / 60)).padStart(2, "0")}:
+                {String(pomodoroSeconds % 60).padStart(2, "0")}
+              </div>
+              <span className="pomodoro-dial-label">
+                {pomodoroRunning ? "Session live" : pomodoroSeconds === 0 ? "Complete" : "Standby"}
+              </span>
+            </div>
+          </div>
+          <p className="pomodoro-status">
+            {pomodoroSeconds === 0
+              ? "Interval complete"
+              : pomodoroRunning
+                ? "Focus session running"
+                : "Ready when you are"}
           </p>
           <div className="pomodoro-presets" aria-label="Timer duration">
             <button
@@ -185,17 +243,6 @@ export function Mainframe({
               />
             </label>
           </div>
-          <div className="pomodoro-clock" aria-live="polite">
-            {String(Math.floor(pomodoroSeconds / 60)).padStart(2, "0")}:
-            {String(pomodoroSeconds % 60).padStart(2, "0")}
-          </div>
-          <p className="pomodoro-status">
-            {pomodoroSeconds === 0
-              ? "Interval complete"
-              : pomodoroRunning
-                ? "Focus session running"
-                : "Ready when you are"}
-          </p>
           <div className="pomodoro-actions">
             <button
               ref={startButton}
@@ -217,38 +264,29 @@ export function Mainframe({
           <p className="frame-foot">Take a five-minute break when the interval ends</p>
         </div>
       ) : frame.feature === "notes" ? (
-        <>
+        <div className="frame-body note-body">
           <div
             ref={editorHost}
             className="note-editor editorjs-note"
             aria-label="Note block editor"
           />
-          <small className="markdown-hint">Markdown is saved automatically on this device.</small>
-        </>
+          <small className="markdown-hint">Local autosave // markdown blocks on this device</small>
+        </div>
       ) : (
-        <>
+        <div className="frame-body">
           <p className="frame-description">{frame.description}</p>
-          <ul>
-            {frame.details.map((detail) => (
+          <ul className="frame-list">
+            {frame.details.map((detail, index) => (
               <li key={detail}>
-                <span aria-hidden="true">•</span>
-                {detail}
+                <span className="list-index">{String(index + 1).padStart(2, "0")}</span>
+                <span className="list-copy">{detail}</span>
+                <span className="list-pip" aria-hidden="true" />
               </li>
             ))}
           </ul>
           <p className="frame-foot">Use the frame stack to revisit earlier contexts</p>
-        </>
+        </div>
       )}
     </section>
-  );
-}
-
-export function StackPreview({ frame }: { frame: WorkspaceFrame }) {
-  return (
-    <div className="stack-preview" aria-hidden="true">
-      <p>{frame.eyebrow}</p>
-      <h2>{frame.title}</h2>
-      <span>{frame.description}</span>
-    </div>
   );
 }
