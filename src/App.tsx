@@ -23,6 +23,7 @@ import type { Settings } from "./settings";
 import { CommandPalette } from "./components/CommandPalette";
 import { Weather } from "./components/Weather";
 import { loadHabits, saveHabits, toggleDay, type Habit } from "./habits";
+import { loadFrames, loadNoteBodies, loadTheme } from "./saved-state";
 import { initReminders, registerHabitSource, removeFrameReminders, restoreFrameReminders } from "./reminders-store";
 import { HudReminders, ReminderBanner } from "./components/ReminderBanner";
 import {
@@ -91,22 +92,12 @@ function HudClock() {
 }
 
 function App() {
-  const [frames, setFrames] = useState<WorkspaceFrame[]>(() => {
-    const saved = localStorage.getItem(FRAMES_KEY);
-    if (!saved) return [initialFrame];
-    return (JSON.parse(saved) as Partial<WorkspaceFrame>[]).map((frame) => ({
-      ...initialFrame,
-      ...frame,
-      feature: frame.feature ?? "notes",
-    }));
-  });
+  const [frames, setFrames] = useState<WorkspaceFrame[]>(() => loadFrames(localStorage));
   const [activeFrameId, setActiveFrameId] = useState("main");
   const [stackFocusIndex, setStackFocusIndex] = useState(-1);
   const [focusedSide, setFocusedSide] = useState<Side>("main");
   const [withinSide, setWithinSide] = useState(false);
-  const [theme, setTheme] = useState<Theme>(
-    () => (localStorage.getItem(THEME_KEY) as Theme | null) ?? "dark",
-  );
+  const [theme, setTheme] = useState<Theme>(() => loadTheme(localStorage));
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [settingsAnchorY, setSettingsAnchorY] = useState<number | null>(null);
   const [settings, setSettings] = useState<Settings>(loadSettings);
@@ -124,12 +115,7 @@ function App() {
   const [featurePanel, setFeaturePanel] = useState<Feature | null>(null);
   const [featureAnchorY, setFeatureAnchorY] = useState<number | null>(null);
   const [entryFocusIndex, setEntryFocusIndex] = useState(0);
-  const [noteBodies, setNoteBodies] = useState<Record<string, string>>(() => {
-    const saved = localStorage.getItem(NOTE_BODIES_KEY);
-    return saved
-      ? (JSON.parse(saved) as Record<string, string>)
-      : { main: "# Notes\n\nStart writing in Markdown…\n\n- [ ] Capture the next idea" };
-  });
+  const [noteBodies, setNoteBodies] = useState<Record<string, string>>(() => loadNoteBodies(localStorage));
 
   const [todoLists, setTodoLists] = useState<Record<string, TodoItem[]>>(() =>
     loadTodoLists(localStorage),
