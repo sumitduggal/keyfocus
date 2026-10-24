@@ -7,6 +7,7 @@ import {
   NOTE_BODIES_KEY,
   THEME_KEY,
   DOCK_COLLAPSED_KEY,
+  STACK_COLLAPSED_KEY,
   commandNames,
   featureMeta,
   initialFrame,
@@ -124,6 +125,19 @@ function App() {
   useEffect(() => {
     setStored(DOCK_COLLAPSED_KEY, dockCollapsed ? "1" : "0");
   }, [dockCollapsed]);
+  // The stack of earlier frames can shrink to a rail the same way.
+  const [stackCollapsed, setStackCollapsed] = useState(() => {
+    try {
+      return localStorage.getItem(STACK_COLLAPSED_KEY) === "1";
+    } catch {
+      return false;
+    }
+  });
+  useEffect(() => {
+    setStored(STACK_COLLAPSED_KEY, stackCollapsed ? "1" : "0");
+  }, [stackCollapsed]);
+  // Set when Alt+Left opens a collapsed stack, so focus can move onto the first frame once it is drawn.
+  const focusStackAfterOpen = useRef(false);
   const [featurePanel, setFeaturePanel] = useState<Feature | null>(null);
   const [featureAnchorY, setFeatureAnchorY] = useState<number | null>(null);
   const [entryFocusIndex, setEntryFocusIndex] = useState(0);
@@ -196,6 +210,11 @@ function App() {
     (frame?.querySelector<HTMLElement>("[data-autofocus]") ?? frame)?.focus();
   }, [activeFrame.id]);
   const stackedFrames = frames.filter((frame) => frame.id !== activeFrame.id);
+  useEffect(() => {
+    if (stackCollapsed || !focusStackAfterOpen.current) return;
+    focusStackAfterOpen.current = false;
+    stackRefs.current[stackedFrames[0]?.id]?.focus();
+  }, [stackCollapsed, stackedFrames]);
   const visibleCommands = useMemo(
     () => commandNames.filter((command) => command.toLowerCase().includes(query.toLowerCase())),
     [query],
@@ -753,10 +772,15 @@ function App() {
         const enteringLeft = nextSide === "left" && stackedFrames.length > 0;
         // Moving to the control panel opens it, so there is something to focus.
         if (nextSide === "right") setDockCollapsed(false);
+        // The same for the stack, which has to be drawn in full before a frame in it can take focus.
+        if (nextSide === "left" && stackCollapsed) {
+          setStackCollapsed(false);
+          focusStackAfterOpen.current = enteringLeft;
+        }
         setFocusedSide(nextSide);
         setWithinSide(enteringLeft);
         setStackFocusIndex(enteringLeft ? 0 : -1);
-        if (enteringLeft) stackRefs.current[stackedFrames[0].id]?.focus();
+        if (enteringLeft && !stackCollapsed) stackRefs.current[stackedFrames[0].id]?.focus();
         else sideRefs.current[nextSide]?.focus();
         return;
       }
@@ -836,6 +860,7 @@ function App() {
     menuOpen,
     openFeatureDirectly,
     rightFocusIndex,
+    stackCollapsed,
     stackFocusIndex,
     stackedFrames,
     toggleTheme,
@@ -890,13 +915,23 @@ function App() {
             ref={(node) => {
               sideRefs.current.left = node;
             }}
-            className={`side-region left-side ${focusedSide === "left" && !barActive ? "side-focused" : ""} ${
+            className={`side-region left-side${stackCollapsed ? " is-collapsed" : ""} ${focusedSide === "left" && !barActive ? "side-focused" : ""} ${
               focusedSide === "left" && withinSide && !barActive ? "within-focused" : ""
             }`}
             aria-label="Latest frames"
             tabIndex={0}
           >
+            <button
+              type="button"
+              className="stack-toggle"
+              aria-label={stackCollapsed ? "Show stack" : "Hide stack"}
+              aria-expanded={!stackCollapsed}
+              onClick={() => setStackCollapsed((current) => !current)}
+            >
+              {stackCollapsed ? "›" : "‹"}
+            </button>
             <Stack
+              collapsed={stackCollapsed}
               stackedFrames={stackedFrames}
               stackFocusIndex={stackFocusIndex}
               registerStack={registerStack}
@@ -928,7 +963,7 @@ function App() {
               setFocusedSide("main");
               setWithinSide(true);
             }}
-            className={`side-region main-side${dockCollapsed ? " dock-collapsed" : ""} ${focusedSide === "main" && !barActive ? "side-focused" : ""} ${
+            className={`side-region main-side${dockCollapsed ? " dock-collapsed" : ""}${stackCollapsed ? " stack-collapsed" : ""} ${focusedSide === "main" && !barActive ? "side-focused" : ""} ${
               focusedSide === "main" && withinSide && !barActive ? "within-focused" : ""
             }`}
             aria-label="Main frame"

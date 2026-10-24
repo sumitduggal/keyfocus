@@ -112,3 +112,33 @@ test('Alt+Right opens a collapsed control panel', async ({ page }) => {
   await page.keyboard.press('Alt+ArrowRight')
   await expect(page.getByRole('button', { name: 'Hide control panel' })).toBeVisible()
 })
+
+test('the stack collapses to a rail, widens the main frame, and stays collapsed after reload', async ({ page }) => {
+  const frame = page.getByRole('region', { name: 'Main frame' })
+  const before = (await frame.boundingBox())!.width
+  await page.getByRole('button', { name: 'Hide stack' }).click()
+  await expect(page.getByRole('button', { name: 'Show stack' })).toBeVisible()
+  await expect(page.getByLabel('0 stacked frames')).toBeVisible()
+  await expect.poll(async () => (await frame.boundingBox())!.width).toBeGreaterThan(before + 100)
+  await page.reload()
+  await expect(page.getByRole('button', { name: 'Show stack' })).toBeVisible()
+  await page.getByRole('button', { name: 'Show stack' }).click()
+  await expect(page.getByRole('button', { name: 'Hide stack' })).toBeVisible()
+})
+
+test('a collapsed stack keeps one icon per frame, and clicking one promotes it', async ({ page }) => {
+  await newFrame(page, 'Todo List', 'Todo List')
+  await page.getByRole('button', { name: 'Hide stack' }).click()
+  await expect(page.getByLabel('1 stacked frames')).toBeVisible()
+  await page.getByRole('button', { name: 'Frame: Pomodoro' }).click()
+  await expect(page.getByRole('button', { name: 'Start focus' })).toBeVisible()
+})
+
+test('Alt+Left opens a collapsed stack and focuses its first frame', async ({ page }) => {
+  await newFrame(page, 'Todo List', 'Todo List')
+  await page.getByRole('button', { name: 'Hide stack' }).click()
+  await page.getByRole('region', { name: 'Main frame' }).focus()
+  await page.keyboard.press('Alt+ArrowLeft')
+  await expect(page.getByRole('button', { name: 'Hide stack' })).toBeVisible()
+  await expect(page.getByLabel('Frame: Pomodoro')).toBeFocused()
+})

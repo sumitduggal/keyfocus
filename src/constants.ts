@@ -92,4 +92,5 @@ export const FRAMES_KEY = "focus-space-frames";
 export const NOTE_BODIES_KEY = "focus-space-note-bodies";
 export const THEME_KEY = "focus-space-theme";
 export const DOCK_COLLAPSED_KEY = "focus-space-dock-collapsed";
+export const STACK_COLLAPSED_KEY = "focus-space-stack-collapsed";
 export const POMODORO_DURATION_KEY = "focus-space-pomodoro-duration";

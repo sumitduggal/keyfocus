@@ -8,6 +8,7 @@ interface StackProps {
   stackFocusIndex: number;
   registerStack: (id: string, node: HTMLElement | null) => void;
   reduceMotion: boolean;
+  collapsed?: boolean;
   onSelect: (index: number) => void;
   onPromote: (index: number) => void;
 }
@@ -17,6 +18,7 @@ export function Stack({
   stackFocusIndex,
   registerStack,
   reduceMotion,
+  collapsed = false,
   onSelect,
   onPromote,
 }: StackProps) {
@@ -26,6 +28,38 @@ export function Stack({
     },
     [onSelect],
   );
+
+  // Collapsed, the stack is a slim rail: a count, then one icon per frame. Frames keep their names
+  // for screen readers and as tooltips, and register for focus like the full cards do.
+  if (collapsed) {
+    return (
+      <div className="stack-rail">
+        <span className="stack-rail-count" aria-label={`${stackedFrames.length} stacked frames`}>
+          {String(stackedFrames.length).padStart(2, "0")}
+        </span>
+        <ol>
+          {stackedFrames.map((frame, index) => (
+            <li key={frame.id}>
+              <button
+                type="button"
+                ref={(node) => {
+                  registerStack(frame.id, node);
+                }}
+                className={index === stackFocusIndex ? "is-previewed" : undefined}
+                aria-label={`Frame: ${frame.title}`}
+                title={frame.title}
+                tabIndex={-1}
+                onFocus={() => handleFocus(index)}
+                onClick={() => onPromote(index)}
+              >
+                {featureMeta[frame.feature].glyph}
+              </button>
+            </li>
+          ))}
+        </ol>
+      </div>
+    );
+  }
 
   return (
     <div className="frame-stack">
