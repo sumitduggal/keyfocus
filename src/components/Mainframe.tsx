@@ -301,6 +301,7 @@ export function Mainframe({
       ) : frame.feature === "todo list" ? (
         <div className="frame-body">
           <TodoFrame
+            key={frame.id}
             items={todoItems ?? []}
             onChange={onTodoChange ?? (() => undefined)}
             onDeleteList={onDelete}

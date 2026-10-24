@@ -6,6 +6,7 @@ export interface TodoItem {
   done: boolean;
   priority: TodoPriority;
   due: string | null; // "YYYY-MM-DD" or null
+  parentId: string | null; // one level deep: the id of the item this step belongs to
 }
 
 export interface ParsedTodoInput {
@@ -166,7 +167,38 @@ export function parseTodoInput(raw: string, today: Date): ParsedTodoInput {
 }
 
 export function createTodoItem(parsed: ParsedTodoInput, id: string): TodoItem {
-  return { id, text: parsed.text, done: false, priority: parsed.priority, due: parsed.due };
+  return {
+    id,
+    text: parsed.text,
+    done: false,
+    priority: parsed.priority,
+    due: parsed.due,
+    parentId: null,
+  };
+}
+
+// Overdue: not done, and due on a day before `today`.
+export function isOverdue(item: TodoItem, today: Date): boolean {
+  return !item.done && item.due !== null && item.due < formatLocalDate(today);
+}
+
+// Removes done items, and any nested items under a removed parent.
+export function clearCompletedTodos(items: TodoItem[]): TodoItem[] {
+  const removed = new Set(items.filter((item) => item.done).map((item) => item.id));
+  return items.filter(
+    (item) => !removed.has(item.id) && !(item.parentId !== null && removed.has(item.parentId)),
+  );
+}
+
+export function progressCounts(items: TodoItem[]): { done: number; total: number } {
+  return { done: items.filter((item) => item.done).length, total: items.length };
+}
+
+// Blank text is ignored, so the previous text is kept.
+export function updateTodoText(items: TodoItem[], id: string, text: string): TodoItem[] {
+  const trimmed = text.trim();
+  if (trimmed === "") return items;
+  return items.map((item) => (item.id === id ? { ...item, text: trimmed } : item));
 }
 
 export function addTodoItem(items: TodoItem[], item: TodoItem): TodoItem[] {
@@ -178,8 +210,9 @@ export function toggleTodoItem(items: TodoItem[], id: string): TodoItem[] {
   return items.map((item) => (item.id === id ? { ...item, done: !item.done } : item));
 }
 
+// Deleting an item also deletes its steps.
 export function deleteTodoItem(items: TodoItem[], id: string): TodoItem[] {
-  return items.filter((item) => item.id !== id);
+  return items.filter((item) => item.id !== id && item.parentId !== id);
 }
 
 const NEXT_PRIORITY: Record<TodoPriority, TodoPriority> = {
@@ -198,6 +231,95 @@ export function openTodoCount(items: TodoItem[]): number {
   return items.filter((item) => !item.done).length;
 }
 
+// Swaps an item with its previous (-1) or next (+1) sibling: items sharing its parent.
+export function moveTodoItem(items: TodoItem[], id: string, delta: -1 | 1): TodoItem[] {
+  const index = items.findIndex((item) => item.id === id);
+  if (index === -1) return items;
+  const parentId = items[index].parentId;
+  let target = index + delta;
+  while (target >= 0 && target < items.length && items[target].parentId !== parentId) {
+    target += delta;
+  }
+  if (target < 0 || target >= items.length) return items;
+  const next = [...items];
+  [next[index], next[target]] = [next[target], next[index]];
+  return next;
+}
+
+// Items in the order they are shown: each top-level item, followed by its steps.
+function displayOrder(items: TodoItem[]): TodoItem[] {
+  const ids = new Set(items.map((item) => item.id));
+  const tops = items.filter((item) => item.parentId === null || !ids.has(item.parentId));
+  return tops.flatMap((top) => [top, ...items.filter((item) => item.parentId === top.id)]);
+}
+
+// Nests an item under the group of the item directly above it, as shown on screen.
+// A parent with steps cannot be nested, and a step is already nested.
+export function nestTodoItem(items: TodoItem[], id: string): TodoItem[] {
+  const shown = displayOrder(items);
+  const position = shown.findIndex((item) => item.id === id);
+  if (position <= 0) return items;
+  const target = shown[position];
+  if (target.parentId !== null) return items;
+  if (items.some((item) => item.parentId === id)) return items;
+  const above = shown[position - 1];
+  const groupId = above.parentId ?? above.id;
+  return items.map((item) => (item.id === id ? { ...item, parentId: groupId } : item));
+}
+
+// Puts back items removed since `previous`, in their old order, without dropping items added since.
+export function restoreTodoItems(current: TodoItem[], previous: TodoItem[]): TodoItem[] {
+  const currentById = new Map(current.map((item) => [item.id, item]));
+  const previousIds = new Set(previous.map((item) => item.id));
+  const restored = previous.map((item) => currentById.get(item.id) ?? item);
+  return [...restored, ...current.filter((item) => !previousIds.has(item.id))];
+}
+
+export function unnestTodoItem(items: TodoItem[], id: string): TodoItem[] {
+  return items.map((item) => (item.id === id ? { ...item, parentId: null } : item));
+}
+
+export type TodoFilter = "all" | "open" | "overdue";
+export type TodoSort = "manual" | "priority" | "due";
+export interface TodoView {
+  filter: TodoFilter;
+  sort: TodoSort;
+}
+export interface TodoGroup {
+  parent: TodoItem;
+  children: TodoItem[];
+}
+
+const PRIORITY_RANK: Record<TodoPriority, number> = { high: 0, medium: 1, low: 2 };
+
+// Top-level groups (an item and its steps) after filtering and sorting.
+// A group is shown when its parent or any of its steps matches the filter.
+export function visibleTodoGroups(items: TodoItem[], view: TodoView, today: Date): TodoGroup[] {
+  const ids = new Set(items.map((item) => item.id));
+  const matches = (item: TodoItem) =>
+    view.filter === "all" ||
+    (view.filter === "open" ? !item.done : isOverdue(item, today));
+
+  const groups: TodoGroup[] = items
+    .filter((item) => item.parentId === null || !ids.has(item.parentId))
+    .map((parent) => ({
+      parent,
+      children: items.filter((item) => item.parentId === parent.id),
+    }))
+    .filter((group) => matches(group.parent) || group.children.some(matches));
+
+  if (view.sort === "priority") {
+    groups.sort((a, b) => PRIORITY_RANK[a.parent.priority] - PRIORITY_RANK[b.parent.priority]);
+  } else if (view.sort === "due") {
+    groups.sort((a, b) => {
+      const aDue = a.parent.due ?? "\uffff";
+      const bDue = b.parent.due ?? "\uffff";
+      return aDue < bDue ? -1 : aDue > bDue ? 1 : 0;
+    });
+  }
+  return groups;
+}
+
 function isTodoItem(value: unknown): value is TodoItem {
   if (typeof value !== "object" || value === null) return false;
   const item = value as Record<string, unknown>;
@@ -210,6 +332,21 @@ function isTodoItem(value: unknown): value is TodoItem {
   );
 }
 
+// Older items have no parent field; a parent that no longer exists is treated as top-level.
+// A parent must exist, must not be the item itself, and must be top-level (steps are one level deep).
+function withValidParents(items: TodoItem[]): TodoItem[] {
+  const byId = new Map(items.map((item) => [item.id, item]));
+  const candidate = (item: TodoItem) =>
+    typeof item.parentId === "string" && item.parentId !== item.id && byId.has(item.parentId)
+      ? item.parentId
+      : null;
+  return items.map((item) => {
+    const parentId = candidate(item);
+    const parent = parentId === null ? null : byId.get(parentId)!;
+    return { ...item, parentId: parent !== null && candidate(parent) === null ? parentId : null };
+  });
+}
+
 export function loadTodoLists(storage: Pick<Storage, "getItem">): Record<string, TodoItem[]> {
   try {
     const raw = storage.getItem(TODO_STORAGE_KEY);
@@ -220,7 +357,7 @@ export function loadTodoLists(storage: Pick<Storage, "getItem">): Record<string,
     const lists: Record<string, TodoItem[]> = {};
     for (const [frameId, items] of Object.entries(parsed as Record<string, unknown>)) {
       if (Array.isArray(items)) {
-        lists[frameId] = items.filter(isTodoItem);
+        lists[frameId] = withValidParents(items.filter(isTodoItem));
       }
     }
     return lists;

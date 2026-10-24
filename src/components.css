@@ -1567,7 +1567,7 @@
 
 .todo-row {
   display: grid;
-  grid-template-columns: 40px minmax(0, 1fr) auto auto 40px;
+  grid-template-columns: 40px minmax(0, 1fr) auto 40px auto 40px;
   align-items: center;
   gap: 8px;
   min-height: 48px;
@@ -1766,4 +1766,182 @@
 .todo-confirm .todo-danger {
   border-color: var(--danger);
   color: var(--danger);
+}
+
+/* Progress, filter and sort above the list. */
+.todo-progress {
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-height: 28px;
+  margin-top: 12px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.todo-progress-bar {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background: var(--accent-soft);
+  transition: width 0.2s ease;
+}
+
+.todo-progress span {
+  position: relative;
+  padding: 0 10px;
+  color: var(--text-muted);
+  font: 10px/1 var(--font-mono-stack);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.todo-view {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+
+.todo-view > div {
+  display: flex;
+  gap: 6px;
+}
+
+.todo-view button,
+.todo-view select,
+.todo-clear {
+  min-height: 36px;
+  padding: 0 10px;
+  border: 1px solid var(--border-strong);
+  border-radius: 4px;
+  background: transparent;
+  color: var(--text-muted);
+  font: 10px/1 var(--font-mono-stack);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.todo-view button.is-selected {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--accent-text);
+}
+
+.todo-view label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-faint);
+  font: 10px/1 var(--font-mono-stack);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.todo-view select {
+  background: var(--surface-2);
+}
+
+/* Steps are indented under their parent, with a connector. */
+.todo-row.is-step {
+  margin-left: 28px;
+  border-style: dashed;
+}
+
+.todo-row.is-step::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: -16px;
+  width: 12px;
+  height: 1px;
+  background: var(--border-strong);
+}
+
+.todo-row {
+  position: relative;
+}
+
+.todo-row.is-overdue {
+  border-color: var(--warm);
+}
+
+.todo-overdue {
+  color: var(--warm);
+  font-weight: 500;
+}
+
+.todo-text-input {
+  min-width: 0;
+  width: 100%;
+  padding: 6px 4px;
+  border: 0;
+  border-bottom: 1px dashed transparent;
+  outline: 0;
+  background: transparent;
+  color: var(--text);
+  font: 12px/1.3 var(--font-mono-stack);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.todo-text-input:hover,
+.todo-text-input:focus-visible {
+  border-bottom-color: var(--border-strong);
+}
+
+.todo-row.is-done .todo-text-input {
+  color: var(--text-faint);
+  text-decoration: line-through;
+}
+
+.todo-nest {
+  min-width: 40px;
+  min-height: 40px;
+  border: 0;
+  background: transparent;
+  color: var(--text-faint);
+  font: 14px/1 var(--font-mono-stack);
+  cursor: pointer;
+}
+
+.todo-clear {
+  margin-top: 14px;
+}
+
+/* Undo toast, bottom centre, for five seconds. */
+.undo-toast {
+  position: absolute;
+  z-index: 9;
+  bottom: 72px;
+  left: 50%;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 14px;
+  transform: translateX(-50%);
+  border: 1px solid var(--border-strong);
+  border-radius: 6px;
+  background: var(--panel);
+  box-shadow: var(--shadow-menu);
+  color: var(--text);
+  font: 11px/1 var(--font-mono-stack);
+  letter-spacing: 0.08em;
+  white-space: nowrap;
+}
+
+.undo-toast button {
+  min-height: 32px;
+  padding: 0 10px;
+  border: 1px solid var(--accent);
+  border-radius: 4px;
+  background: var(--accent-soft);
+  color: var(--accent-text);
+  font: 10px/1 var(--font-mono-stack);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
 }

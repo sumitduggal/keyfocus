@@ -8,7 +8,7 @@ import { Stack } from "./components/Stack";
 import { Dock } from "./components/Dock";
 import { FeaturePanel } from "./components/FeaturePanel";
 import { CommandPalette } from "./components/CommandPalette";
-import { loadTodoLists, openTodoCount, saveTodoLists, type TodoItem } from "./todo";
+import { loadTodoLists, openTodoCount, restoreTodoItems, saveTodoLists, type TodoItem } from "./todo";
 import "./App.css";
 import "./components.css";
 
@@ -74,6 +74,8 @@ function App() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [menuFocusIndex, setMenuFocusIndex] = useState(0);
+  // The last undoable change; the toast clears itself after five seconds.
+  const [undo, setUndo] = useState<{ message: string; restore: () => void } | null>(null);
   // Feature picked in ⌘K: the palette lists its existing frames and a New row.
   const [featureMenu, setFeatureMenu] = useState<Feature | null>(null);
   const [searchMode, setSearchMode] = useState(false);
@@ -248,8 +250,40 @@ function App() {
   };
 
   // Moves a stacked frame into the main side and pushes the current main frame onto the stack.
+  // Saves a todo list. A change that removes items can be undone for a few seconds.
+  const changeTodoList = (items: TodoItem[]) => {
+    const frameId = activeFrame.id;
+    const previous = todoLists[frameId] ?? [];
+    if (items.length < previous.length) {
+      const removed = previous.length - items.length;
+      setUndo({
+        message: `Removed ${removed} item${removed === 1 ? "" : "s"}`,
+        restore: () =>
+          setTodoLists((current) => ({
+            ...current,
+            [frameId]: restoreTodoItems(current[frameId] ?? [], previous),
+          })),
+      });
+    }
+    setTodoLists((current) => ({ ...current, [frameId]: items }));
+  };
+
   // Removes a frame and its todo list. Falls back to the first remaining frame, or a fresh Pomodoro.
   const deleteFrame = (id: string) => {
+    const position = frames.findIndex((frame) => frame.id === id);
+    const removedFrame = frames[position];
+    const removedList = todoLists[id];
+    setUndo({
+      message: `Deleted "${removedFrame.title}"`,
+      restore: () => {
+        setFrames((current) => {
+          const restored = [...current];
+          restored.splice(Math.min(position, restored.length), 0, removedFrame);
+          return restored;
+        });
+        if (removedList) setTodoLists((current) => ({ ...current, [id]: removedList }));
+      },
+    });
     const remaining = frames.filter((frame) => frame.id !== id);
     const next = remaining[0] ?? { ...initialFrame };
     setFrames(remaining.length ? remaining : [next]);
@@ -324,6 +358,11 @@ function App() {
   };
 
   useEffect(() => {
+    if (!undo) return;
+    const timer = window.setTimeout(() => setUndo(null), 5000);
+    return () => window.clearTimeout(timer);
+  }, [undo]);
+  useEffect(() => {
     localStorage.setItem("focus-space-frames", JSON.stringify(frames));
   }, [frames]);
   useEffect(() => {
@@ -372,6 +411,15 @@ function App() {
       if ((event.metaKey || event.ctrlKey) && event.shiftKey && event.key.toLowerCase() === "l") {
         event.preventDefault();
         toggleTheme();
+        return;
+      }
+      if ((event.metaKey || event.ctrlKey) && !event.shiftKey && event.key.toLowerCase() === "z") {
+        const target = event.target;
+        const inEditor = target instanceof HTMLElement && target.closest("[contenteditable='true'], .codex-editor") !== null;
+        if (!undo || target instanceof HTMLInputElement || inEditor) return;
+        event.preventDefault();
+        undo.restore();
+        setUndo(null);
         return;
       }
       if (event.key === "Escape") {
@@ -508,6 +556,7 @@ function App() {
     stackFocusIndex,
     stackedFrames,
     toggleTheme,
+    undo,
     withinSide,
   ]);
 
@@ -636,9 +685,7 @@ function App() {
                     current.map((frame) => (frame.id === activeFrame.id ? { ...frame, title } : frame)),
                   )
                 }
-                onTodoChange={(items) =>
-                  setTodoLists((current) => ({ ...current, [activeFrame.id]: items }))
-                }
+                onTodoChange={changeTodoList}
                 onNoteChange={(value) =>
                   setNoteBodies((current) => ({ ...current, [activeFrame.id]: value }))
                 }
@@ -744,6 +791,21 @@ function App() {
             </button>
           ))}
         </nav>
+
+        {undo && (
+          <div className="undo-toast" role="status">
+            <span>{undo.message}</span>
+            <button
+              type="button"
+              onClick={() => {
+                undo.restore();
+                setUndo(null);
+              }}
+            >
+              Undo
+            </button>
+          </div>
+        )}
 
         <footer className="hud-bottom">
           <div className="key-hints">

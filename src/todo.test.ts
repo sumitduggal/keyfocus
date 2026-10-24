@@ -17,7 +17,7 @@ import {
 const TODAY = new Date(2026, 9, 24);
 
 function makeItem(id: string, overrides: Partial<TodoItem> = {}): TodoItem {
-  return { id, text: `task ${id}`, done: false, priority: "medium", due: null, ...overrides };
+  return { id, text: `task ${id}`, done: false, priority: "medium", due: null, parentId: null, ...overrides };
 }
 
 function fakeStorage(): Storage & { map: Map<string, string> } {
@@ -184,6 +184,7 @@ describe("createTodoItem", () => {
       done: false,
       priority: "high",
       due: "2026-10-25",
+      parentId: null,
     });
   });
 });
