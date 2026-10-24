@@ -1959,3 +1959,87 @@
   text-transform: uppercase;
   cursor: pointer;
 }
+
+/* Overdue banner, under the header; dismissed for this visit. */
+.overdue-banner {
+  position: absolute;
+  z-index: 8;
+  top: calc(var(--edge) + var(--top-h) + 10px);
+  left: 50%;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  max-width: calc(100% - 32px);
+  padding: 8px 12px;
+  transform: translateX(-50%);
+  border: 1px solid var(--warm);
+  border-radius: 6px;
+  background: var(--panel);
+  color: var(--text);
+  font: 10px/1 var(--font-mono-stack);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.overdue-banner > span {
+  color: var(--warm);
+}
+
+.overdue-banner button {
+  min-height: 32px;
+  padding: 0 10px;
+  border: 1px solid var(--border-strong);
+  border-radius: 4px;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  cursor: pointer;
+}
+
+.overdue-banner .overdue-dismiss {
+  color: var(--text-faint);
+}
+
+/* Due date on each row: a native date field, cleared to remove the date. */
+.todo-due {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.todo-date-input {
+  min-height: 32px;
+  padding: 0 2px;
+  border: 0;
+  border-bottom: 1px dashed transparent;
+  outline: 0;
+  background: transparent;
+  color: var(--text-muted);
+  font: 10px/1 var(--font-mono-stack);
+  letter-spacing: 0.06em;
+  cursor: pointer;
+}
+
+.todo-date-input:hover,
+.todo-date-input:focus-visible {
+  border-bottom-color: var(--border-strong);
+}
+
+.feature-new {
+  display: grid;
+  width: 100%;
+  min-height: 44px;
+  grid-template-columns: 24px 1fr;
+  align-items: start;
+  gap: 8px;
+  padding: 9px 8px;
+  border: 1px dashed var(--border-strong);
+  border-radius: 4px;
+  background: transparent;
+  color: var(--accent-text);
+  text-align: left;
+  cursor: pointer;
+}

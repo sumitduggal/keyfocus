@@ -10,6 +10,7 @@ interface FeaturePanelProps {
   featureAsideRef: React.RefObject<HTMLElement | null>;
   featureEntryRefs: Record<string, HTMLButtonElement | null>;
   onClose: () => void;
+  onCreate?: () => void;
   onEntryClick: (frame: WorkspaceFrame) => void;
 }
 
@@ -21,6 +22,7 @@ export function FeaturePanel({
   featureAsideRef,
   featureEntryRefs,
   onClose,
+  onCreate,
   onEntryClick,
 }: FeaturePanelProps) {
   useEffect(() => {
@@ -86,6 +88,15 @@ export function FeaturePanel({
         </button>
       </div>
       <div className="feature-entry-list">
+        {onCreate && (
+          <button type="button" className="feature-new" onClick={onCreate}>
+            <span className="feature-entry-index">+</span>
+            <span className="feature-entry-copy">
+              <b>New {featureMeta[featurePanel].frame.title}</b>
+              <small>{featureMeta[featurePanel].description}</small>
+            </span>
+          </button>
+        )}
         {featureEntries.length
           ? featureEntries.map((frame, index) => (
               <button

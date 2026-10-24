@@ -7,6 +7,7 @@ interface DockProps {
   profileRef: React.RefObject<HTMLButtonElement | null>;
   framesCountByFeature: Record<Feature, number>;
   todoOpenCount: number;
+  todoOverdueCount: number;
   activeFeature: Feature;
   theme: Theme;
   onToggleTheme: () => void;
@@ -19,6 +20,7 @@ export function Dock({
   profileRef,
   framesCountByFeature,
   todoOpenCount,
+  todoOverdueCount,
   activeFeature,
   theme,
   onToggleTheme,
@@ -93,7 +95,7 @@ export function Dock({
                   {feature === "pomodoro"
                     ? "Open timer"
                     : feature === "todo list"
-                      ? `${todoOpenCount} open`
+                      ? `${todoOpenCount} open${todoOverdueCount ? ` · ${todoOverdueCount} overdue` : ""}`
                       : `${framesCountByFeature[feature]} entries`}
                 </small>
               </span>

@@ -13,6 +13,7 @@ import {
   openTodoCount,
   parseTodoInput,
   progressCounts,
+  setTodoDue,
   toggleTodoItem,
   unnestTodoItem,
   updateTodoText,
@@ -346,10 +347,16 @@ export function TodoFrame({
                 {item.done ? "☑" : "☐"}
               </button>
               <TodoTextInput item={item} onChange={(text) => onChange(updateTodoText(items, item.id, text))} />
-              <small className="todo-due">
-                {item.due ?? ""}
-                {overdue && <b className="todo-overdue"> overdue</b>}
-              </small>
+              <span className="todo-due">
+                <input
+                  type="date"
+                  className="todo-date-input"
+                  aria-label={`Due date: ${item.text}`}
+                  value={item.due ?? ""}
+                  onChange={(event) => onChange(setTodoDue(items, item.id, event.target.value || null))}
+                />
+                {overdue && <b className="todo-overdue">overdue</b>}
+              </span>
               <button
                 type="button"
                 className="todo-nest"

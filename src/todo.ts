@@ -476,3 +476,14 @@ export function saveTodoViews(
     // Storage can be full or blocked; the view simply resets on reload.
   }
 }
+
+// Open items due before today, including steps.
+export function overdueCount(items: TodoItem[], today: Date): number {
+  return items.filter((item) => isOverdue(item, today)).length;
+}
+
+// Sets an item's due date. A null (or empty) value clears it. Malformed dates are ignored.
+export function setTodoDue(items: TodoItem[], id: string, due: string | null): TodoItem[] {
+  if (due !== null && !ISO_DATE.test(due)) return items;
+  return items.map((item) => (item.id === id ? { ...item, due } : item));
+}

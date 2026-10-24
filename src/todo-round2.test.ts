@@ -183,3 +183,38 @@ describe("nesting follows the order on screen", () => {
     expect(nestTodoItem(items, "b", ["b", "a"]).find((i) => i.id === "b")!.parentId).toBeNull();
   });
 });
+
+import { overdueCount } from "./todo";
+
+describe("overdueCount", () => {
+  const today = new Date(2026, 9, 24);
+
+  it("counts open items due before today, including steps", () => {
+    const items = [
+      item({ id: "a", due: "2026-10-20" }),
+      item({ id: "b", due: "2026-10-20", done: true }),
+      item({ id: "c", due: "2026-10-24" }),
+      item({ id: "d", parentId: "a", due: "2026-10-01" }),
+    ];
+    expect(overdueCount(items, today)).toBe(2);
+  });
+});
+
+import { setTodoDue } from "./todo";
+
+describe("setTodoDue", () => {
+  it("sets a valid date on the item", () => {
+    const items = [item({ id: "a" })];
+    expect(setTodoDue(items, "a", "2026-11-12")[0].due).toBe("2026-11-12");
+  });
+
+  it("clears the date with null", () => {
+    const items = [item({ id: "a", due: "2026-11-12" })];
+    expect(setTodoDue(items, "a", null)[0].due).toBeNull();
+  });
+
+  it("ignores a malformed date", () => {
+    const items = [item({ id: "a", due: "2026-11-12" })];
+    expect(setTodoDue(items, "a", "12/11/2026")[0].due).toBe("2026-11-12");
+  });
+});

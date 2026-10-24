@@ -13,6 +13,7 @@ import {
   loadTodoViews,
   openTodoCount,
   saveTodoLists,
+  overdueCount,
   saveTodoViews,
   type TodoItem,
   type TodoViewState,
@@ -207,6 +208,15 @@ function App() {
       frame.feature === "todo list" ? total + openTodoCount(todoLists[frame.id] ?? []) : total,
     0,
   );
+
+  // Lists with overdue items, for the dock badge and the banner.
+  const todayForOverdue = new Date();
+  const overdueLists = frames
+    .filter((frame) => frame.feature === "todo list")
+    .map((frame) => ({ frame, count: overdueCount(todoLists[frame.id] ?? [], todayForOverdue) }))
+    .filter((entry) => entry.count > 0);
+  const todoOverdueCount = overdueLists.reduce((total, entry) => total + entry.count, 0);
+  const [overdueBannerOpen, setOverdueBannerOpen] = useState(true);
 
   const framesCountByFeature = Object.fromEntries(
     visibleFeatures.map((feature) => [
@@ -836,6 +846,7 @@ function App() {
               profileRef={profileRef}
               framesCountByFeature={framesCountByFeature}
               todoOpenCount={todoOpenCount}
+              todoOverdueCount={todoOverdueCount}
               activeFeature={activeFrame.feature}
               theme={theme}
               onToggleTheme={toggleTheme}
@@ -856,6 +867,10 @@ function App() {
               featureAsideRef={featureAsideRef}
               featureEntryRefs={featureEntryRefs.current}
               onClose={closeFeaturePanel}
+              onCreate={() => {
+                runCommand(featurePanel);
+                setFeaturePanel(null);
+              }}
               onEntryClick={(frame) => {
                 setActiveFrameId(frame.id);
                 setFocusedSide("main");
@@ -939,6 +954,20 @@ function App() {
               }}
             >
               Undo
+            </button>
+          </div>
+        )}
+
+        {overdueBannerOpen && overdueLists.length > 0 && (
+          <div className="overdue-banner" role="status">
+            <span>Overdue:</span>
+            {overdueLists.map(({ frame, count }) => (
+              <button key={frame.id} type="button" onClick={() => showFrame(frame.id)}>
+                {frame.title} · {count}
+              </button>
+            ))}
+            <button type="button" className="overdue-dismiss" onClick={() => setOverdueBannerOpen(false)}>
+              Dismiss
             </button>
           </div>
         )}

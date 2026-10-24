@@ -65,3 +65,8 @@ Add to each Todo list: clear completed, a progress bar, in-place item editing, o
 - Undo after reload: deleted items and lists go to a Recently deleted area, kept for 7 days, then removed automatically on load. Restoring from it puts the item back as it was. The five-second Undo toast still works as before.
 - Sort and filter are remembered per list across reloads.
 - Recently deleted is reached from the ⌘K command list when it has entries. Each entry can be restored with Enter.
+
+## Backlog (round 3, not yet specified)
+
+- Due date editing on the row: done. A native date field on each row; clearing it removes the date.
+- Overdue reminders (option 1, in-app): done. A dock badge and a dismissible banner show overdue items.
