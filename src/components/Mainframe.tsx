@@ -13,6 +13,7 @@ import Marker from "@editorjs/marker";
 import type { WorkspaceFrame } from "../types";
 import type { TodoItem, TodoViewState } from "../todo";
 import { TodoFrame } from "./TodoFrame";
+import { FocusMusic } from "./FocusMusic";
 
 // Moves focus to the next focusable element after `current` in page order.
 function focusNextElement(current: HTMLElement) {
@@ -302,6 +303,8 @@ export function Mainframe({
           </div>
           <p className="frame-foot">Take a five-minute break when the interval ends</p>
         </div>
+      ) : frame.feature === "focus music" ? (
+        <FocusMusic />
       ) : frame.feature === "todo list" ? (
         <div className="frame-body">
           <TodoFrame

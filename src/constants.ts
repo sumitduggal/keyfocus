@@ -68,7 +68,7 @@ export const featureMeta: Record<Feature, FeatureMeta> = {
 };
 
 // Features shown in the dock, ⌘K and the flyout. Hidden features keep their metadata so they can return.
-export const visibleFeatures: Feature[] = ["pomodoro", "todo list"];
+export const visibleFeatures: Feature[] = ["pomodoro", "todo list", "focus music"];
 
 export const commandNames: Command[] = [...visibleFeatures, "Search"];
 

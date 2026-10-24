@@ -2043,3 +2043,99 @@
   text-align: left;
   cursor: pointer;
 }
+
+/* Focus Music frame */
+.focus-music {
+  display: grid;
+  gap: 18px;
+}
+
+.music-group {
+  display: grid;
+  gap: 10px;
+}
+
+.music-label {
+  margin: 0;
+  color: var(--text-muted);
+  font: 10px/1 var(--font-mono-stack);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.music-choices,
+.music-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.music-choices button,
+.music-controls button,
+.music-tracks button {
+  min-height: 40px;
+  padding: 0 12px;
+  border: 1px solid var(--border-strong);
+  border-radius: 4px;
+  background: transparent;
+  color: var(--text-muted);
+  font: 10px/1 var(--font-mono-stack);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.music-choices .is-selected,
+.music-controls .is-selected,
+.music-tracks .is-selected {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--accent-text);
+}
+
+.music-controls button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.music-controls .music-play {
+  min-width: 96px;
+  border-color: var(--accent);
+  color: var(--accent-text);
+}
+
+.music-slider {
+  display: grid;
+  gap: 6px;
+  color: var(--text-faint);
+  font: 10px/1 var(--font-mono-stack);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.music-slider input {
+  width: 100%;
+  min-height: 32px;
+  accent-color: var(--accent);
+}
+
+.music-tracks {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.music-tracks button {
+  width: 100%;
+  text-align: left;
+}
+
+.music-now {
+  margin: 0;
+  color: var(--text-muted);
+  font: 10px/1.4 var(--font-mono-stack);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
