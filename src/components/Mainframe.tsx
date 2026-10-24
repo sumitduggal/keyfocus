@@ -10,6 +10,7 @@ import { HabitsFrame } from "./HabitsFrame";
 import { RemindersFrame } from "./RemindersFrame";
 import { POMODORO_DURATION_KEY } from "../constants";
 import { setStored } from "../storage";
+import { loadSettings, playAlert } from "../settings";
 
 // Moves focus to the next focusable element after `current` in page order.
 function focusNextElement(current: HTMLElement) {
@@ -166,16 +167,8 @@ export function Mainframe({
   const startButton = useRef<HTMLButtonElement | null>(null);
 
   const playCompletionAlert = () => {
-    const context = new AudioContext();
-    const oscillator = context.createOscillator();
-    const gain = context.createGain();
-    oscillator.frequency.setValueAtTime(660, context.currentTime);
-    oscillator.frequency.setValueAtTime(880, context.currentTime + 0.16);
-    gain.gain.setValueAtTime(0.18, context.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.001, context.currentTime + 0.5);
-    oscillator.connect(gain).connect(context.destination);
-    oscillator.start();
-    oscillator.stop(context.currentTime + 0.5);
+    const { alertSound, alertVolume } = loadSettings();
+    playAlert(alertSound, alertVolume);
   };
 
   useEffect(() => {

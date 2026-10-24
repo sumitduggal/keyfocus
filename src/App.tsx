@@ -17,6 +17,9 @@ import { Mainframe } from "./components/Mainframe";
 import { Stack } from "./components/Stack";
 import { Dock } from "./components/Dock";
 import { FeaturePanel } from "./components/FeaturePanel";
+import { SettingsPanel } from "./components/SettingsPanel";
+import { loadSettings, saveSettings } from "./settings";
+import type { Settings } from "./settings";
 import { CommandPalette } from "./components/CommandPalette";
 import { Weather } from "./components/Weather";
 import { loadHabits, saveHabits, toggleDay, type Habit } from "./habits";
@@ -104,6 +107,9 @@ function App() {
   const [theme, setTheme] = useState<Theme>(
     () => (localStorage.getItem(THEME_KEY) as Theme | null) ?? "dark",
   );
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [settingsAnchorY, setSettingsAnchorY] = useState<number | null>(null);
+  const [settings, setSettings] = useState<Settings>(loadSettings);
   const [menuOpen, setMenuOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [menuFocusIndex, setMenuFocusIndex] = useState(0);
@@ -543,6 +549,7 @@ function App() {
   useEffect(() => {
     setStored(NOTE_BODIES_KEY, JSON.stringify(noteBodies));
   }, [noteBodies]);
+  useEffect(() => saveSettings(settings), [settings]);
   useEffect(() => {
     saveTodoLists(localStorage, todoLists);
   }, [todoLists]);
@@ -669,7 +676,7 @@ function App() {
         quietBarFocus.current = false;
         return;
       }
-      if (featurePanel) return;
+      if (featurePanel || settingsOpen) return;
       // Tab stays inside the region being worked in; Alt+arrows and Cmd+K leave it.
       if (
         event.key === "Tab" &&
@@ -821,6 +828,7 @@ function App() {
     stackFocusIndex,
     stackedFrames,
     toggleTheme,
+    settingsOpen,
     undo,
     withinSide,
   ]);
@@ -979,8 +987,16 @@ function App() {
               todoOpenCount={todoOpenCount}
               todoOverdueCount={todoOverdueCount}
               activeFeature={activeFrame.feature}
-              theme={theme}
-              onToggleTheme={toggleTheme}
+              onOpenSettings={() => {
+                if (settingsOpen) {
+                  setSettingsOpen(false);
+                  return;
+                }
+                const rect = rightItemRefs.current.settings?.getBoundingClientRect();
+                setSettingsAnchorY(rect ? rect.top + rect.height / 2 : null);
+                setFeaturePanel(null);
+                setSettingsOpen(true);
+              }}
               setRightFocusIndex={setRightFocusIndex}
               onFeaturePress={(feature) => {
                 if (singleFrameFeatures.includes(feature)) openFeatureDirectly(feature);
@@ -988,6 +1004,20 @@ function App() {
               }}
             />
           </aside>
+
+          {settingsOpen && (
+            <SettingsPanel
+              theme={theme}
+              settings={settings}
+              anchorY={settingsAnchorY}
+              onToggleTheme={toggleTheme}
+              onChange={(patch) => setSettings((current) => ({ ...current, ...patch }))}
+              onClose={(restoreFocus) => {
+                setSettingsOpen(false);
+                if (restoreFocus) rightItemRefs.current.settings?.focus();
+              }}
+            />
+          )}
 
           {featurePanel && (
             <FeaturePanel
