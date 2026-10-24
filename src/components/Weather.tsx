@@ -1,4 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState, type FormEvent } from "react";
+import { motion, useReducedMotion } from "motion/react";
 import { setStored } from "../storage";
 
 const REFRESH_MS = 15 * 60 * 1000;
@@ -65,6 +66,7 @@ export function Weather() {
   const [query, setQuery] = useState("");
   const [error, setError] = useState("");
   const labelRef = useRef<HTMLSpanElement>(null);
+  const reduceMotion = useReducedMotion();
   const [state, setState] = useState<WeatherState>(() =>
     place || navigator.geolocation
       ? { status: "loading" }
@@ -224,7 +226,9 @@ export function Weather() {
       }}
     >
       <span ref={labelRef} className="hud-weather-label">
-        <i>{label}</i>
+        <motion.i key={label} initial={reduceMotion ? false : { opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.2 }}>
+          {label}
+        </motion.i>
       </span>
       {temperature && <b>{temperature}</b>}
     </button>

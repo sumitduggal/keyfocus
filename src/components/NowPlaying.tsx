@@ -1,5 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore } from "react";
 import type { KeyboardEvent } from "react";
+import { AnimatePresence, motion, useReducedMotion } from "motion/react";
+import { useFadeUp, usePopup, usePress } from "../motion";
 import { BUILT_IN_SOUNDS, type SoundId } from "../music";
 import {
   getMusicState,
@@ -59,6 +61,10 @@ export function NowPlaying() {
   const [overflowing, setOverflowing] = useState(false);
   const popupRef = useRef<HTMLDivElement | null>(null);
   const [tab, setTab] = useState<"tracks" | "radio" | "sounds">("tracks");
+  const popup = usePopup("bottom right");
+  const press = usePress();
+  const fadeBody = useFadeUp();
+  const reduceMotion = useReducedMotion();
   const [query, setQuery] = useState("");
   const [stations, setStations] = useState<Station[]>([]);
   const [radioStatus, setRadioStatus] = useState("");
@@ -163,16 +169,28 @@ export function NowPlaying() {
       </button>
 
       <div className="now-playing-row">
-        <button type="button" className="now-playing-step" onClick={previousTrack} disabled={!hasTracks} aria-label="Previous track">
+        <motion.button {...press} type="button" className="now-playing-step" onClick={previousTrack} disabled={!hasTracks} aria-label="Previous track">
           ‹
-        </button>
-        <button type="button" className="now-playing-play" onClick={togglePlaying} aria-label={music.playing ? "Pause" : "Play"}>
-          {music.playing ? "❚❚" : "▶"}
-        </button>
-        <button type="button" className="now-playing-step" onClick={nextTrack} disabled={!hasTracks} aria-label="Next track">
+        </motion.button>
+        <motion.button {...press} type="button" className="now-playing-play" onClick={togglePlaying} aria-label={music.playing ? "Pause" : "Play"}>
+          <AnimatePresence mode="wait" initial={false}>
+            <motion.span
+              key={music.playing ? "pause" : "play"}
+              initial={reduceMotion ? false : { opacity: 0, scale: 0.5, rotate: -30 }}
+              animate={{ opacity: 1, scale: 1, rotate: 0 }}
+              exit={reduceMotion ? { opacity: 0 } : { opacity: 0, scale: 0.5, rotate: 30 }}
+              transition={{ duration: reduceMotion ? 0 : 0.1 }}
+              style={{ display: "inline-block" }}
+            >
+              {music.playing ? "❚❚" : "▶"}
+            </motion.span>
+          </AnimatePresence>
+        </motion.button>
+        <motion.button {...press} type="button" className="now-playing-step" onClick={nextTrack} disabled={!hasTracks} aria-label="Next track">
           ›
-        </button>
-        <button
+        </motion.button>
+        <motion.button
+          {...press}
           ref={toggleRef}
           type="button"
           className="now-playing-toggle"
@@ -181,12 +199,19 @@ export function NowPlaying() {
           aria-label="Music options"
           onClick={() => setOpen(!open)}
         >
-          {open ? "−" : "+"}
-        </button>
+          <motion.span
+            animate={{ rotate: open ? 45 : 0 }}
+            transition={{ duration: reduceMotion ? 0 : 0.18 }}
+            style={{ display: "inline-block" }}
+          >
+            +
+          </motion.span>
+        </motion.button>
       </div>
 
+      <AnimatePresence>
       {open && (
-        <div ref={popupRef} className="now-playing-popup" role="dialog" aria-label="Music options" tabIndex={-1} onKeyDown={popupKeyDown}>
+        <motion.div {...popup} ref={popupRef} className="now-playing-popup" role="dialog" aria-label="Music options" tabIndex={-1} onKeyDown={popupKeyDown}>
           <div className="now-playing-popup-head">
             <span>Music options</span>
             <button type="button" aria-label="Close music options" onClick={closePopup}>
@@ -197,10 +222,17 @@ export function NowPlaying() {
             {(["tracks", "radio", "sounds"] as const).map((id) => (
               <button key={id} type="button" role="tab" aria-selected={tab === id} className={tab === id ? "is-selected" : ""} onClick={() => setTab(id)}>
                 {id === "tracks" ? "Tracks" : id === "radio" ? "Radio" : "Sounds"}
+                {tab === id && (
+                  <motion.span
+                    layoutId="now-playing-tab-line"
+                    className="now-playing-tab-line"
+                    transition={reduceMotion ? { duration: 0 } : { type: "spring", stiffness: 500, damping: 36 }}
+                  />
+                )}
               </button>
             ))}
           </div>
-          <div className="now-playing-body" role="tabpanel">
+          <motion.div key={tab} {...fadeBody} className="now-playing-body" role="tabpanel">
           {tab === "tracks" && (
             <>
           <p className="now-playing-label">Your tracks</p>
@@ -250,6 +282,7 @@ export function NowPlaying() {
                     type="button"
                     aria-current={music.station?.url === station.url}
                     className={music.station?.url === station.url ? "is-selected" : ""}
+                    title={station.name}
                     onClick={() => playStation(station)}
                   >
                     {station.name}
@@ -302,9 +335,10 @@ export function NowPlaying() {
             )}
           </div>
           )}
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
       )}
+      </AnimatePresence>
     </section>
   );
 }

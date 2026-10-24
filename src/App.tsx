@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { KeyboardEvent } from "react";
-import { useReducedMotion } from "motion/react";
+import { useAnimate, useReducedMotion } from "motion/react";
 import type { Command, Feature, Side, Theme, WorkspaceFrame } from "./types";
 import {
   FRAMES_KEY,
@@ -162,6 +162,17 @@ function App() {
   }, []);
   const getEntry = useCallback((id: string) => featureEntryRefs.current[id] ?? null, []);
   const reduceMotion = useReducedMotion() ?? false;
+  // The main frame slides in when another frame takes its place. It is animated in place rather than
+  // re-created, so a running Pomodoro keeps its state.
+  const [frameScope, animateFrame] = useAnimate<HTMLDivElement>();
+  const lastFrameId = useRef(activeFrameId);
+  useEffect(() => {
+    if (lastFrameId.current === activeFrameId) return;
+    lastFrameId.current = activeFrameId;
+    if (!reduceMotion && frameScope.current) {
+      void animateFrame(frameScope.current, { opacity: [0, 1], x: [18, 0] }, { duration: 0.2, ease: "easeOut" });
+    }
+  }, [activeFrameId, animateFrame, frameScope, reduceMotion]);
 
   const activeFrame = frames.find((frame) => frame.id === activeFrameId) ?? frames[0];
 
@@ -916,6 +927,7 @@ function App() {
             </div>
 
             <div
+              ref={frameScope}
               className={
                 activeFrame.feature === "notes"
                   ? "main-frame-position note-position"

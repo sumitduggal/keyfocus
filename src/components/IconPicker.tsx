@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState } from "react";
+import { AnimatePresence, motion } from "motion/react";
+import { usePopup, usePress } from "../motion";
 import { ICONS } from "../icons";
 
 interface IconPickerProps {
@@ -12,6 +14,8 @@ export function IconPicker({ icon, label, onChange }: IconPickerProps) {
   const [open, setOpen] = useState(false);
   const buttonRef = useRef<HTMLButtonElement | null>(null);
   const popupRef = useRef<HTMLDivElement | null>(null);
+  const popup = usePopup("top left");
+  const press = usePress();
 
   useEffect(() => {
     if (!open) return;
@@ -27,7 +31,8 @@ export function IconPicker({ icon, label, onChange }: IconPickerProps) {
 
   return (
     <span className="habit-more-wrap">
-      <button
+      <motion.button
+        {...press}
         ref={buttonRef}
         type="button"
         className="icon-button"
@@ -36,9 +41,11 @@ export function IconPicker({ icon, label, onChange }: IconPickerProps) {
         onClick={() => setOpen((current) => !current)}
       >
         {icon}
-      </button>
+      </motion.button>
+      <AnimatePresence>
       {open && (
-        <div
+        <motion.div
+          {...popup}
           ref={popupRef}
           className="habit-popup icon-popup"
           role="dialog"
@@ -69,8 +76,9 @@ export function IconPicker({ icon, label, onChange }: IconPickerProps) {
               {option}
             </button>
           ))}
-        </div>
+        </motion.div>
       )}
+      </AnimatePresence>
     </span>
   );
 }

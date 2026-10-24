@@ -1,4 +1,5 @@
 import { useSyncExternalStore } from "react";
+import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import {
   dismissBanner,
   finishReminder,
@@ -24,12 +25,21 @@ export function ReminderBanner() {
     const reminder = lists[item.frameId]?.reminders.find((candidate) => candidate.id === item.id);
     return reminder ? [{ ...item, reminder }] : [];
   });
-  if (items.length === 0 && habitNudges.length === 0) return null;
+  const reduceMotion = useReducedMotion();
+  // Each banner slides down from the top edge and back up when answered.
+  const slide = {
+    layout: reduceMotion ? false : ("position" as const),
+    initial: reduceMotion ? false : { opacity: 0, y: -24, scale: 0.97 },
+    animate: { opacity: 1, y: 0, scale: 1 },
+    exit: reduceMotion ? { opacity: 0 } : { opacity: 0, y: -16 },
+    transition: reduceMotion ? { duration: 0 } : ({ type: "spring", stiffness: 420, damping: 32 } as const),
+  };
 
   return (
     <div className="reminder-banner" role="alert" aria-label="Reminders due">
+      <AnimatePresence initial={false}>
       {habitNudges.map((nudge) => (
-        <div key={`habit:${nudge.habitId}:${nudge.day}`} className="reminder-banner-item">
+        <motion.div {...slide} key={`habit:${nudge.habitId}:${nudge.day}`} className="reminder-banner-item">
           <b>
             {nudge.icon ?? DEFAULT_HABIT_ICON} {nudge.name}
           </b>
@@ -41,10 +51,10 @@ export function ReminderBanner() {
               ×
             </button>
           </div>
-        </div>
+        </motion.div>
       ))}
       {items.map(({ frameId, id, reminder }) => (
-        <div key={`${frameId}:${id}`} className="reminder-banner-item">
+        <motion.div {...slide} key={`${frameId}:${id}`} className="reminder-banner-item">
           <b>
             {reminder.icon ?? DEFAULT_REMINDER_ICON} {reminder.text}
           </b>
@@ -61,8 +71,9 @@ export function ReminderBanner() {
               ×
             </button>
           </div>
-        </div>
+        </motion.div>
       ))}
+      </AnimatePresence>
     </div>
   );
 }
@@ -71,6 +82,7 @@ export function ReminderBanner() {
 export function HudReminders() {
   const { lists } = useSyncExternalStore(subscribeReminders, getRemindersState);
   const { nudges } = useSyncExternalStore(subscribeReminders, getRemindersState);
+  const reduceMotion = useReducedMotion();
   const summary = summarise(Object.values(lists));
   const next = summary.next;
   const overdue = summary.overdue + nudges.length;
@@ -83,9 +95,9 @@ export function HudReminders() {
     <div className="hud-status-line hud-reminders">
       {overdue > 0 && <b>{overdue} overdue</b>}
       {next && trigger && (
-        <span title={next.text}>
+        <motion.span key={`${next.id}:${when}`} initial={reduceMotion ? false : { opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.2 }} title={next.text}>
           Next: {next.text} · {when}
-        </span>
+        </motion.span>
       )}
     </div>
   );

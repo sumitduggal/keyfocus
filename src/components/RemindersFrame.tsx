@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { AnimatePresence, motion, useReducedMotion } from "motion/react";
+import { usePopup, usePress } from "../motion";
 import type { FormEvent, KeyboardEvent } from "react";
 import {
   EMPTY_REMINDERS,
@@ -190,6 +192,7 @@ export function RemindersFrame({ frameId, onDeleteList }: RemindersFrameProps) {
                   </div>
                 </li>
               ))}
+            <AnimatePresence initial={false}>
             {group.items.map((reminder) => (
               <ReminderRow
                 key={reminder.id}
@@ -212,6 +215,7 @@ export function RemindersFrame({ frameId, onDeleteList }: RemindersFrameProps) {
                 now={now}
               />
             ))}
+            </AnimatePresence>
           </ul>
         </section>
       ))}
@@ -281,6 +285,9 @@ interface ReminderRowProps {
 }
 
 function ReminderRow({ reminder, panel, popupRef, onPanel, onEdit, onDone, onPriority, onIcon, onSnooze, onDelete, now }: ReminderRowProps) {
+  const popup = usePopup("top right");
+  const press = usePress();
+  const reduceMotion = useReducedMotion();
   const overdue = isOverdue(reminder);
   const when = reminder.firedAt ?? nextTrigger(reminder) ?? reminder.due;
   const repeat = describeRepeat(reminder.repeat);
@@ -294,9 +301,16 @@ function ReminderRow({ reminder, panel, popupRef, onPanel, onEdit, onDone, onPri
   };
 
   return (
-    <li className={`habit-row reminder-row${overdue ? " is-overdue" : ""}`}>
+    <motion.li
+      layout={reduceMotion ? false : "position"}
+      initial={reduceMotion ? false : { opacity: 0, y: -6 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={reduceMotion ? { opacity: 0 } : { opacity: 0, x: 24 }}
+      transition={{ duration: reduceMotion ? 0 : 0.18 }}
+      className={`habit-row reminder-row${overdue ? " is-overdue" : ""}`}
+    >
       <div className="habit-main">
-        <button type="button" className="todo-check reminder-check" aria-label={`Mark ${reminder.text} done`} onClick={onDone} />
+        <motion.button {...press} type="button" className="todo-check reminder-check" aria-label={`Mark ${reminder.text} done`} onClick={onDone} />
         <IconPicker icon={reminder.icon ?? DEFAULT_REMINDER_ICON} label={reminder.text} onChange={onIcon} />
         <span className="habit-name">
           {reminder.text}
@@ -322,18 +336,20 @@ function ReminderRow({ reminder, panel, popupRef, onPanel, onEdit, onDone, onPri
           <button type="button" className="habit-more reminder-open" onClick={() => onPanel(panel === "edit" ? null : "edit")}>
             Edit
           </button>
+          <AnimatePresence>
           {panel && (
-            <div ref={popupRef} className="habit-popup reminder-popup" role="dialog" tabIndex={-1} aria-label={`${reminder.text} options`} onKeyDown={closeOnEscape}>
+            <motion.div {...popup} ref={popupRef} className="habit-popup reminder-popup" role="dialog" tabIndex={-1} aria-label={`${reminder.text} options`} onKeyDown={closeOnEscape}>
               {panel === "snooze" ? (
                 <SnoozePanel now={now} onSnooze={onSnooze} />
               ) : (
                 <EditPanel reminder={reminder} now={now} onEdit={onEdit} onDelete={onDelete} />
               )}
-            </div>
+            </motion.div>
           )}
+          </AnimatePresence>
         </span>
       </div>
-    </li>
+    </motion.li>
   );
 }
 

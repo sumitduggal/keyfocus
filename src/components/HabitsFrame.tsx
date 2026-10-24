@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState } from "react";
+import { AnimatePresence, motion, useReducedMotion } from "motion/react";
+import { usePopup } from "../motion";
 import type { FormEvent } from "react";
 import { DEFAULT_HABIT_ICON } from "../icons";
 import { IconPicker } from "./IconPicker";
@@ -42,6 +44,8 @@ export function HabitsFrame({ habits, onChange, onDeleteList }: HabitsFrameProps
   const [yearView, setYearView] = useState(false);
   const [showArchived, setShowArchived] = useState(false);
   const popupRef = useRef<HTMLDivElement | null>(null);
+  const popup = usePopup("top right");
+  const reduceMotion = useReducedMotion();
   const moreRefs = useRef<Record<string, HTMLButtonElement | null>>({});
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [confirmingHabit, setConfirmingHabit] = useState<string | null>(null);
@@ -159,8 +163,12 @@ export function HabitsFrame({ habits, onChange, onDeleteList }: HabitsFrameProps
                   {weekDays.map((day) => {
                     const done = habit.done.includes(day);
                     return (
-                      <button
+                      <motion.button
                         key={day}
+                        initial={false}
+                        animate={reduceMotion ? undefined : done ? { scale: [1, 1.25, 1] } : { scale: 1 }}
+                        whileTap={reduceMotion ? undefined : { scale: 0.88 }}
+                        transition={{ duration: 0.2 }}
                         type="button"
                         className={`habit-day${done ? " is-done" : ""}${day === todayKey ? " is-today" : ""}`}
                         aria-pressed={done}
@@ -169,7 +177,7 @@ export function HabitsFrame({ habits, onChange, onDeleteList }: HabitsFrameProps
                         onClick={() => onChange(toggleDay(habits, habit.id, day, today))}
                       >
                         {dayLabel(day)}
-                      </button>
+                      </motion.button>
                     );
                   })}
                 </div>
@@ -185,8 +193,10 @@ export function HabitsFrame({ habits, onChange, onDeleteList }: HabitsFrameProps
                   >
                     More
                   </button>
+                  <AnimatePresence>
                   {open && (
-                    <div
+                    <motion.div
+                      {...popup}
                       ref={popupRef}
                       className="habit-popup habit-options"
                       role="dialog"
@@ -260,8 +270,14 @@ export function HabitsFrame({ habits, onChange, onDeleteList }: HabitsFrameProps
                           </div>
                         </div>
                         <div className="habit-map" role="img" aria-label={`${habit.name} history`}>
-                          {heatMap(habit, today, FIRST_DAY, yearView ? 52 : 12).map((week) => (
-                            <div key={week[0].day} className="habit-map-week">
+                          {heatMap(habit, today, FIRST_DAY, yearView ? 52 : 12).map((week, index) => (
+                            <motion.div
+                              key={week[0].day}
+                              className="habit-map-week"
+                              initial={reduceMotion ? false : { opacity: 0 }}
+                              animate={{ opacity: 1 }}
+                              transition={{ duration: 0.2, delay: Math.min(index, 20) * 0.012 }}
+                            >
                               {week.map((cell) => (
                                 <span
                                   key={cell.day}
@@ -269,7 +285,7 @@ export function HabitsFrame({ habits, onChange, onDeleteList }: HabitsFrameProps
                                   className={`habit-cell${cell.done ? " is-done" : ""}${cell.future ? " is-future" : ""}`}
                                 />
                               ))}
-                            </div>
+                            </motion.div>
                           ))}
                         </div>
                       </div>
@@ -301,8 +317,9 @@ export function HabitsFrame({ habits, onChange, onDeleteList }: HabitsFrameProps
                           </>
                         )}
                       </div>
-                    </div>
+                    </motion.div>
                   )}
+                  </AnimatePresence>
                 </span>
               </div>
             </li>

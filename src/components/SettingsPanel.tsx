@@ -1,4 +1,5 @@
 import { useEffect, useLayoutEffect, useRef } from "react";
+import { motion, useReducedMotion } from "motion/react";
 import type { Theme } from "../types";
 import { alertSounds, playAlert } from "../settings";
 import type { Settings } from "../settings";
@@ -20,6 +21,7 @@ export function SettingsPanel({
   onChange,
   onClose,
 }: SettingsPanelProps) {
+  const reduceMotion = useReducedMotion();
   const panelRef = useRef<HTMLElement | null>(null);
 
   // Center on the Settings button, then keep the whole panel inside its container.
@@ -47,9 +49,12 @@ export function SettingsPanel({
   }, [onClose]);
 
   return (
-    <aside
+    <motion.aside
       ref={panelRef}
       className="feature-aside settings-aside"
+      initial={reduceMotion ? false : { opacity: 0, x: 14, y: "-50%" }}
+      animate={{ opacity: 1, x: 0, y: "-50%" }}
+      transition={{ type: "spring", stiffness: 520, damping: 36 }}
       aria-label="Settings"
       tabIndex={-1}
       onKeyDown={(event) => {
@@ -116,6 +121,6 @@ export function SettingsPanel({
           onChange={(event) => onChange({ alertVolume: Number(event.target.value) })}
         />
       </div>
-    </aside>
+    </motion.aside>
   );
 }

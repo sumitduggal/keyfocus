@@ -1,4 +1,5 @@
 import { useCallback, useEffect } from "react";
+import { motion, useReducedMotion } from "motion/react";
 import type { Feature, WorkspaceFrame } from "../types";
 import { featureMeta } from "../constants";
 
@@ -27,6 +28,7 @@ export function FeaturePanel({
   onCreate,
   onEntryClick,
 }: FeaturePanelProps) {
+  const reduceMotion = useReducedMotion();
   useEffect(() => {
     const closeWhenFocusLeaves = (event: FocusEvent) => {
       if (featureAsideRef.current && !featureAsideRef.current.contains(event.target as Node)) {
@@ -77,10 +79,13 @@ export function FeaturePanel({
   );
 
   return (
-    <aside
+    <motion.aside
       ref={featureAsideRef}
       className="feature-aside"
       style={{ top: featureAnchorY ?? "50%" }}
+      initial={reduceMotion ? false : { opacity: 0, x: 14, y: "-50%" }}
+      animate={{ opacity: 1, x: 0, y: "-50%" }}
+      transition={{ type: "spring", stiffness: 520, damping: 36 }}
       aria-label={`${featureMeta[featurePanel].frame.title} entries`}
       tabIndex={-1}
       onKeyDown={handleKeyDown}
@@ -131,6 +136,6 @@ export function FeaturePanel({
               </button>
             ))}
       </div>
-    </aside>
+    </motion.aside>
   );
 }
