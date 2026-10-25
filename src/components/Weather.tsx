@@ -4,6 +4,16 @@ import { setStored } from "../storage";
 
 const REFRESH_MS = 15 * 60 * 1000;
 const PLACE_KEY = "focus-space-weather-place";
+// Set once the first-visit prompt has been shown, so it never appears twice.
+const PROMPTED_KEY = "focus-space-weather-prompted";
+
+function wasPrompted(): boolean {
+  try {
+    return localStorage.getItem(PROMPTED_KEY) === "1";
+  } catch {
+    return true;
+  }
+}
 
 interface Place {
   name: string;
@@ -68,13 +78,22 @@ export function Weather() {
   const labelRef = useRef<HTMLSpanElement>(null);
   const reduceMotion = useReducedMotion();
   const [state, setState] = useState<WeatherState>(() =>
-    place || navigator.geolocation
-      ? { status: "loading" }
-      : { status: "unavailable", message: "Set location" },
+    place ? { status: "loading" } : { status: "unavailable", message: "Add location" },
   );
 
+  // First visit with no location: open the form once, after the app has settled its own focus.
+  // The browser's permission prompt only appears after "Use my location" is pressed.
   useEffect(() => {
-    if (!place && !navigator.geolocation) return;
+    if (place || wasPrompted()) return;
+    const timer = window.setTimeout(() => {
+      setStored(PROMPTED_KEY, "1");
+      setEditing(true);
+    }, 600);
+    return () => window.clearTimeout(timer);
+  }, [place]);
+
+  useEffect(() => {
+    if (!place) return;
 
     let controller: AbortController | undefined;
 
@@ -111,15 +130,7 @@ export function Weather() {
     };
 
     const refresh = () => {
-      if (place) {
-        void load(place.latitude, place.longitude);
-        return;
-      }
-      navigator.geolocation.getCurrentPosition(
-        (position) => void load(position.coords.latitude, position.coords.longitude),
-        () => setState({ status: "unavailable", message: "Set location" }),
-        { maximumAge: REFRESH_MS, timeout: 10_000 },
-      );
+      void load(place.latitude, place.longitude);
     };
 
     refresh();
@@ -132,11 +143,7 @@ export function Weather() {
 
   const choosePlace = (next: Place | null) => {
     setPlace(next);
-    setState(
-      next || navigator.geolocation
-        ? { status: "loading" }
-        : { status: "unavailable", message: "Set location" },
-    );
+    setState(next ? { status: "loading" } : { status: "unavailable", message: "Add location" });
     if (next) setStored(PLACE_KEY, JSON.stringify(next));
     else
       try {
@@ -145,6 +152,18 @@ export function Weather() {
         // Nothing to clear if storage is blocked.
       }
     setEditing(false);
+  };
+
+  const useMyLocation = () => {
+    if (!navigator.geolocation) {
+      setError("Not supported");
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(
+      ({ coords }) => choosePlace({ name: "My location", latitude: coords.latitude, longitude: coords.longitude }),
+      () => setError("Location blocked"),
+      { timeout: 10_000 },
+    );
   };
 
   const submit = async (event: FormEvent) => {
@@ -196,7 +215,7 @@ export function Weather() {
         <input
           autoFocus
           value={query}
-          placeholder="City, or blank for my location"
+          placeholder="Add a city"
           aria-label="Weather location"
           onChange={(event) => {
             setQuery(event.target.value);
@@ -209,6 +228,9 @@ export function Weather() {
             if (event.key === "Escape") setEditing(false);
           }}
         />
+        <button type="button" className="hud-weather-locate" onMouseDown={(event) => event.preventDefault()} onClick={useMyLocation}>
+          Use my location
+        </button>
         {error && <small>{error}</small>}
       </form>
     );
@@ -219,7 +241,7 @@ export function Weather() {
       type="button"
       className="hud-status-line hud-weather"
       aria-live="polite"
-      title="Set weather location"
+      title={place ? "Change weather location" : "Add a location for weather"}
       onClick={() => {
         setQuery(place?.name ?? "");
         setEditing(true);

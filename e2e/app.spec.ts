@@ -267,3 +267,25 @@ test('a frame that comes back from the stack starts a fresh hour', async ({ page
   await page.clock.fastForward(2 * 60_000)
   await expect(page.getByLabel('Latest frames').getByLabel('Frame: Todo List')).toBeVisible()
 })
+
+test('weather asks for a location once on the first visit, then leaves a link', async ({ page }) => {
+  let asked = false
+  await page.addInitScript(() => {
+    navigator.geolocation.getCurrentPosition = () => {
+      ;(window as unknown as { asked: boolean }).asked = true
+    }
+  })
+  // beforeEach already visited once, so start over as a new visitor.
+  await page.evaluate(() => localStorage.clear())
+  await page.reload()
+  await expect(page.getByLabel('Weather location')).toBeVisible()
+  asked = await page.evaluate(() => Boolean((window as unknown as { asked?: boolean }).asked))
+  expect(asked).toBe(false)
+
+  await page.getByLabel('Weather location').press('Escape')
+  await expect(page.getByRole('button', { name: /Add location/ })).toBeVisible()
+
+  await page.reload()
+  await expect(page.getByLabel('Weather location')).toHaveCount(0)
+  await expect(page.getByRole('button', { name: /Add location/ })).toBeVisible()
+})
