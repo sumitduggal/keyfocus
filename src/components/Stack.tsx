@@ -3,6 +3,9 @@ import { AnimatePresence, motion } from "motion/react";
 import type { WorkspaceFrame } from "../types";
 import { featureMeta } from "../constants";
 
+// Distance in pixels from one card to the next. A card is about 90px tall, so the rest is the gap.
+const CARD_STEP = 112;
+
 interface StackProps {
   stackedFrames: WorkspaceFrame[];
   stackFocusIndex: number;
@@ -79,15 +82,16 @@ export function Stack({
         <motion.div
           className={index === stackFocusIndex ? "stack-item previewed" : "stack-item"}
           key={frame.id}
-          initial={reduceMotion ? false : { opacity: 0, y: index * 104, x: -24, rotateY: 22, scale: 0.94 }}
+          initial={reduceMotion ? false : { opacity: 0, y: index * CARD_STEP, x: -24, rotateY: 22, scale: 0.94 }}
           exit={reduceMotion ? { opacity: 0 } : { opacity: 0, x: 48, scale: 0.92, transition: { duration: 0.18, ease: "easeIn" } }}
           animate={{
-            y: index * 104,
-            x: -index * 5,
-            z: -Math.min(index, 4) * 40,
-            rotateX: Math.min(index, 4) * 4,
+            // Depth, scale and a sideways step are left out, so every card is the same width and lines up.
+            y: index * CARD_STEP,
+            x: 0,
+            z: 0,
+            rotateX: 0,
             rotateY: 22,
-            scale: 1 - Math.min(index, 4) * 0.03,
+            scale: 1,
             opacity: 1 - Math.min(index, 4) * 0.08,
           }}
           transition={
