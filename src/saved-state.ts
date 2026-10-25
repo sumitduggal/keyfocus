@@ -23,7 +23,9 @@ export function loadFrames(storage: Store): WorkspaceFrame[] {
   const frames = (Array.isArray(saved) ? saved : []).flatMap((frame: Partial<WorkspaceFrame> | null) => {
     if (typeof frame?.id !== "string") return [];
     const feature = frame.feature ?? "notes";
-    return isFeature(feature) ? [{ ...initialFrame, ...frame, feature }] : [];
+    const { stackedAt, ...rest } = frame;
+    const time = typeof stackedAt === "number" && Number.isFinite(stackedAt) ? { stackedAt } : {};
+    return isFeature(feature) ? [{ ...initialFrame, ...rest, ...time, feature }] : [];
   });
   return frames.length > 0 ? frames : [initialFrame];
 }

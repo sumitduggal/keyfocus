@@ -28,6 +28,7 @@ import { loadHabits, saveHabits, toggleDay, type Habit } from "./habits";
 import { loadFrames, loadNoteBodies, loadTheme } from "./saved-state";
 import { formatClock, getPomodoroState, subscribePomodoro } from "./pomodoro";
 import type { FrameData } from "./frame-summary";
+import { isParked, markStacked, unstamped } from "./stack-expiry";
 import { getLibrary, subscribeLibrary } from "./bookmarks-store";
 import {
   getRemindersState,
@@ -232,7 +233,21 @@ function App() {
     if (frame?.contains(document.activeElement)) return;
     (frame?.querySelector<HTMLElement>("[data-autofocus]") ?? frame)?.focus();
   }, [activeFrame.id]);
-  const stackedFrames = frames.filter((frame) => frame.id !== activeFrame.id);
+  // A frame left in the stack for an hour is hidden from it. It stays saved and opens from ⌘K or the dock.
+  const [stackNow, setStackNow] = useState(() => Date.now());
+  useEffect(() => {
+    const timer = window.setInterval(() => setStackNow(Date.now()), 30_000);
+    return () => window.clearInterval(timer);
+  }, []);
+  const stackedFrames = frames.filter((frame) => frame.id !== activeFrame.id && !isParked(frame, stackNow));
+  // Notes when a frame goes into the stack, so its hour starts then. The frame is already saved:
+  // every change to a frame's data is written to storage as it happens.
+  const previousActive = useRef<string | null>(null);
+  useEffect(() => {
+    const previous = previousActive.current === activeFrame.id ? null : previousActive.current;
+    previousActive.current = activeFrame.id;
+    setFrames((current) => markStacked(current, activeFrame.id, previous, Date.now()));
+  }, [activeFrame.id]);
   // Each stacked card draws a small version of its frame from the frame's own data.
   const library = useSyncExternalStore(subscribeLibrary, getLibrary);
   const reminderLists = useSyncExternalStore(subscribeReminders, getRemindersState).lists;
@@ -470,7 +485,7 @@ function App() {
         setFrames((current) => {
           if (current.some((frame) => frame.id === id)) return current;
           const restored = [...current];
-          restored.splice(Math.min(position, restored.length), 0, removedFrame);
+          restored.splice(Math.min(position, restored.length), 0, unstamped(removedFrame));
           return restored;
         });
         if (removedList) setTodoLists((current) => ({ ...current, [id]: removedList }));
@@ -528,7 +543,7 @@ function App() {
       setFrames((current) => {
         if (current.some((existing) => existing.id === frame.id)) return current;
         const restored = [...current];
-        restored.splice(Math.min(entry.position, restored.length), 0, frame);
+        restored.splice(Math.min(entry.position, restored.length), 0, unstamped(frame));
         return restored;
       });
       setTodoLists((current) => ({ ...current, [frame.id]: entry.items }));

@@ -13,6 +13,7 @@ export interface WorkspaceFrame {
   eyebrow: string;
   description: string;
   details: string[];
+  stackedAt?: number; // when it went into the stack, in ms; a frame left there for an hour is hidden from it
 }
 
 export interface FeatureMeta {

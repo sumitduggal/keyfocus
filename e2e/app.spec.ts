@@ -229,3 +229,41 @@ test('a stacked Pomodoro card shows the timer as it runs', async ({ page }) => {
   await expect(card).toContainText('Session live')
   await expect(card).toContainText(/2[34]:\d\d/)
 })
+
+const HOUR = 60 * 60 * 1000
+
+test('a frame left in the stack for an hour leaves the stack bar but stays saved and reachable', async ({ page }) => {
+  await page.clock.install()
+  await page.goto('/')
+  await newFrame(page, 'Todo List', 'Todo List')
+  await page.getByLabel('New item').fill('Send the proposal')
+  await page.keyboard.press('Enter')
+  await dock(page, 'Habits').click()
+  const card = page.getByLabel('Latest frames').getByLabel('Frame: Todo List')
+  await expect(card).toBeVisible()
+  // Moving to the stack has saved everything: the frame and its items are in storage already.
+  const saved = await page.evaluate(() => [localStorage.getItem('focus-space-frames'), localStorage.getItem('focus-space-todo-lists')].join(' '))
+  expect(saved).toContain('Todo List')
+  expect(saved).toContain('Send the proposal')
+
+  await page.clock.fastForward(HOUR - 60_000)
+  await expect(card).toBeVisible()
+  await page.clock.fastForward(2 * 60_000)
+  await expect(card).toBeHidden()
+
+  // Nothing was deleted: the list opens again from the dock with its item.
+  await dock(page, 'Todo List').click()
+  await page.locator('.feature-entry-list button:not(.feature-new)').first().click()
+  await expect(page.getByLabel('Edit item: Send the proposal')).toBeVisible()
+})
+
+test('a frame that comes back from the stack starts a fresh hour', async ({ page }) => {
+  await page.clock.install()
+  await page.goto('/')
+  await newFrame(page, 'Todo List', 'Todo List')
+  await page.clock.fastForward(HOUR - 60_000)
+  await page.getByLabel('Frame: Pomodoro').click()
+  await dock(page, 'Todo List').click()
+  await page.clock.fastForward(2 * 60_000)
+  await expect(page.getByLabel('Latest frames').getByLabel('Frame: Todo List')).toBeVisible()
+})
