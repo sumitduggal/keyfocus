@@ -960,36 +960,51 @@
 }
 
 @media (min-width: 1100px) {
+  /* The same boxed button as the control panel's, on the opposite edge. */
   .stack-toggle {
     position: absolute;
     z-index: 1;
-    top: 10px;
-    right: 14px;
-    display: block;
-    width: 20px;
-    height: 16px;
+    top: 12px;
+    right: 16px;
+    display: grid;
+    place-items: center;
+    width: 30px;
+    height: 30px;
     padding: 0;
-    border: 0;
-    background: none;
-    color: var(--text-faint);
-    font: 12px/1 var(--font-mono-stack);
+    border: 1px solid var(--border-strong);
+    border-radius: 4px;
+    background: var(--surface-2);
+    color: var(--accent-text);
+    font: 22px/1 var(--font-mono-stack);
     cursor: pointer;
   }
 
-  .stack-toggle:hover {
+  .stack-toggle:hover,
+  .stack-toggle:focus-visible {
+    border-color: var(--accent);
     color: var(--accent);
+    outline: 0;
+  }
+
+  /* Room above the cards for the toggle's own row, as on the control panel. */
+  .left-side {
+    padding-top: 54px;
+  }
+
+  .frame-stack {
+    margin-top: 0;
   }
 
   /* Collapsed, the stack keeps a count and one icon per frame. Names stay as tooltips and for
      screen readers. */
   .left-side.is-collapsed {
     width: 56px;
-    padding: 36px 6px 0;
+    padding: 54px 6px 0;
     overflow-x: hidden;
   }
 
   .left-side.is-collapsed .stack-toggle {
-    right: 18px;
+    right: 13px;
   }
 
   .left-side.is-collapsed .side-readout {
