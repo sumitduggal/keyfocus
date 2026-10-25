@@ -204,3 +204,28 @@ test('Alt+Left opens a collapsed stack and focuses its first frame', async ({ pa
   await expect(page.getByRole('button', { name: 'Hide stack' })).toBeVisible()
   await expect(page.getByLabel('Frame: Pomodoro')).toBeFocused()
 })
+
+test('stacked cards look like their frame right now, not the template copy', async ({ page }) => {
+  await newFrame(page, 'Todo List', 'Todo List')
+  const pomodoro = page.getByLabel('Frame: Pomodoro')
+  await expect(pomodoro).toContainText('25:00')
+  await expect(pomodoro).toContainText('Standby')
+  await page.getByLabel('New item').fill('Send the proposal')
+  await page.keyboard.press('Enter')
+  await dock(page, 'Habits').click()
+  const todo = page.getByLabel('Frame: Todo List')
+  await expect(todo).toContainText('Send the proposal')
+  await expect(todo).not.toContainText('focused list')
+  await expect(todo).toHaveAttribute('title', '1 open · Send the proposal')
+})
+
+test('a stacked Pomodoro card shows the timer as it runs', async ({ page }) => {
+  await page.clock.install()
+  await page.goto('/')
+  await page.getByRole('button', { name: 'Start focus' }).click()
+  await newFrame(page, 'Todo List', 'Todo List')
+  await page.clock.runFor(61_000)
+  const card = page.getByLabel('Frame: Pomodoro')
+  await expect(card).toContainText('Session live')
+  await expect(card).toContainText(/2[34]:\d\d/)
+})

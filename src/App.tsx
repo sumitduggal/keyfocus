@@ -27,7 +27,16 @@ import { Weather } from "./components/Weather";
 import { loadHabits, saveHabits, toggleDay, type Habit } from "./habits";
 import { loadFrames, loadNoteBodies, loadTheme } from "./saved-state";
 import { formatClock, getPomodoroState, subscribePomodoro } from "./pomodoro";
-import { initReminders, registerHabitSource, removeFrameReminders, restoreFrameReminders } from "./reminders-store";
+import type { FrameData } from "./frame-summary";
+import { getLibrary, subscribeLibrary } from "./bookmarks-store";
+import {
+  getRemindersState,
+  initReminders,
+  registerHabitSource,
+  removeFrameReminders,
+  restoreFrameReminders,
+  subscribeReminders,
+} from "./reminders-store";
 import { HudReminders, ReminderBanner } from "./components/ReminderBanner";
 import {
   loadTodoLists,
@@ -224,6 +233,18 @@ function App() {
     (frame?.querySelector<HTMLElement>("[data-autofocus]") ?? frame)?.focus();
   }, [activeFrame.id]);
   const stackedFrames = frames.filter((frame) => frame.id !== activeFrame.id);
+  // Each stacked card draws a small version of its frame from the frame's own data.
+  const library = useSyncExternalStore(subscribeLibrary, getLibrary);
+  const reminderLists = useSyncExternalStore(subscribeReminders, getRemindersState).lists;
+  const frameData: FrameData = {
+    todos: todoLists,
+    habits: habitLists,
+    reminders: reminderLists,
+    notes: noteBodies,
+    library,
+    pomodoro,
+    today: new Date(),
+  };
   useEffect(() => {
     if (stackCollapsed || !focusStackAfterOpen.current) return;
     focusStackAfterOpen.current = false;
@@ -982,6 +1003,7 @@ function App() {
               stackFocusIndex={stackFocusIndex}
               registerStack={registerStack}
               reduceMotion={reduceMotion}
+              data={frameData}
               onSelect={(index) => {
                 setFocusedSide("left");
                 setWithinSide(true);

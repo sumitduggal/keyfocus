@@ -2,15 +2,20 @@ import { useCallback } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import type { WorkspaceFrame } from "../types";
 import { featureMeta } from "../constants";
+import type { FrameData } from "../frame-summary";
+import { frameSummary } from "../frame-summary";
+import { FramePreview } from "./FramePreview";
 
-// Distance in pixels from one card to the next. A card is about 90px tall, so the rest is the gap.
-const CARD_STEP = 112;
+// Distance in pixels from one card to the next. Every card is 122px tall, so the rest, 6px, is the gap.
+const CARD_STEP = 128;
 
 interface StackProps {
   stackedFrames: WorkspaceFrame[];
   stackFocusIndex: number;
   registerStack: (id: string, node: HTMLElement | null) => void;
   reduceMotion: boolean;
+  // What is inside the frames. Each card draws a small version of its frame from this.
+  data: FrameData;
   collapsed?: boolean;
   onSelect: (index: number) => void;
   onPromote: (index: number) => void;
@@ -21,6 +26,7 @@ export function Stack({
   stackFocusIndex,
   registerStack,
   reduceMotion,
+  data,
   collapsed = false,
   onSelect,
   onPromote,
@@ -50,7 +56,7 @@ export function Stack({
                 }}
                 className={index === stackFocusIndex ? "is-previewed" : undefined}
                 aria-label={`Frame: ${frame.title}`}
-                title={frame.title}
+                title={`${frame.title} · ${frameSummary(frame, data)}`}
                 tabIndex={-1}
                 onFocus={() => handleFocus(index)}
                 onClick={() => onPromote(index)}
@@ -105,6 +111,7 @@ export function Stack({
             }}
             className="stack-frame"
             aria-label={`Frame: ${frame.title}`}
+            title={frameSummary(frame, data)}
             role="button"
             tabIndex={-1}
             onFocus={() => handleFocus(index)}
@@ -121,7 +128,9 @@ export function Stack({
               </span>
             </span>
             <b>{frame.title}</b>
-            <small>{frame.description}</small>
+            <div className="stack-preview" aria-hidden="true">
+              <FramePreview frame={frame} data={data} />
+            </div>
           </div>
         </motion.div>
       ))}
