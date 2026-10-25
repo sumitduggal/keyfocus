@@ -14,7 +14,6 @@ function pomodoroLabel({ phase, remainingSec }: PomodoroState): string {
 
 interface DockProps {
   registerItem: (id: string, node: HTMLButtonElement | null) => void;
-  profileRef: React.RefObject<HTMLButtonElement | null>;
   framesCountByFeature: Record<Feature, number>;
   todoOpenCount: number;
   todoOverdueCount: number;
@@ -26,7 +25,6 @@ interface DockProps {
 
 export function Dock({
   registerItem,
-  profileRef,
   framesCountByFeature,
   todoOpenCount,
   todoOverdueCount,
@@ -40,34 +38,13 @@ export function Dock({
 
   return (
     <div className="dock">
-      <button
-        ref={(node) => {
-          profileRef.current = node;
-          registerItem("profile", node);
-        }}
-        type="button"
-        className="dock-profile"
-        title="Operator"
-        onFocus={() => setRightFocusIndex(0)}
-        onClick={() => setRightFocusIndex(0)}
-      >
-        <span className="dock-avatar" aria-hidden="true">
-          OP
-        </span>
-        <span className="dock-copy">
-          <b>Operator</b>
-          <small>Local session</small>
-        </span>
-        <span className="dock-pip" aria-hidden="true" />
-      </button>
-
       <p className="dock-section">
         Features <span>{String(features.length).padStart(2, "0")}</span>
       </p>
 
       <div className="dock-list">
         {features.map((feature, index) => {
-          const dockIndex = index + 1;
+          const dockIndex = index;
           return (
             <button
               key={feature}
@@ -91,7 +68,7 @@ export function Dock({
                 setRightFocusIndex(dockIndex);
               }}
             >
-              <span className="dock-index">{String(dockIndex).padStart(2, "0")}</span>
+              <span className="dock-index">{String(dockIndex + 1).padStart(2, "0")}</span>
               <span className="dock-glyph" aria-hidden="true">
                 {featureMeta[feature].glyph}
               </span>
@@ -124,10 +101,10 @@ export function Dock({
           className="dock-item is-quiet"
           title="Settings"
           data-settings-toggle
-          onFocus={() => setRightFocusIndex(features.length + 1)}
+          onFocus={() => setRightFocusIndex(features.length)}
           onClick={() => {
             onOpenSettings();
-            setRightFocusIndex(features.length + 1);
+            setRightFocusIndex(features.length);
           }}
         >
           <span className="dock-glyph" aria-hidden="true">
@@ -136,28 +113,6 @@ export function Dock({
           <span className="dock-copy">
             <b>Settings</b>
             <small>Appearance, timer alerts</small>
-          </span>
-          <span className="dock-chevron" aria-hidden="true">
-            ›
-          </span>
-        </button>
-
-        <button
-          ref={(node) => {
-            registerItem("logout", node);
-          }}
-          type="button"
-          className="dock-item is-quiet"
-          title="Log out"
-          onFocus={() => setRightFocusIndex(features.length + 2)}
-          onClick={() => setRightFocusIndex(features.length + 2)}
-        >
-          <span className="dock-glyph" aria-hidden="true">
-            ↪
-          </span>
-          <span className="dock-copy">
-            <b>Log out</b>
-            <small>End session</small>
           </span>
           <span className="dock-chevron" aria-hidden="true">
             ›

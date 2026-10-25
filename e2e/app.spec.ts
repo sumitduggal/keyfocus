@@ -4,7 +4,7 @@ test.beforeEach(async ({ page }) => page.goto('/'))
 
 test('starts on the pomodoro frame with the dock listed', async ({ page }) => {
   await expect(page.getByRole('region', { name: 'Main frame' })).toContainText(/pomodoro/i)
-  for (const name of ['Pomodoro', 'Todo List', 'Habits', 'Reminders', 'Settings', 'Log out'])
+  for (const name of ['Pomodoro', 'Todo List', 'Habits', 'Reminders', 'Settings'])
     await expect(dock(page, name)).toBeVisible()
 })
 
@@ -159,7 +159,7 @@ test('the control panel collapses to a rail, widens the main frame, and stays co
   const before = (await frame.boundingBox())!.width
   await page.getByRole('button', { name: 'Hide control panel' }).click()
   // The rail keeps an icon for every item, with the name as a tooltip, but no words.
-  for (const name of ['Pomodoro', 'Todo List', 'Habits', 'Reminders', 'Bookmarks', 'Settings', 'Log out'])
+  for (const name of ['Pomodoro', 'Todo List', 'Habits', 'Reminders', 'Bookmarks', 'Settings'])
     await expect(page.locator(`.dock-item[title="${name}"] .dock-glyph`)).toBeVisible()
   await expect(page.locator('.dock-item[title="Pomodoro"] .dock-copy')).not.toBeInViewport({ ratio: 0.5 })
   await expect.poll(async () => (await frame.boundingBox())!.width).toBeGreaterThan(before + 150)
@@ -318,4 +318,14 @@ test('the temperature unit is set in Settings, drives the weather request and su
   await page.reload()
   await page.getByTitle('Settings').click()
   await expect(page.getByRole('button', { name: /Temperature unit/ })).toHaveText(chosen!)
+})
+
+test('arrow keys walk the dock from Pomodoro down to Settings and stop there', async ({ page }) => {
+  await page.keyboard.press('Alt+ArrowRight')
+  await page.keyboard.press('Enter')
+  await expect(page.locator('.dock-item[title="Pomodoro"]')).toBeFocused()
+  for (let i = 0; i < 8; i++) await page.keyboard.press('ArrowDown')
+  await expect(page.locator('.dock-item[title="Settings"]')).toBeFocused()
+  await page.keyboard.press('ArrowUp')
+  await expect(page.locator('.dock-item[title="Bookmarks"]')).toBeFocused()
 })

@@ -177,7 +177,6 @@ function App() {
     main: null,
     right: null,
   });
-  const profileRef = useRef<HTMLButtonElement | null>(null);
   const rightItemRefs = useRef<Record<string, HTMLButtonElement | null>>({});
   const actionInputRef = useRef<HTMLInputElement | null>(null);
   // Where Escape came from, so Escape in the command bar can go back; and a flag so that
@@ -374,14 +373,7 @@ function App() {
 
   const focusDockItem = () => {
     const features = visibleFeatures;
-    const id =
-      rightFocusIndex === 0
-        ? "profile"
-        : rightFocusIndex === features.length + 1
-          ? "settings"
-          : rightFocusIndex === features.length + 2
-            ? "logout"
-            : `feature-${features[rightFocusIndex - 1]}`;
+    const id = rightFocusIndex === features.length ? "settings" : `feature-${features[rightFocusIndex]}`;
     rightItemRefs.current[id]?.focus();
   };
 
@@ -707,11 +699,8 @@ function App() {
 
   useEffect(() => {
     const rightItemId = (index: number) => {
-      const count = visibleFeatures.length + 3;
-      if (index === 0) return "profile";
-      if (index === count - 1) return "logout";
-      if (index === count - 2) return "settings";
-      return `feature-${visibleFeatures[index - 1]}`;
+      if (index === visibleFeatures.length) return "settings";
+      return `feature-${visibleFeatures[index]}`;
     };
     const navigate = (event: globalThis.KeyboardEvent) => {
       if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
@@ -871,7 +860,7 @@ function App() {
         (event.key === "ArrowUp" || event.key === "ArrowDown")
       ) {
         event.preventDefault();
-        const count = visibleFeatures.length + 3;
+        const count = visibleFeatures.length + 1;
         const delta = event.key === "ArrowUp" ? -1 : 1;
         const next = Math.max(0, Math.min(count - 1, rightFocusIndex + delta));
         setRightFocusIndex(next);
@@ -891,7 +880,7 @@ function App() {
         }
         if (focusedSide === "right") {
           setRightFocusIndex(0);
-          profileRef.current?.focus();
+          rightItemRefs.current[rightItemId(0)]?.focus();
         }
         return;
       }
@@ -906,10 +895,9 @@ function App() {
       }
       if (
         focusedSide === "right" &&
-        rightFocusIndex >= 1 &&
-        rightFocusIndex <= visibleFeatures.length
+        rightFocusIndex < visibleFeatures.length
       ) {
-        const feature = visibleFeatures[rightFocusIndex - 1];
+        const feature = visibleFeatures[rightFocusIndex];
         if (singleFrameFeatures.includes(feature)) openFeatureDirectly(feature);
         else openFeaturePanel(feature);
       }
@@ -1117,7 +1105,6 @@ function App() {
             </button>
             <Dock
               registerItem={registerItem}
-              profileRef={profileRef}
               framesCountByFeature={framesCountByFeature}
               todoOpenCount={todoOpenCount}
               todoOverdueCount={todoOverdueCount}
