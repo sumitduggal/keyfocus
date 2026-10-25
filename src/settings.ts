@@ -12,15 +12,20 @@ export const alertSounds: Sound[] = [
   { id: "coin-grab", label: "Coin grab", src: "/alerts/coin-grab-sound-effect.mp3" },
 ];
 
+export type TemperatureUnit = "celsius" | "fahrenheit";
+
 export interface Settings {
   alertSound: string;
   alertVolume: number;
+  temperatureUnit: TemperatureUnit;
 }
 
 const KEY = "focus-space-settings";
 export const defaultSettings: Settings = {
   alertSound: "glass-bell",
   alertVolume: 0.7,
+  // Until chosen, the browser's region decides: Fahrenheit for the US, Celsius elsewhere.
+  temperatureUnit: new Intl.Locale(navigator.language).region === "US" ? "fahrenheit" : "celsius",
 };
 
 export const loadSettings = (): Settings => {

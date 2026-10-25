@@ -86,6 +86,22 @@ export function SettingsPanel({
 
       <div className="settings-row">
         <span>
+          <b>Temperature</b>
+          <small>Weather in the header</small>
+        </span>
+        <button
+          type="button"
+          aria-label={`Temperature unit: ${settings.temperatureUnit}. Switch`}
+          onClick={() =>
+            onChange({ temperatureUnit: settings.temperatureUnit === "celsius" ? "fahrenheit" : "celsius" })
+          }
+        >
+          {settings.temperatureUnit === "celsius" ? "°C" : "°F"}
+        </button>
+      </div>
+
+      <div className="settings-row">
+        <span>
           <b>Timer alert</b>
           <small>Plays when a session ends</small>
         </span>

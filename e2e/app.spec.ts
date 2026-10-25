@@ -289,3 +289,33 @@ test('weather asks for a location once on the first visit, then leaves a link', 
   await expect(page.getByLabel('Weather location')).toHaveCount(0)
   await expect(page.getByRole('button', { name: /Add location/ })).toBeVisible()
 })
+
+test('the temperature unit is set in Settings, drives the weather request and survives reload', async ({ page }) => {
+  const units: (string | null)[] = []
+  await page.unroute(/open-meteo|geocod|ipapi|ipwho|nominatim/)
+  await page.route(/open-meteo/, (route) => {
+    units.push(new URL(route.request().url()).searchParams.get('temperature_unit'))
+    return route.fulfill({
+      json: {
+        timezone: 'Europe/Berlin',
+        current: { temperature_2m: 20, weather_code: 0, is_day: 1 },
+        current_units: { temperature_2m: '°' },
+      },
+    })
+  })
+  await page.evaluate(() =>
+    localStorage.setItem('focus-space-weather-place', JSON.stringify({ name: 'Berlin', latitude: 52.5, longitude: 13.4 })),
+  )
+  await page.reload()
+  await page.getByTitle('Settings').click()
+  const toggle = page.getByRole('button', { name: /Temperature unit/ })
+  const before = await toggle.textContent()
+  await toggle.click()
+  await expect(toggle).not.toHaveText(before!)
+  await expect.poll(() => new Set(units).size).toBe(2)
+
+  const chosen = await toggle.textContent()
+  await page.reload()
+  await page.getByTitle('Settings').click()
+  await expect(page.getByRole('button', { name: /Temperature unit/ })).toHaveText(chosen!)
+})

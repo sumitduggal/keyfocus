@@ -1,6 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState, type FormEvent } from "react";
 import { motion, useReducedMotion } from "motion/react";
 import { setStored } from "../storage";
+import type { TemperatureUnit } from "../settings";
 
 const REFRESH_MS = 15 * 60 * 1000;
 const PLACE_KEY = "focus-space-weather-place";
@@ -66,11 +67,7 @@ function describe(code: number, isDay: boolean): Condition {
   return { label: "Thunderstorm", glyph: "⚡" };
 }
 
-function usesFahrenheit() {
-  return new Intl.Locale(navigator.language).region === "US";
-}
-
-export function Weather() {
+export function Weather({ unit }: { unit: TemperatureUnit }) {
   const [place, setPlace] = useState<Place | null>(readPlace);
   const [editing, setEditing] = useState(false);
   const [query, setQuery] = useState("");
@@ -100,7 +97,6 @@ export function Weather() {
     const load = async (latitude: number, longitude: number) => {
       controller?.abort();
       controller = new AbortController();
-      const unit = usesFahrenheit() ? "fahrenheit" : "celsius";
       const url = new URL("https://api.open-meteo.com/v1/forecast");
       url.searchParams.set("latitude", latitude.toFixed(4));
       url.searchParams.set("longitude", longitude.toFixed(4));
@@ -139,7 +135,7 @@ export function Weather() {
       window.clearInterval(interval);
       controller?.abort();
     };
-  }, [place]);
+  }, [place, unit]);
 
   const choosePlace = (next: Place | null) => {
     setPlace(next);

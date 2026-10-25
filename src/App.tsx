@@ -986,7 +986,7 @@ function App() {
           </div>
 
           <div className="hud-status">
-            <Weather />
+            <Weather unit={settings.temperatureUnit} />
             <HudReminders />
             <HudClock />
           </div>
