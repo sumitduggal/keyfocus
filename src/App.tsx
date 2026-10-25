@@ -210,7 +210,7 @@ function App() {
     if (lastFrameId.current === activeFrameId) return;
     lastFrameId.current = activeFrameId;
     if (!reduceMotion && frameScope.current) {
-      void animateFrame(frameScope.current, { opacity: [0, 1], x: [18, 0] }, { duration: 0.2, ease: "easeOut" });
+      void animateFrame(frameScope.current, { opacity: [0, 1], x: [28, 0], scale: [0.985, 1] }, { duration: 0.32, ease: [0.22, 1, 0.36, 1] });
     }
   }, [activeFrameId, animateFrame, frameScope, reduceMotion]);
 

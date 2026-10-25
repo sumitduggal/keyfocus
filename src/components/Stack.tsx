@@ -1,5 +1,5 @@
 import { useCallback } from "react";
-import { motion } from "motion/react";
+import { AnimatePresence, motion } from "motion/react";
 import type { WorkspaceFrame } from "../types";
 import { featureMeta } from "../constants";
 
@@ -72,10 +72,15 @@ export function Stack({
         </div>
       )}
 
+      {/* A frame joining or leaving the stack fades and slides toward the main frame, so promoting one
+          reads as a move, not a swap. */}
+      <AnimatePresence initial={false}>
       {stackedFrames.map((frame, index) => (
         <motion.div
           className={index === stackFocusIndex ? "stack-item previewed" : "stack-item"}
           key={frame.id}
+          initial={reduceMotion ? false : { opacity: 0, y: index * 104, x: -24, rotateY: 22, scale: 0.94 }}
+          exit={reduceMotion ? { opacity: 0 } : { opacity: 0, x: 48, scale: 0.92, transition: { duration: 0.18, ease: "easeIn" } }}
           animate={{
             y: index * 104,
             x: -index * 5,
@@ -116,6 +121,7 @@ export function Stack({
           </div>
         </motion.div>
       ))}
+      </AnimatePresence>
     </div>
   );
 }
