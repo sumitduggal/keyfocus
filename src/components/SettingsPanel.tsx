@@ -32,7 +32,10 @@ export function SettingsPanel({
     if (!panel || !container) return;
     const margin = 12;
     const half = panel.offsetHeight / 2;
-    const wanted = anchorY === null ? container.clientHeight / 2 : anchorY - container.getBoundingClientRect().top;
+    const wanted =
+      anchorY === null
+        ? container.clientHeight / 2
+        : anchorY - container.getBoundingClientRect().top;
     const max = container.clientHeight - half - margin;
     panel.style.top = `${Math.max(half + margin, Math.min(max, wanted))}px`;
   }, [anchorY]);
@@ -43,7 +46,8 @@ export function SettingsPanel({
       const target = event.target as Element;
       // The Settings button toggles the panel itself.
       if (target.closest?.("[data-settings-toggle]")) return;
-      if (panelRef.current && !panelRef.current.contains(target)) onClose(false);
+      if (panelRef.current && !panelRef.current.contains(target))
+        onClose(false);
     };
     document.addEventListener("focusin", closeWhenFocusLeaves);
     return () => document.removeEventListener("focusin", closeWhenFocusLeaves);
@@ -69,35 +73,46 @@ export function SettingsPanel({
       <div className="feature-aside-heading">
         <span aria-hidden="true">⚙</span>
         <b>Settings</b>
-        <button type="button" aria-label="Close settings" onClick={() => onClose(true)}>
+        <button
+          type="button"
+          aria-label="Close settings"
+          onClick={() => onClose(true)}
+        >
           ×
         </button>
       </div>
 
-      <div className="settings-row">
-        <span>
-          <b>Appearance</b>
-          <small>Shortcut ⌘⇧L</small>
-        </span>
-        <button type="button" onClick={onToggleTheme}>
-          {theme === "dark" ? "☾ Dark" : "☀ Light"}
-        </button>
-      </div>
+      <div className="settings-pair">
+        <div className="settings-row">
+          <span>
+            <b>Appearance</b>
+            <small>Shortcut ⌘⇧L</small>
+          </span>
+          <button type="button" onClick={onToggleTheme}>
+            {theme === "dark" ? "☾ Dark" : "☀ Light"}
+          </button>
+        </div>
 
-      <div className="settings-row">
-        <span>
-          <b>Temperature</b>
-          <small>Weather in the header</small>
-        </span>
-        <button
-          type="button"
-          aria-label={`Temperature unit: ${settings.temperatureUnit}. Switch`}
-          onClick={() =>
-            onChange({ temperatureUnit: settings.temperatureUnit === "celsius" ? "fahrenheit" : "celsius" })
-          }
-        >
-          {settings.temperatureUnit === "celsius" ? "°C" : "°F"}
-        </button>
+        <div className="settings-row">
+          <span>
+            <b>Temperature</b>
+            <small>Weather in the header</small>
+          </span>
+          <button
+            type="button"
+            aria-label={`Temperature unit: ${settings.temperatureUnit}. Switch`}
+            onClick={() =>
+              onChange({
+                temperatureUnit:
+                  settings.temperatureUnit === "celsius"
+                    ? "fahrenheit"
+                    : "celsius",
+              })
+            }
+          >
+            {settings.temperatureUnit === "celsius" ? "°C" : "°F"}
+          </button>
+        </div>
       </div>
 
       <div className="settings-row">
@@ -135,7 +150,9 @@ export function SettingsPanel({
           step="0.05"
           aria-label="Alert volume"
           value={settings.alertVolume}
-          onChange={(event) => onChange({ alertVolume: Number(event.target.value) })}
+          onChange={(event) =>
+            onChange({ alertVolume: Number(event.target.value) })
+          }
         />
       </div>
 

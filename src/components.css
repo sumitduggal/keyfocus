@@ -1383,6 +1383,20 @@
   color: var(--text-muted);
 }
 
+/* Two short rows side by side. */
+.settings-pair {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.settings-pair .settings-row {
+  border-bottom: 0;
+  /* Captions can wrap to different lengths; the buttons still line up along the bottom. */
+  align-content: space-between;
+}
+
 .settings-row:last-child {
   border-bottom: 0;
 }
