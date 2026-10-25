@@ -77,7 +77,7 @@ export function Stack({
 
       {/* A frame joining or leaving the stack fades and slides toward the main frame, so promoting one
           reads as a move, not a swap. */}
-      <AnimatePresence initial={false}>
+      <AnimatePresence initial={false} mode="popLayout">
       {stackedFrames.map((frame, index) => (
         <motion.div
           className={index === stackFocusIndex ? "stack-item previewed" : "stack-item"}
