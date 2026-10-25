@@ -14,6 +14,7 @@ import {
   snoozeReminder,
   snoozeTime,
   summarise,
+  syncTodoReminders,
   tick,
   type RemindersData,
   type Repeat,
@@ -271,5 +272,49 @@ describe("saving", () => {
     expect(loaded.f1.reminders).toHaveLength(1);
     expect(loaded.f1.done).toEqual([]);
     expect(loadReminders({ getItem: () => "nope" })).toEqual({});
+  });
+});
+
+describe("reminders that belong to todo items", () => {
+  const empty: RemindersData = { reminders: [], done: [] };
+  const want = (todoId: string, at: string, text = "Send the proposal") => ({ todoId, text, priority: "medium" as const, at });
+
+  it("adds one reminder per item that wants one, and nothing when nothing changed", () => {
+    const first = syncTodoReminders(empty, [want("a", "2025-10-16T09:00")]);
+    expect(first.reminders).toHaveLength(1);
+    expect(first.reminders[0]).toMatchObject({ id: "todo:a", text: "Send the proposal", due: "2025-10-16T09:00", todo: { id: "a", at: "2025-10-16T09:00" } });
+    expect(syncTodoReminders(first, [want("a", "2025-10-16T09:00")])).toBe(first);
+  });
+
+  it("removes the reminder when its item no longer wants one, and leaves other reminders alone", () => {
+    const mine = oneOff("2025-10-16T09:00", "mine");
+    const synced = syncTodoReminders(data(mine), [want("a", "2025-10-16T09:00")]);
+    expect(synced.reminders.map((reminder) => reminder.id)).toEqual(["mine", "todo:a"]);
+    expect(syncTodoReminders(synced, []).reminders.map((reminder) => reminder.id)).toEqual(["mine"]);
+  });
+
+  it("renames in place, but a new time starts it over", () => {
+    const synced = syncTodoReminders(empty, [want("a", "2025-10-16T09:00")]);
+    const snoozed = snoozeReminder(synced, "todo:a", "2025-10-16T09:30");
+    const renamed = syncTodoReminders(snoozed, [want("a", "2025-10-16T09:00", "Send the new proposal")]);
+    expect(renamed.reminders[0]).toMatchObject({ text: "Send the new proposal", due: "2025-10-16T09:30" });
+    const moved = syncTodoReminders(snoozed, [want("a", "2025-10-17T08:00")]);
+    expect(moved.reminders[0]).toMatchObject({ due: "2025-10-17T08:00", firedAt: null, todo: { at: "2025-10-17T08:00" } });
+  });
+
+  it("does not make a reminder again once it was answered for that time, even after a snooze", () => {
+    const synced = syncTodoReminders(empty, [want("a", "2025-10-16T09:00")]);
+    const snoozed = snoozeReminder(synced, "todo:a", "2025-10-16T09:30");
+    const answered = completeReminder(snoozed, "todo:a", new Date(2025, 9, 16, 9, 31));
+    expect(answered.reminders).toEqual([]);
+    expect(syncTodoReminders(answered, [want("a", "2025-10-16T09:00")])).toBe(answered);
+    expect(syncTodoReminders(answered, [want("a", "2025-10-17T09:00")]).reminders).toHaveLength(1);
+  });
+
+  it("survives a save and load with its link", () => {
+    const synced = syncTodoReminders(empty, [want("a", "2025-10-16T09:00")]);
+    const storage = new Map<string, string>();
+    saveReminders({ setItem: (key, value) => void storage.set(key, value) }, { f: synced });
+    expect(loadReminders({ getItem: (key) => storage.get(key) ?? null }).f.reminders[0].todo).toEqual({ id: "a", at: "2025-10-16T09:00" });
   });
 });

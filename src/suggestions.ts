@@ -12,6 +12,13 @@ export const PRIORITY_SUGGESTIONS: Suggestion[] = [
   { value: "!low", label: "low", hint: "when there is time" },
 ];
 
+export const TIME_SUGGESTIONS: Suggestion[] = [
+  { value: "~9am", label: "9am", hint: "remind at 09:00" },
+  { value: "~12pm", label: "12pm", hint: "remind at 12:00" },
+  { value: "~3pm", label: "3pm", hint: "remind at 15:00" },
+  { value: "~6pm", label: "6pm", hint: "remind at 18:00" },
+];
+
 const WEEKDAYS = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
 
 const shortDate = (date: Date) =>

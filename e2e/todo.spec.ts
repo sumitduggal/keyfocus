@@ -90,3 +90,51 @@ test('deleting the list asks for confirmation', async ({ page }) => {
   await page.locator('.todo-danger').click()
   await expect(page.getByLabel('New item')).toBeHidden()
 })
+
+// Opens the Reminders frame, then comes back to the todo list through its card in the stack.
+const viewReminders = async (page: import('@playwright/test').Page) => {
+  await page.locator('.dock-item', { hasText: 'Reminders' }).click()
+}
+const backToTodo = (page: import('@playwright/test').Page) => page.getByRole('button', { name: /Frame: Todo List/ }).click()
+
+test('a ~time on an item makes a reminder that leaves Reminders when the item is done', async ({ page }) => {
+  await add(page, 'Send the proposal @friday ~9am')
+  await expect(page.getByLabel('Edit item: Send the proposal')).toBeVisible()
+  await viewReminders(page)
+  const reminder = page.locator('.habit-name', { hasText: 'Send the proposal' })
+  await expect(reminder).toBeVisible()
+  await expect(reminder.locator('.reminder-when')).toContainText('09:00')
+
+  await backToTodo(page)
+  await page.getByLabel('Mark done: Send the proposal').click()
+  await viewReminders(page)
+  await expect(page.locator('.habit-name', { hasText: 'Send the proposal' })).toHaveCount(0)
+})
+
+test('the bell sets, changes and clears an item reminder, and deleting the item removes it', async ({ page }) => {
+  await add(page, 'Call Alex')
+  await page.getByLabel('Reminder: Call Alex').click()
+  await page.getByLabel('Reminder time: Call Alex').fill('2030-01-02T08:30')
+  await viewReminders(page)
+  await expect(page.locator('.habit-name', { hasText: 'Call Alex' })).toBeVisible()
+
+  await backToTodo(page)
+  await page.getByLabel('Reminder: Call Alex').click()
+  await page.getByRole('button', { name: 'Clear reminder' }).click()
+  await viewReminders(page)
+  await expect(page.locator('.habit-name', { hasText: 'Call Alex' })).toHaveCount(0)
+
+  await backToTodo(page)
+  await page.getByLabel('Reminder: Call Alex').click()
+  await page.getByLabel('Reminder time: Call Alex').fill('2030-01-02T08:30')
+  await page.getByLabel('Delete Call Alex').click()
+  await viewReminders(page)
+  await expect(page.locator('.habit-name', { hasText: 'Call Alex' })).toHaveCount(0)
+})
+
+test('an item reminder survives a reload', async ({ page }) => {
+  await add(page, 'Water plants ~6pm')
+  await page.reload()
+  await viewReminders(page)
+  await expect(page.locator('.habit-name', { hasText: 'Water plants' })).toBeVisible()
+})

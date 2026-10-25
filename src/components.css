@@ -1661,7 +1661,7 @@
 
 .todo-row {
   display: grid;
-  grid-template-columns: 16px 40px minmax(0, 1fr) auto 40px auto 40px;
+  grid-template-columns: 16px 40px minmax(0, 1fr) auto 40px 40px auto 40px;
   align-items: center;
   gap: 8px;
   min-height: 48px;
@@ -2004,6 +2004,51 @@
 .todo-row.is-done .todo-text-input {
   color: var(--text-faint);
   text-decoration: line-through;
+}
+
+.todo-bell {
+  min-width: 40px;
+  min-height: 40px;
+  border: 0;
+  background: transparent;
+  color: var(--text-faint);
+  font: 15px/1 var(--font-mono-stack);
+  cursor: pointer;
+}
+
+.todo-bell.is-set,
+.todo-bell:hover,
+.todo-bell:focus-visible {
+  color: var(--accent);
+}
+
+.todo-remind-edit {
+  grid-column: 3 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  padding: 0 0 10px;
+  color: var(--text-muted);
+  font: 10px/1.2 var(--font-mono-stack);
+  letter-spacing: 0.08em;
+}
+
+.todo-remind-edit label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.todo-remind-edit input,
+.todo-remind-edit button {
+  padding: 5px 8px;
+  border: 1px solid var(--border-strong);
+  border-radius: 4px;
+  background: var(--surface-2);
+  color: var(--text);
+  font: inherit;
+  cursor: pointer;
 }
 
 .todo-nest {

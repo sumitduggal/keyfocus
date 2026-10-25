@@ -22,6 +22,9 @@ export interface Reminder {
   repeat: Repeat | null;
   snoozedUntil: string | null; // an extra one-off time for a repeating reminder
   firedAt: string | null; // the occurrence that fired and still needs an answer
+  // Set on a reminder that belongs to a todo item: the item's id, and the time it was made for.
+  // The item owns its text and time; the reminder is removed with it.
+  todo?: { id: string; at: string };
 }
 
 export interface DoneEntry {
@@ -193,6 +196,57 @@ export function tick(data: RemindersData, now: Date): { data: RemindersData; fir
   return { data: changed ? { ...data, reminders } : data, fired };
 }
 
+export interface TodoReminder {
+  todoId: string;
+  text: string;
+  priority: ReminderPriority;
+  at: string;
+}
+
+// Brings the reminders that belong to todo items in line with the items that currently want one:
+// adds, retimes and renames them, and removes those whose item is gone, done or has no reminder.
+// A reminder already answered for the same time is not made again. Returns `data` itself when
+// nothing changed.
+export function syncTodoReminders(data: RemindersData, wanted: TodoReminder[]): RemindersData {
+  const byId = new Map(wanted.map((item) => [item.todoId, item]));
+  let changed = false;
+  const reminders: Reminder[] = [];
+  for (const reminder of data.reminders) {
+    if (!reminder.todo) {
+      reminders.push(reminder);
+      continue;
+    }
+    const item = byId.get(reminder.todo.id);
+    if (!item) {
+      changed = true;
+      continue;
+    }
+    byId.delete(item.todoId);
+    let next = reminder;
+    if (next.text !== item.text || next.priority !== item.priority) next = { ...next, text: item.text, priority: item.priority };
+    // A new time starts the reminder over; a snooze or an answer for the old time is forgotten.
+    if (next.todo!.at !== item.at) next = { ...next, due: item.at, firedAt: null, snoozedUntil: null, todo: { id: item.todoId, at: item.at } };
+    if (next !== reminder) changed = true;
+    reminders.push(next);
+  }
+  for (const item of byId.values()) {
+    const id = `todo:${item.todoId}`;
+    if (data.done.some((entry) => entry.id.startsWith(`${id}@`) && entry.at === item.at)) continue;
+    changed = true;
+    reminders.push({
+      id,
+      text: item.text,
+      priority: item.priority,
+      due: item.at,
+      repeat: null,
+      snoozedUntil: null,
+      firedAt: null,
+      todo: { id: item.todoId, at: item.at },
+    });
+  }
+  return changed ? { ...data, reminders } : data;
+}
+
 export function addReminder(data: RemindersData, reminder: Reminder): RemindersData {
   return { ...data, reminders: [...data.reminders, reminder] };
 }
@@ -250,7 +304,7 @@ export function completeReminder(data: RemindersData, id: string, now: Date): Re
   const reminder = data.reminders.find((candidate) => candidate.id === id);
   if (!reminder) return data;
   const doneAt = toStamp(now);
-  const entry: DoneEntry = { id: `${id}@${doneAt}`, text: reminder.text, at: reminder.firedAt ?? reminder.due, doneAt };
+  const entry: DoneEntry = { id: `${id}@${doneAt}`, text: reminder.text, at: reminder.todo?.at ?? reminder.firedAt ?? reminder.due, doneAt };
   if (!reminder.repeat) {
     return { reminders: data.reminders.filter((candidate) => candidate.id !== id), done: [entry, ...data.done] };
   }
@@ -580,7 +634,9 @@ function isReminder(value: unknown): value is Reminder {
     isStamp(reminder.due) &&
     (reminder.repeat === null || isRepeat(reminder.repeat)) &&
     (reminder.snoozedUntil === null || isStamp(reminder.snoozedUntil)) &&
-    (reminder.firedAt === null || isStamp(reminder.firedAt))
+    (reminder.firedAt === null || isStamp(reminder.firedAt)) &&
+    (reminder.todo === undefined ||
+      (typeof reminder.todo === "object" && reminder.todo !== null && typeof reminder.todo.id === "string" && isStamp(reminder.todo.at)))
   );
 }
 

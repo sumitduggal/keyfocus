@@ -7,12 +7,31 @@ export interface TodoItem {
   priority: TodoPriority;
   due: string | null; // "YYYY-MM-DD" or null
   parentId: string | null; // the id of the item this step belongs to; null at the top level
+  remindAt?: string; // "YYYY-MM-DDTHH:mm": when to remind; shows up in Reminders while the item is open
 }
 
 export interface ParsedTodoInput {
   text: string;
   priority: TodoPriority;
   due: string | null;
+  remindAt?: string;
+}
+
+const STAMP = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/;
+const CLOCK = /^(\d{1,2})(?::(\d{2}))?(am|pm)?$/;
+
+// "9am", "9:30pm" or "14:30" as "HH:mm". A bare number is not a time, so "~9" is left as text.
+function resolveClock(body: string): string | null {
+  const match = CLOCK.exec(body);
+  if (!match || (match[2] === undefined && match[3] === undefined)) return null;
+  let hours = Number(match[1]);
+  const minutes = Number(match[2] ?? 0);
+  if (minutes > 59) return null;
+  if (match[3]) {
+    if (hours < 1 || hours > 12) return null;
+    hours = (hours % 12) + (match[3] === "pm" ? 12 : 0);
+  } else if (hours > 23) return null;
+  return `${pad(hours)}:${pad(minutes)}`;
 }
 
 export const TODO_STORAGE_KEY = "focus-space-todo-lists";
@@ -125,6 +144,7 @@ export function parseTodoInput(raw: string, today: Date): ParsedTodoInput {
   const kept: string[] = [];
   let priority: TodoPriority = "medium";
   let due: string | null = null;
+  let time: string | null = null;
 
   for (let i = 0; i < tokens.length; i++) {
     const token = tokens[i];
@@ -134,6 +154,14 @@ export function parseTodoInput(raw: string, today: Date): ParsedTodoInput {
     if (priorityValue !== undefined) {
       priority = priorityValue;
       continue;
+    }
+
+    if (lower.startsWith("~")) {
+      const clock = resolveClock(lower.slice(1));
+      if (clock !== null) {
+        time = clock;
+        continue;
+      }
     }
 
     if (!lower.startsWith("@")) {
@@ -163,7 +191,19 @@ export function parseTodoInput(raw: string, today: Date): ParsedTodoInput {
     kept.push(token);
   }
 
-  return { text: kept.join(" "), priority, due };
+  const parsed: ParsedTodoInput = { text: kept.join(" "), priority, due };
+  if (time !== null) {
+    // The due day if there is one. Otherwise today, or tomorrow when that time has already passed.
+    const nowStamp = `${formatLocalDate(today)}T${pad(today.getHours())}:${pad(today.getMinutes())}`;
+    const today0 = `${formatLocalDate(base)}T${time}`;
+    parsed.remindAt =
+      due !== null
+        ? `${due}T${time}`
+        : today0 > nowStamp
+          ? today0
+          : `${formatLocalDate(new Date(base.getFullYear(), base.getMonth(), base.getDate() + 1))}T${time}`;
+  }
+  return parsed;
 }
 
 export function createTodoItem(parsed: ParsedTodoInput, id: string): TodoItem {
@@ -174,6 +214,7 @@ export function createTodoItem(parsed: ParsedTodoInput, id: string): TodoItem {
     priority: parsed.priority,
     due: parsed.due,
     parentId: null,
+    ...(parsed.remindAt ? { remindAt: parsed.remindAt } : {}),
   };
 }
 
@@ -390,7 +431,11 @@ function withValidParents(items: TodoItem[]): TodoItem[] {
     }
     if (current !== null) parentOf.set(item.id, null);
   }
-  return items.map((item) => ({ ...item, parentId: parentOf.get(item.id) ?? null }));
+  return items.map(({ remindAt, ...item }) => ({
+    ...item,
+    parentId: parentOf.get(item.id) ?? null,
+    ...(typeof remindAt === "string" && STAMP.test(remindAt) ? { remindAt } : {}),
+  }));
 }
 
 export function loadTodoLists(storage: Pick<Storage, "getItem">): Record<string, TodoItem[]> {
@@ -486,4 +531,15 @@ export function overdueCount(items: TodoItem[], today: Date): number {
 export function setTodoDue(items: TodoItem[], id: string, due: string | null): TodoItem[] {
   if (due !== null && !ISO_DATE.test(due)) return items;
   return items.map((item) => (item.id === id ? { ...item, due } : item));
+}
+
+// Sets or clears (null) an item's reminder time. A malformed time is ignored.
+export function setTodoRemind(items: TodoItem[], id: string, remindAt: string | null): TodoItem[] {
+  if (remindAt !== null && !STAMP.test(remindAt)) return items;
+  return items.map((item) => {
+    if (item.id !== id) return item;
+    const rest = { ...item };
+    delete rest.remindAt;
+    return remindAt === null ? rest : { ...rest, remindAt };
+  });
 }

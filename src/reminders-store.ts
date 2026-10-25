@@ -5,7 +5,9 @@ import {
   loadReminders,
   saveReminders,
   snoozeReminder,
+  syncTodoReminders,
   tick,
+  type TodoReminder,
   type Reminder,
   type RemindersData,
 } from "./reminders";
@@ -180,6 +182,13 @@ export function registerHabitSource(source: HabitSource): void {
 export function updateReminders(frameId: string, change: (data: RemindersData) => RemindersData): void {
   const current = state.lists[frameId] ?? EMPTY_REMINDERS;
   emit({ lists: { ...state.lists, [frameId]: change(current) } });
+}
+
+// Keeps the todo-owned reminders in a frame's list matching what the todo items want.
+export function syncTodoRemindersIn(frameId: string, wanted: TodoReminder[]): void {
+  const current = state.lists[frameId] ?? EMPTY_REMINDERS;
+  const next = syncTodoReminders(current, wanted);
+  if (next !== current) emit({ lists: { ...state.lists, [frameId]: next } });
 }
 
 export function finishReminder(frameId: string, id: string): void {

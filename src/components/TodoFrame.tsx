@@ -14,6 +14,7 @@ import {
   parseTodoInput,
   progressCounts,
   setTodoDue,
+  setTodoRemind,
   toggleTodoItem,
   unnestTodoItem,
   updateTodoText,
@@ -23,7 +24,7 @@ import {
   type TodoSort,
   type TodoViewState,
 } from "../todo";
-import { PRIORITY_SUGGESTIONS, currentToken, dateSuggestions, type Suggestion } from "../suggestions";
+import { PRIORITY_SUGGESTIONS, TIME_SUGGESTIONS, currentToken, dateSuggestions, type Suggestion } from "../suggestions";
 
 // Item text is edited in place and saved as you type. The stored text is shown when not editing,
 // so undo and other changes always show what is saved. Leaving the field blank keeps the saved text.
@@ -61,6 +62,8 @@ export function TodoFrame({
   const [activeSuggestion, setActiveSuggestion] = useState(0);
   const [dismissedToken, setDismissedToken] = useState<string | null>(null);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
+  // The item whose reminder time is being edited.
+  const [remindingId, setRemindingId] = useState<string | null>(null);
   const { filter, sort } = view;
   const setFilter = (next: TodoFilter) => onViewChange({ filter: next, sort });
   const setSort = (next: TodoSort) => onViewChange({ filter, sort: next });
@@ -84,7 +87,9 @@ export function TodoFrame({
       ? PRIORITY_SUGGESTIONS
       : sigil === "@"
         ? dateSuggestions(today)
-        : [];
+        : sigil === "~"
+          ? TIME_SUGGESTIONS
+          : [];
   const suggestions = pool.filter((option) => option.label.startsWith(prefix));
   const open = suggestions.length > 0 && dismissedToken !== token;
   const highlighted = suggestions[Math.min(activeSuggestion, suggestions.length - 1)];
@@ -196,7 +201,7 @@ export function TodoFrame({
           aria-expanded={open}
           aria-controls="todo-suggestions"
           data-autofocus={items.length === 0 ? "" : undefined}
-          placeholder="Add item · ! priority  @ date"
+          placeholder="Add item · ! priority  @ date  ~ time"
           value={draft}
           onChange={(event) => updateDraft(event.target.value)}
           onKeyDown={handleInputKey}
@@ -221,7 +226,7 @@ export function TodoFrame({
           </ul>
         )}
       </form>
-      <p className="todo-hint">!high !medium !low · @today @tomorrow @friday @12 Nov @2026-11-12</p>
+      <p className="todo-hint">!high !medium !low · @today @tomorrow @friday @12 Nov @2026-11-12 · ~9am ~14:30 adds a reminder</p>
 
       <div className="todo-progress" role="progressbar" aria-label="Progress" aria-valuemin={0} aria-valuemax={progress.total} aria-valuenow={progress.done}>
         <div className="todo-progress-bar" style={{ width: progress.total ? `${(progress.done / progress.total) * 100}%` : "0%" }} />
@@ -320,6 +325,16 @@ export function TodoFrame({
               </span>
               <button
                 type="button"
+                className={`todo-bell${item.remindAt ? " is-set" : ""}`}
+                aria-label={`Reminder: ${item.text}`}
+                aria-expanded={remindingId === item.id}
+                title={item.remindAt ? `Reminder ${item.remindAt.replace("T", " ")}` : "Add a reminder"}
+                onClick={() => setRemindingId(remindingId === item.id ? null : item.id)}
+              >
+                ◷
+              </button>
+              <button
+                type="button"
                 className="todo-nest"
                 aria-label={depth > 0 ? `Move up a level: ${item.text}` : `Nest under the item above: ${item.text}`}
                 onClick={() =>
@@ -344,6 +359,36 @@ export function TodoFrame({
               >
                 ×
               </button>
+              {remindingId === item.id && (
+                <div
+                  className="todo-remind-edit"
+                  onKeyDown={(event) => {
+                    if (event.key !== "Escape") return;
+                    event.preventDefault();
+                    event.stopPropagation();
+                    setRemindingId(null);
+                  }}
+                >
+                  <label>
+                    Remind me
+                    <input
+                      type="datetime-local"
+                      autoFocus
+                      aria-label={`Reminder time: ${item.text}`}
+                      value={item.remindAt ?? ""}
+                      onChange={(event) => onChange(setTodoRemind(items, item.id, event.target.value || null))}
+                    />
+                  </label>
+                  {item.remindAt && (
+                    <button type="button" onClick={() => onChange(setTodoRemind(items, item.id, null))}>
+                      Clear reminder
+                    </button>
+                  )}
+                  <button type="button" onClick={() => setRemindingId(null)}>
+                    Done
+                  </button>
+                </div>
+              )}
             </li>
           );
         })}

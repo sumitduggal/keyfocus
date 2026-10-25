@@ -34,6 +34,7 @@ import {
   getRemindersState,
   initReminders,
   registerHabitSource,
+  syncTodoRemindersIn,
   removeFrameReminders,
   restoreFrameReminders,
   subscribeReminders,
@@ -449,6 +450,10 @@ function App() {
         },
       });
     }
+    // A todo reminder lives in the Reminders frame, so one is made if there is none yet.
+    if (items.some((item) => item.remindAt) && !frames.some((frame) => frame.feature === "reminders")) {
+      setFrames((current) => [...current, { ...featureMeta.reminders.frame, feature: "reminders", id: crypto.randomUUID() }]);
+    }
     setTodoLists((current) => ({ ...current, [frameId]: items }));
   };
 
@@ -639,6 +644,22 @@ function App() {
         })),
     });
   }, []);
+  // After the store has loaded the saved reminders, or this would save over them.
+  // Todo items with a reminder time appear in the Reminders frame, and leave it when done or deleted.
+  const remindersFrameId = frames.find((frame) => frame.feature === "reminders")?.id;
+  useEffect(() => {
+    if (!remindersFrameId) return;
+    syncTodoRemindersIn(
+      remindersFrameId,
+      frames.flatMap((frame) =>
+        (todoLists[frame.id] ?? []).flatMap((item) =>
+          !item.done && item.remindAt
+            ? [{ todoId: item.id, text: item.text, priority: item.priority, at: item.remindAt }]
+            : [],
+        ),
+      ),
+    );
+  }, [frames, todoLists, remindersFrameId]);
   useEffect(() => {
     saveHabits(localStorage, habitLists);
   }, [habitLists]);

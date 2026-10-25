@@ -9,6 +9,7 @@ import {
   openTodoCount,
   parseTodoInput,
   saveTodoLists,
+  setTodoRemind,
   toggleTodoItem,
   type TodoItem,
 } from "./todo";
@@ -325,5 +326,47 @@ describe("saveTodoLists", () => {
       },
     };
     expect(() => saveTodoLists(storage, { frameA: [] })).not.toThrow();
+  });
+});
+
+describe("reminder times on todo items", () => {
+  const at = (hours: number, minutes = 0) => new Date(2026, 9, 24, hours, minutes);
+
+  it("reads ~9am, ~9:30pm and ~14:30 as a time today when it is still ahead", () => {
+    expect(parseTodoInput("call ~9am", at(8)).remindAt).toBe("2026-10-24T09:00");
+    expect(parseTodoInput("call ~9:30pm", at(8)).remindAt).toBe("2026-10-24T21:30");
+    expect(parseTodoInput("call ~14:30", at(8)).remindAt).toBe("2026-10-24T14:30");
+    expect(parseTodoInput("call ~9am", at(8)).text).toBe("call");
+  });
+
+  it("uses tomorrow when the time has passed, and the due day when there is one", () => {
+    expect(parseTodoInput("call ~9am", at(10)).remindAt).toBe("2026-10-25T09:00");
+    expect(parseTodoInput("call @friday ~9am", at(10)).remindAt).toBe("2026-10-30T09:00");
+  });
+
+  it("leaves things that are not times as text", () => {
+    expect(parseTodoInput("save ~9 now", at(8))).toEqual({ text: "save ~9 now", priority: "medium", due: null });
+    expect(parseTodoInput("x ~25:00 ~13pm", at(8)).remindAt).toBeUndefined();
+  });
+
+  it("stores the time on the item, sets it, clears it, and ignores a malformed one", () => {
+    const parsed = parseTodoInput("call ~9am", at(8));
+    expect(createTodoItem(parsed, "a").remindAt).toBe("2026-10-24T09:00");
+    expect(createTodoItem(parseTodoInput("call", at(8)), "b")).not.toHaveProperty("remindAt");
+    const items = [makeItem("a")];
+    const set = setTodoRemind(items, "a", "2026-11-01T08:15");
+    expect(set[0].remindAt).toBe("2026-11-01T08:15");
+    expect(setTodoRemind(set, "a", null)[0]).not.toHaveProperty("remindAt");
+    expect(setTodoRemind(items, "a", "tomorrow")).toBe(items);
+  });
+
+  it("keeps a saved time on load and drops a malformed one", () => {
+    const storage = fakeStorage();
+    saveTodoLists(storage, {
+      f: [makeItem("a", { remindAt: "2026-11-01T08:15" }), makeItem("b", { remindAt: "soon" })],
+    });
+    const loaded = loadTodoLists(storage).f;
+    expect(loaded[0].remindAt).toBe("2026-11-01T08:15");
+    expect(loaded[1]).not.toHaveProperty("remindAt");
   });
 });
