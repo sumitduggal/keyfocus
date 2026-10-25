@@ -11,6 +11,12 @@ class FakeAudio {
 }
 
 let storage: Map<string, string>;
+let closeHandlers: ((event: { persisted: boolean }) => void)[];
+
+const logged = () =>
+  (JSON.parse(storage.get("focus-space-focus-log") ?? "[]") as { seconds: number; completed: boolean }[]).map(
+    ({ seconds, completed }) => ({ seconds, completed }),
+  );
 
 async function freshTimer() {
   vi.resetModules();
@@ -26,7 +32,14 @@ beforeEach(() => {
     getItem: (key: string) => storage.get(key) ?? null,
     setItem: (key: string, value: string) => void storage.set(key, value),
   });
-  vi.stubGlobal("window", { setInterval, clearInterval });
+  closeHandlers = [];
+  vi.stubGlobal("window", {
+    setInterval,
+    clearInterval,
+    addEventListener: (type: string, handler: (event: { persisted: boolean }) => void) => {
+      if (type === "pagehide") closeHandlers.push(handler);
+    },
+  });
   vi.stubGlobal("document", { hidden: false });
   vi.stubGlobal("Audio", FakeAudio);
 });
@@ -108,5 +121,82 @@ describe("pomodoro timer", () => {
     expect(timer.formatClock(1125)).toBe("18:45");
     expect(timer.formatClock(0)).toBe("00:00");
     expect(timer.formatClock(3600)).toBe("60:00");
+  });
+});
+
+describe("focus log", () => {
+  it("records a completed session at its full length", async () => {
+    const timer = await freshTimer();
+    timer.setPomodoroMinutes(2);
+    timer.startPomodoro();
+    vi.advanceTimersByTime(121_000);
+    expect(logged()).toEqual([{ seconds: 120, completed: true }]);
+  });
+
+  it("records the time run as partial when reset after a minute or more", async () => {
+    const timer = await freshTimer();
+    timer.startPomodoro();
+    vi.advanceTimersByTime(90_000);
+    timer.resetPomodoro();
+    expect(logged()).toEqual([{ seconds: 90, completed: false }]);
+  });
+
+  it("records nothing for a session under a minute", async () => {
+    const timer = await freshTimer();
+    timer.startPomodoro();
+    vi.advanceTimersByTime(59_000);
+    timer.resetPomodoro();
+    expect(logged()).toEqual([]);
+  });
+
+  it("counts only the time run, not the time spent paused", async () => {
+    const timer = await freshTimer();
+    timer.startPomodoro();
+    vi.advanceTimersByTime(120_000);
+    timer.pausePomodoro();
+    vi.advanceTimersByTime(300_000);
+    timer.resetPomodoro();
+    expect(logged()).toEqual([{ seconds: 120, completed: false }]);
+  });
+
+  it("records a session once when it is paused and resumed before finishing", async () => {
+    const timer = await freshTimer();
+    timer.setPomodoroMinutes(2);
+    timer.startPomodoro();
+    vi.advanceTimersByTime(30_000);
+    timer.pausePomodoro();
+    vi.advanceTimersByTime(60_000);
+    timer.startPomodoro();
+    vi.advanceTimersByTime(91_000);
+    expect(logged()).toEqual([{ seconds: 120, completed: true }]);
+  });
+
+  it("records partial time when another length is chosen mid-session", async () => {
+    const timer = await freshTimer();
+    timer.startPomodoro();
+    vi.advanceTimersByTime(75_000);
+    timer.setPomodoroMinutes(15);
+    expect(logged()).toEqual([{ seconds: 75, completed: false }]);
+    timer.resetPomodoro();
+    expect(logged()).toHaveLength(1);
+  });
+
+  it("records partial time when the tab is closed, but not when the page is only kept for later", async () => {
+    const timer = await freshTimer();
+    timer.startPomodoro();
+    vi.advanceTimersByTime(100_000);
+    closeHandlers.forEach((handler) => handler({ persisted: true }));
+    expect(logged()).toEqual([]);
+    closeHandlers.forEach((handler) => handler({ persisted: false }));
+    expect(logged()).toEqual([{ seconds: 100, completed: false }]);
+  });
+
+  it("does not record a second time after a session was already recorded", async () => {
+    const timer = await freshTimer();
+    timer.setPomodoroMinutes(1);
+    timer.startPomodoro();
+    vi.advanceTimersByTime(61_000);
+    timer.resetPomodoro();
+    expect(logged()).toEqual([{ seconds: 60, completed: true }]);
   });
 });

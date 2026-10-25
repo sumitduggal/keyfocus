@@ -9,6 +9,7 @@ import { TodoFrame } from "./TodoFrame";
 import { HabitsFrame } from "./HabitsFrame";
 import { RemindersFrame } from "./RemindersFrame";
 import { BookmarksFrame } from "./BookmarksFrame";
+import { FocusStats } from "./FocusStats";
 import {
   getPomodoroState,
   resetPomodoro,
@@ -289,6 +290,7 @@ export function Mainframe({
             </button>
           </div>
           <p className="frame-foot">Take a five-minute break when the interval ends</p>
+          <FocusStats />
         </div>
       ) : frame.feature === "focus music" ? (
         <div className="frame-body" />

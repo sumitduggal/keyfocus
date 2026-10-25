@@ -2,6 +2,8 @@
 // header, dock and tab title can all show it. It counts down to a fixed end time instead of
 // subtracting a second per tick, so a throttled background tab does not make it run slow.
 import { POMODORO_DURATION_KEY } from "./constants";
+import { MIN_PARTIAL_SECONDS } from "./focus-log";
+import { recordSession } from "./focus-log-store";
 import { requestNotificationPermission } from "./reminders-store";
 import { loadSettings, playAlert } from "./settings";
 import { setStored } from "./storage";
@@ -37,6 +39,9 @@ let state: PomodoroState | null = null;
 let endsAt = 0; // while running: when the timer finishes, in ms
 let pausedMs = 0; // while paused: how much time is left, in ms
 let timer: number | undefined;
+let ranMs = 0; // time already run in this session, before the current stretch
+let stretchStart = 0; // when the current stretch began, while running
+let listeningForClose = false;
 const listeners = new Set<() => void>();
 
 function current(): PomodoroState {
@@ -76,6 +81,22 @@ function ring() {
   }
 }
 
+// Seconds the current session has really run, which is less than the length chosen if it was paused.
+function sessionSeconds(): number {
+  const running = current().phase === "running" ? Date.now() - stretchStart : 0;
+  return Math.floor((ranMs + running) / 1000);
+}
+
+// A session that is reset, changed to another length or closed with a minute or more run is recorded
+// as partial. A shorter one is not worth keeping.
+function logPartial() {
+  const { phase } = current();
+  if (phase !== "running" && phase !== "paused") return;
+  const seconds = sessionSeconds();
+  if (seconds >= MIN_PARTIAL_SECONDS) recordSession(seconds, false);
+  ranMs = 0;
+}
+
 function stopTicking() {
   window.clearInterval(timer);
   timer = undefined;
@@ -85,6 +106,8 @@ function tick() {
   const left = endsAt - Date.now();
   if (left <= 0) {
     stopTicking();
+    recordSession(current().durationMin * 60, true);
+    ranMs = 0;
     emit({ remainingSec: 0, phase: "complete" });
     ring();
     return;
@@ -98,7 +121,16 @@ export function startPomodoro(): void {
   requestNotificationPermission();
   // A finished timer starts again from the full length.
   const ms = phase === "paused" ? pausedMs : phase === "complete" ? durationMin * 60_000 : remainingSec * 1000;
-  endsAt = Date.now() + ms;
+  if (phase !== "paused") ranMs = 0; // a new session; resuming keeps the time already run
+  stretchStart = Date.now();
+  endsAt = stretchStart + ms;
+  if (!listeningForClose) {
+    listeningForClose = true;
+    // Closing the tab mid-session counts as abandoning it. A page kept for the back button is not closed.
+    window.addEventListener("pagehide", (event) => {
+      if (!event.persisted) logPartial();
+    });
+  }
   stopTicking();
   timer = window.setInterval(tick, 250);
   emit({ phase: "running", remainingSec: Math.ceil(ms / 1000) });
@@ -107,6 +139,7 @@ export function startPomodoro(): void {
 export function pausePomodoro(): void {
   if (current().phase !== "running") return;
   stopTicking();
+  ranMs += Date.now() - stretchStart;
   pausedMs = Math.max(0, endsAt - Date.now());
   emit({ phase: "paused", remainingSec: Math.ceil(pausedMs / 1000) });
 }
@@ -117,6 +150,7 @@ export function togglePomodoro(): void {
 }
 
 export function resetPomodoro(): void {
+  logPartial();
   stopTicking();
   emit({ phase: "idle", remainingSec: current().durationMin * 60 });
 }
@@ -124,6 +158,7 @@ export function resetPomodoro(): void {
 // Choosing a length stops the timer and starts that length fresh.
 export function setPomodoroMinutes(minutes: number): void {
   const durationMin = clampMinutes(minutes);
+  logPartial();
   stopTicking();
   setStored(POMODORO_DURATION_KEY, String(durationMin));
   emit({ durationMin, phase: "idle", remainingSec: durationMin * 60 });
