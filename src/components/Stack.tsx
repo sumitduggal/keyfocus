@@ -1,5 +1,4 @@
 import { useCallback } from "react";
-import { AnimatePresence, motion } from "motion/react";
 import type { WorkspaceFrame } from "../types";
 import { featureMeta } from "../constants";
 import type { FrameData } from "../frame-summary";
@@ -81,30 +80,20 @@ export function Stack({
         </div>
       )}
 
-      {/* A frame joining or leaving the stack fades and slides toward the main frame, so promoting one
-          reads as a move, not a swap. */}
-      <AnimatePresence initial={false} mode="popLayout">
+      {/* Cards are placed and moved with plain CSS, not JS springs: those can stall part-way and leave a
+          faint ghost or a blank slot. A frame leaving the stack just disappears and the rest slide up. */}
       {stackedFrames.map((frame, index) => (
-        <motion.div
+        <div
           className={index === stackFocusIndex ? "stack-item previewed" : "stack-item"}
           key={frame.id}
-          // No opacity here: if the entry animation ever stalls, the card is still drawn, never a blank slot.
-          initial={reduceMotion ? false : { y: index * CARD_STEP, x: -24, rotateY: 22, scale: 0.94 }}
-          exit={reduceMotion ? { opacity: 0 } : { opacity: 0, x: 48, scale: 0.92, transition: { duration: 0.18, ease: "easeIn" } }}
-          animate={{
-            // Depth, scale and a sideways step are left out, so every card is the same width and lines up.
-            y: index * CARD_STEP,
-            x: 0,
-            z: 0,
-            rotateX: 0,
-            rotateY: 22,
-            scale: 1,
-            opacity: 1 - Math.min(index, 4) * 0.08,
-          }}
-          transition={
-            reduceMotion ? { duration: 0 } : { type: "spring", stiffness: 320, damping: 32 }
+          style={
+            {
+              "--y": `${index * CARD_STEP}px`,
+              opacity: 1 - Math.min(index, 4) * 0.08,
+              zIndex: stackedFrames.length - index,
+              ...(reduceMotion ? { animation: "none", transition: "none" } : {}),
+            } as React.CSSProperties
           }
-          style={{ zIndex: stackedFrames.length - index }}
         >
           <div
             ref={(node) => {
@@ -133,9 +122,8 @@ export function Stack({
               <FramePreview frame={frame} data={data} />
             </div>
           </div>
-        </motion.div>
+        </div>
       ))}
-      </AnimatePresence>
     </div>
   );
 }
