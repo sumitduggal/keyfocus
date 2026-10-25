@@ -88,7 +88,8 @@ export function Stack({
         <motion.div
           className={index === stackFocusIndex ? "stack-item previewed" : "stack-item"}
           key={frame.id}
-          initial={reduceMotion ? false : { opacity: 0, y: index * CARD_STEP, x: -24, rotateY: 22, scale: 0.94 }}
+          // No opacity here: if the entry animation ever stalls, the card is still drawn, never a blank slot.
+          initial={reduceMotion ? false : { y: index * CARD_STEP, x: -24, rotateY: 22, scale: 0.94 }}
           exit={reduceMotion ? { opacity: 0 } : { opacity: 0, x: 48, scale: 0.92, transition: { duration: 0.18, ease: "easeIn" } }}
           animate={{
             // Depth, scale and a sideways step are left out, so every card is the same width and lines up.
