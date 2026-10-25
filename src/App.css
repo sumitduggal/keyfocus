@@ -122,7 +122,7 @@
   padding: 0 22px;
   box-sizing: border-box;
   border-bottom: 1px solid color-mix(in srgb, var(--accent) 15%, var(--border));
-  background: linear-gradient(180deg, color-mix(in srgb, var(--shade) 88%, transparent), color-mix(in srgb, var(--shade) 55%, transparent));
+  background: linear-gradient(180deg, color-mix(in srgb, var(--bg-deep) 94%, transparent), color-mix(in srgb, var(--bg-deep) 70%, transparent));
   backdrop-filter: blur(10px);
 }
 
@@ -300,7 +300,7 @@
   padding: 18px 16px 0;
   box-sizing: border-box;
   border-right: 1px solid color-mix(in srgb, var(--accent) 12%, var(--border));
-  background: linear-gradient(90deg, color-mix(in srgb, var(--shade) 74%, transparent), color-mix(in srgb, var(--shade) 18%, transparent));
+  background: linear-gradient(90deg, color-mix(in srgb, var(--bg-deep) 90%, transparent), color-mix(in srgb, var(--bg-deep) 30%, transparent));
 }
 
 .left-side.side-focused {
@@ -343,7 +343,7 @@
   padding: 18px 16px 0;
   box-sizing: border-box;
   border-left: 1px solid color-mix(in srgb, var(--accent) 12%, var(--border));
-  background: linear-gradient(270deg, color-mix(in srgb, var(--shade) 78%, transparent), color-mix(in srgb, var(--shade) 22%, transparent));
+  background: linear-gradient(270deg, color-mix(in srgb, var(--bg-deep) 90%, transparent), color-mix(in srgb, var(--bg-deep) 30%, transparent));
   overflow-y: auto;
   scrollbar-width: thin;
   scrollbar-color: var(--border-strong) transparent;
@@ -406,7 +406,7 @@
   padding: 0 22px;
   box-sizing: border-box;
   border-top: 1px solid var(--border);
-  background: linear-gradient(0deg, var(--panel), transparent);
+  background: linear-gradient(0deg, var(--bg-deep), transparent);
 }
 
 .key-hints {

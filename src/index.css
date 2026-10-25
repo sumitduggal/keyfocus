@@ -38,20 +38,20 @@
 
 /* Theme tokens. `data-theme` on <html> picks the palette; component CSS should
    only reference these variables, never a raw color. Values follow docs/design/DESIGN.md:
-   navy-black ground, cyan accent, amber reserved for warnings. */
+   neutral #202020 ground, cyan accent, amber reserved for warnings. */
 :root,
 [data-theme="dark"] {
   color-scheme: dark;
-  --bg: #03070c;
-  --bg-deep: #03070c;
-  --panel: rgba(6, 18, 30, 0.84);
-  --surface: #071a2a;
-  --surface-2: #0a2236;
-  --border: rgba(62, 200, 255, 0.18);
-  --border-strong: rgba(62, 200, 255, 0.35);
-  --text: #d6ecf7;
-  --text-muted: #9fc3d8;
-  --text-faint: #6d8ba0;
+  --bg: #202020;
+  --bg-deep: #1a1c1e;
+  --panel: rgba(38, 38, 38, 0.86);
+  --surface: #2a2a2a;
+  --surface-2: #333333;
+  --border: rgba(255, 255, 255, 0.12);
+  --border-strong: rgba(255, 255, 255, 0.26);
+  --text: #ececec;
+  --text-muted: #bdbdbd;
+  --text-faint: #9a9a9a;
   --accent: #3ec8ff;
   --accent-soft: rgba(62, 200, 255, 0.14);
   --accent-text: #8fdcff;
@@ -60,8 +60,8 @@
   --warm-soft: rgba(242, 180, 92, 0.12);
   --danger: #ff8a7a;
   --shade: #000000;
-  --overlay: rgba(3, 7, 12, 0.8);
-  --grid-line: rgba(62, 200, 255, 0.06);
+  --overlay: rgba(32, 32, 32, 0.8);
+  --grid-line: rgba(255, 255, 255, 0.04);
   --scan-line: rgba(255, 255, 255, 0.012);
   --glow: 0 0 24px rgba(62, 200, 255, 0.25);
   --shadow-card: 0 1px 0 rgba(255, 255, 255, 0.025), 0 18px 50px rgba(0, 0, 0, 0.5);
