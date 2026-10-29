@@ -3,22 +3,35 @@ import { motion, useReducedMotion } from "motion/react";
 import type { Theme } from "../types";
 import { alertSounds, playAlert } from "../settings";
 import type { Settings } from "../settings";
+import type { WorkspaceViewId } from "../workspace/view";
+import { workspaceViewMeta } from "../workspace/view";
 import { BookmarksSettings } from "./BookmarksSettings";
 
 interface SettingsPanelProps {
   theme: Theme;
   settings: Settings;
+  workspaceView: WorkspaceViewId;
   anchorY: number | null;
   onToggleTheme: () => void;
+  onWorkspaceViewChange: (view: WorkspaceViewId) => void;
   onChange: (patch: Partial<Settings>) => void;
   onClose: (restoreFocus: boolean) => void;
 }
 
+const workspaceViewIds: WorkspaceViewId[] = [
+  "operator",
+  "calm",
+  "immersive",
+  "overview",
+];
+
 export function SettingsPanel({
   theme,
   settings,
+  workspaceView,
   anchorY,
   onToggleTheme,
+  onWorkspaceViewChange,
   onChange,
   onClose,
 }: SettingsPanelProps) {
@@ -81,6 +94,43 @@ export function SettingsPanel({
           ×
         </button>
       </div>
+
+      <section
+        className="settings-workspace-view"
+        aria-labelledby="workspace-view-heading"
+      >
+        <b id="workspace-view-heading">Workspace view</b>
+        <div
+          className="workspace-view-choices"
+          role="group"
+          aria-labelledby="workspace-view-heading"
+        >
+          {workspaceViewIds.map((view) => (
+            <button
+              key={view}
+              className="workspace-view-choice"
+              type="button"
+              aria-pressed={workspaceView === view}
+              aria-labelledby={`workspace-view-${view}-label`}
+              aria-describedby={`workspace-view-${view}-description`}
+              onClick={() => onWorkspaceViewChange(view)}
+            >
+              <span
+                className="workspace-view-choice-label"
+                id={`workspace-view-${view}-label`}
+              >
+                {workspaceViewMeta[view].label}
+              </span>
+              <span
+                className="workspace-view-choice-description"
+                id={`workspace-view-${view}-description`}
+              >
+                {workspaceViewMeta[view].description}
+              </span>
+            </button>
+          ))}
+        </div>
+      </section>
 
       <div className="settings-pair">
         <div className="settings-row">

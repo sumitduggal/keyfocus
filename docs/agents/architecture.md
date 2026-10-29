@@ -1,107 +1,108 @@
 # Architecture
 
-Keyfocus is a **keyboard-first focus workspace**: a single-page React app that renders a three-side canvas of frames and moves focus between them with the keyboard. It is client-only — no backend, no router, no tests — and ships as a static Vite build.
+Keyfocus is a **keyboard-first focus workspace**: a React + Vite single-page app with one active frame, a recency-ordered stack and shared feature state. Workspace data is stored locally in the browser; there is no account, cloud sync or router. Optional network integrations include bookmark metadata through `/api/og`, weather and radio search. Vocabulary for the domain terms used here is in `CONTEXT.md`.
 
-Everything of substance lives in `src/App.tsx` (~440 lines). There is no component split or feature folder; read that one file to understand the app. Vocabulary for the domain terms used here is in `CONTEXT.md`.
+The Phase 1 extraction is in place. `src/App.tsx` is now a one-line re-export of `src/workspace/WorkspaceApp.tsx`; the application is split between workspace orchestration, a view adapter, shared components and feature modules.
 
-## Layout
+## Entry points and workspace views
 
-Three DOM regions over a fixed-viewport canvas (`.stage` / `.canvas`):
+`src/main.tsx` runs saved-state migration and mounts `App` in `StrictMode`. In development only, any URL with a `?variant=` parameter mounts `DesignPrototype` instead. This is still the throwaway prototype route for the approved mock directions, not a production view adapter. Production ignores `?variant=` and mounts the real app.
 
-| Side | Element | Role |
+The current production path is:
+
+```text
+src/main.tsx
+  └── src/App.tsx
+        └── src/workspace/WorkspaceApp.tsx
+              state, actions, persistence and global keyboard orchestration
+              └── WorkspaceView snapshot/actions interface
+                    └── src/workspace/views/OperatorConsole.tsx
+```
+
+- `WorkspaceApp.tsx` owns frames, active-frame selection, focus state, settings, todo and habit state, trash, persistence and commands. It also subscribes to the app-wide Pomodoro, reminders and bookmark stores, assembles the `WorkspaceView` value and installs the global keyboard listener.
+- The `WorkspaceView` interface is currently exported from `WorkspaceApp.tsx`. It is the snapshot-and-actions seam between orchestration and presentation: adapters receive derived data, refs, registration callbacks and event actions rather than owning feature state or persistence.
+- `OperatorConsole.tsx` is the only production adapter. It renders the existing three-side design through `Mainframe`, `Stack`, `Dock`, `FeaturePanel`, `SettingsPanel`, `CommandPalette` and the reminder/music components.
+- `src/workspace/view.ts` defines `WorkspaceViewId` (`operator`, `calm`, `immersive`, `overview`), the operator default and picker metadata. `src/workspace/view-setting.ts` loads and saves the selection. Missing, unknown, damaged or inaccessible stored values fall back to `operator`.
+
+Settings presents all four view choices. The choice persists under **`focus-space-workspace-view`**, independently of appearance, and is restored on reload. However, `WorkspaceApp` currently returns `<OperatorConsole workspace={workspace} />` unconditionally: choosing Calm Workspace, Immersive Focus or Daily Overview saves the ID but does not yet change the rendered layout. Those adapters are planned, not shipped.
+
+## Operator Console layout
+
+The adapter renders a fixed-viewport `.stage` / `.canvas` with these regions:
+
+| Region | Component or element | Role |
 |---|---|---|
-| left | `<aside class="side-region left-side">` (`App.tsx:379`) | The **stack** — an animated 3D card stack of every non-active frame (`.frame-stack`, one `motion.div` per frame at `383`). |
-| main | `<section class="side-region main-side">` (`391`) | The **active frame**, rendered by `FrameCard`. |
-| right | `<aside class="side-region right-side">` (`396`) | The dock: Profile, feature links, Settings, Log out. |
-| overlay | feature flyout aside (`404`) | Lists the frames of one feature. |
-| overlay | command palette (`427`–`442`) | The ⌘K command input and menu. |
+| left | `Stack` inside `.left-side` | Promotable previews of non-active, non-parked frames; can collapse to a rail. |
+| main | `Mainframe` inside `.main-side` | The active feature editing surface. |
+| right | `Dock` inside `.right-side` | Visible feature navigation, Now Playing and Settings; can collapse to a rail. |
+| overlays | `FeaturePanel`, `SettingsPanel`, `CommandPalette` | Frame selection/creation, preferences, commands, search and Recently deleted. |
+| status | header, footer, `ReminderBanner`, overdue and Undo banners | Timer/weather/reminder status, keyboard hints and transient actions. |
 
-`src/main.tsx` mounts `App` in `StrictMode`. During development, `?variant=A`, `B`, or `C` mounts the throwaway `DesignPrototype` instead; production always mounts `App`.
+`visibleFeatures` in `src/constants.ts` controls the dock and command list. Notes and Focus Music remain valid frame types but are not currently visible dock features. Existing Notes frames remain available through the stack and search. Focus Music playback lives in the dock's app-wide `NowPlaying` control.
 
-## Domain types
+## Domain and feature modules
 
-Declared at `App.tsx:16-19`:
+`src/types.ts` declares `Feature`, `Command`, `Side`, `Theme` and `WorkspaceFrame`. `src/constants.ts` supplies feature metadata, the initial Pomodoro frame, visible/single-frame feature sets and shared storage keys.
 
-- `Feature` — the six feature kinds. `Command` adds `'Search'`. `Side` is `'left' | 'main' | 'right'`.
-- `WorkspaceFrame` — `{ id, feature, title, eyebrow, description, details }`.
-- `featureMeta` (`21-28`) — per-feature glyph, description, and default frame content.
+`Mainframe` routes the active frame to real feature implementations:
 
-## Rendering a frame
+| Feature | Implementation |
+|---|---|
+| Pomodoro | Timer controls in `Mainframe`, app-wide state in `pomodoro.ts`, and Focus Log charts in `FocusStats`. |
+| Todo List | `TodoFrame`, with parsing, nesting, ordering, filtering and recovery logic in the todo modules. |
+| Habits | `HabitsFrame`, backed by per-frame habit state in `WorkspaceApp`. |
+| Reminders | `RemindersFrame` and the app-wide scheduler/store in `reminders-store.ts`. |
+| Bookmarks | `BookmarksFrame` and `bookmarks-store.ts`; Settings also exposes import/export. |
+| Notes | An Editor.js document in `Mainframe`; the editor and its tools load dynamically only for a Notes frame. |
+| Focus Music | App-wide `NowPlaying` playback in the dock rather than a second player owned by the active frame. |
 
-`FrameCard` (`33-110`) branches on `frame.feature`:
+`FramePreview` and `frame-summary.ts` derive compact stack previews from the same feature data. Feature behavior is implemented in these shared modules, not in `OperatorConsole`.
 
-- **pomodoro** → timer view (`93`).
-- **notes** → Editor.js host (`101`).
-- **anything else** → a generic frame: eyebrow, title, description, and the static `details` list (`104`). habits, reminders, focus music, and todo list all land here, so they are placeholders.
+## Keyboard and focus model
 
-## The keyboard and focus model
+Focus has two levels. `focusedSide` identifies `left`, `main` or `right`; `withinSide` distinguishes focus on the region from focus inside one of its controls. Enter steps into a region and Escape backs out through the command bar/current interaction. Refs registered by the adapter let `WorkspaceApp` restore focus to stack cards, dock items, feature entries and the active frame after rendering.
 
-This is the heart of the app and the part most likely to surprise you.
+The global listener in `WorkspaceApp` owns the shortcut order and behavior:
 
-Focus is a **two-level model**. `focusedSide` (`124`) says which side owns focus; `withinSide` (`125`) says whether focus is on the side itself or has stepped *into* an item inside it. Enter steps down a level; Escape steps back out.
+- **⌘/Ctrl+K** opens the command palette; **⌘/Ctrl+Shift+L** toggles appearance.
+- **⌘/Ctrl+Z** invokes the current workspace Undo action outside text inputs and editable editors.
+- **Alt+←/→** moves between stack, active frame and dock; **↑/↓** moves within the stack or dock.
+- **Enter** steps into a side, promotes a highlighted stack frame or activates a dock item.
+- **Alt+1…9** promotes the corresponding visible stack frame.
+- **Delete/Backspace** deletes the highlighted stack frame when focus is within the stack.
+- **Tab/Shift+Tab** cycles focus within the current side while focus is inside that side.
 
-Focus position is held as state, one index per region:
+Feature panels, Settings, text inputs, the command input and editable feature controls have their own handling where appropriate. Global navigation must not steal those interactions.
 
-- `stackFocusIndex` (`123`) — highlighted frame in the left stack (-1 = none).
-- `rightFocusIndex` (`131`) — dock item; 0 = Profile, 1..6 = features, 7 = Settings, 8 = Log out (mapping at `264-268` and `366`).
-- `menuFocusIndex` (`129`) — highlighted command or search result.
-- `entryFocusIndex` (`134`) — highlighted row in the feature flyout.
+**Promotion** reorders frames so the selected frame becomes active and the previous active frame follows it in recency order. `stackedFrames` excludes the active frame and frames parked by `stack-expiry.ts`; parking hides a long-stacked frame from the stack without deleting it. Stack deletion routes through the same frame deletion and Undo/trash path as other deletion controls.
 
-One global `keydown` listener (`199-305`) drives everything, and its order matters:
+## Commands, panels and persistence
 
-1. **⌘/Ctrl+K** — open the command palette (`201-210`).
-2. **Escape** — close the menu and drop focus back to the main side (`211-219`).
-3. If the feature flyout is open it handles its own keys — return (`220`).
-4. If the palette is open or the target is an input, return (`221`).
-5. **Backspace/Delete** on a highlighted stack frame removes it (`222-238`).
-6. **Alt+←/→** moves the focused side, stepping into the stack when entering left (`239-251`).
-7. **↑/↓** moves within the stack (`252-261`) or the dock (`262-271`).
-8. **Enter** (`272-301`): if not yet `withinSide`, step into the focused side; otherwise, on the left stack, **promote** the highlighted frame into main; on the right dock, open the feature (pomodoro opens directly, the rest open the flyout).
+`CommandPalette` supports feature commands, frame search and Recently deleted. Single-frame features open or create their one frame directly; multi-instance features use a frame-selection/create menu or `FeaturePanel`. The adapter supplies the command bar host, while `WorkspaceApp` owns query, menu mode, highlighted row and selection actions.
 
-**Promotion** (`287-296`) is the app's central gesture: it reorders `frames` so the chosen frame is first and the previously active frame takes second place, then makes the chosen frame active. The stack is therefore a recency-ordered list, and `stackedFrames` (`149`) is just `frames` minus the active one.
-
-Focus is applied with `requestAnimationFrame` after state updates so the target node exists before `.focus()` is called (e.g. `176`).
-
-## Command palette
-
-`runCommand` (`307-324`) creates a frame from `featureMeta[command]` and prepends it; `Search` flips `searchMode` on. `visibleCommands` (`150`) filters the fixed command list; `searchResults` (`151`) filters existing frames. `commandKeyDown` (`326-354`) handles arrow/enter/escape for both modes. Selection is reflected with ARIA (`aria-activedescendant`, `role="menu"`; `428`, `436`).
-
-## Feature flyout
-
-`openFeaturePanel` (`356-362`) stores the feature and its anchor Y so the flyout sits beside the clicked dock item. A `focusin` listener (`184-198`) closes the flyout when focus leaves it. Arrow keys, Escape, and Tab-wrapping are handled on the aside (`404-422`).
-
-## Notes frame — Editor.js
-
-When `frame.feature === 'notes'`, `FrameCard` (`40-62`) instantiates Editor.js into `editorHost`. It loads `noteBody` as saved `OutputData` JSON, or falls back to one paragraph block per line. Tools: header, list, quote, checklist, image (uploads become base64 data URLs via `FileReader`, `53`), inline code, code, link, marker. `onChange` saves `editor.save()` JSON through `noteChangeRef` (`38`, `59`). The editor is destroyed on cleanup after `isReady` (`62`).
-
-The notes frame previously used CodeMirror and now uses Editor.js; `docs/adr/` records the surrounding decisions.
-
-## Pomodoro frame
-
-State at `64-66`; the tick interval at `79-85`; a Web Audio beep on completion (`68-78`). Presets and the custom field call `chooseTimer` (`88`). Duration persists to `localStorage` (`87`).
-
-## Persistence
-
-Three keys, each read in a `useState` initializer and written from a `useEffect`:
-
-| Key | Holds | Read | Write |
-|---|---|---|---|
-| `focus-space-frames` | the frame list | `117-121` | `165` |
-| `focus-space-note-bodies` | note JSON per frame id | `135-138` | `166` |
-| `focus-space-pomodoro-duration` | minutes | `64-65` | `87` |
-
-Frames are migrated on load by merging saved partials over `initialFrame` (`119-120`). There is no server — see `docs/adr/0002`.
+`WorkspaceApp` persists frames, note bodies, todos, habits, todo view preferences, trash, settings, theme, collapsed rails and the selected workspace view. Feature modules own additional stores and migrations, including Pomodoro duration, Focus Log, reminders/nudges, bookmarks and music/radio preferences. Storage reads generally tolerate missing or damaged values. Timer, scheduler and playback coordination are app-wide rather than tied to whichever frame is active.
 
 ## Styling
 
-- `src/index.css` — font and reset basics.
-- `src/App.css` — all app styles. It is **minified** (several rules per line) and has grown by appending later rules that override earlier ones: `.right-side` appears at lines 4, 9 and 16; `.feature-links` at 9, 12 and 13; `.note-frame` at 9 and 21. Later wins, so when editing a selector find its **last** definition.
+- `src/index.css` contains global font/reset basics.
+- `src/App.css` contains the current application and Operator Console layout styles.
+- `src/components.css` contains shared component and feature styles.
+- `src/components/DesignPrototype.css` belongs only to the development prototype.
 
-## Known loose ends
+The planned design-system phase will separate view-owned accents/structure from dark/light neutral tokens and split these styles into scoped base, chrome, feature and view files. That token and file split has not landed yet.
 
-- **Placeholder features**: only notes and pomodoro do anything; habits, reminders, focus music, and todo list render the generic frame.
-- **Settings is inert**: the Settings button only flips its own label (`compactMode`, `126`); it has no effect on layout or behaviour.
-- **Stock template leftovers**: `README.md` is the untouched Vite template.
-- `src/editorjs.d.ts` hand-declares three Editor.js modules that ship without types.
-- No tests, no CI, and no lint rules beyond `.oxlintrc.json`. Scripts are the standard Vite set — see `package.json`.
-- `docs/design/untitled.pen` is a design file (Penpot), not code.
+## Tests and checks
+
+The project has both unit and browser coverage; it is not a no-test prototype. `npm test` runs Vitest (excluding `e2e/`) and then Playwright. Feature tests cover stores, parsing, migrations, timers, habits, reminders, bookmarks, music and other behavior; `src/workspace/view-setting.test.ts` covers workspace-view loading and saving. Browser specifications under `e2e/` exercise the real app, including keyboard and feature flows.
+
+Use `npm run build` for the production TypeScript/Vite build and `npm run lint` for Oxlint. `npm run e2e` runs Playwright alone.
+
+## Rollout status and approved next steps
+
+Phase 1 established the seam without replacing the current design. The remaining approved work is:
+
+1. **Phase 2:** add shared view/theme tokens, scoped styles, configurable palette placement and cross-view smoke tests; preserve the existing keyboard semantics.
+2. **Phases 3–5:** implement Calm Workspace, Immersive Focus and Daily Overview as real adapters over `WorkspaceView`, reusing shared frames, stores and actions. Non-default adapters are planned to be lazy-loaded.
+3. **Phase 6:** after feature parity, remove the development-only `?variant=` gate and `DesignPrototype`, finish design documentation and record the shared-state/four-adapter decision.
+
+Until those phases land, do not describe the picker as a working four-layout switch or the prototype variants as production views. See `docs/design/design-rollout-plan.md` for acceptance criteria and `docs/design/feature-guide.md` for current feature behavior and planned presentation.

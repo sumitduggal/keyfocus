@@ -19,7 +19,7 @@ test('adds a habit with a weekly target', async ({ page }) => {
 
 test('ticking a day updates weekly progress and persists', async ({ page }) => {
   await add(page, 'Stretch')
-  await page.getByRole('group', { name: 'Stretch this week' }).getByRole('button').first().click()
+  await page.getByRole('group', { name: 'Stretch this week' }).getByRole('button', { disabled: false }).first().click()
   await expect(page.getByLabel(/^1 of \d this week$/)).toBeVisible()
   await page.reload()
   await dock(page, 'Habits').click()

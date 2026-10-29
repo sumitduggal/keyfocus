@@ -3,7 +3,7 @@
 Status: living document  
 Companion: [Four workspace views: implementation plan](design-rollout-plan.md)
 
-This guide describes what each feature does and how the four workspace views present it. Feature behaviour is shared across views; the visual layout changes, not the underlying data or rules.
+This guide describes current feature behaviour and the approved presentation for the four workspace views. **Only Operator Console is currently a production adapter.** Calm Workspace, Immersive Focus and Daily Overview below are planned designs, not shipped layouts. Their shared-state behaviour and cross-view continuity are rollout requirements, not claims about the current UI.
 
 ## Core concepts
 
@@ -18,20 +18,22 @@ Keyfocus is a **keyboard-first focus workspace**.
 
 Promotion is deliberately not just a tab switch. It changes the order of the person's recent context.
 
-## The four views
+## The four views: current and planned
 
-| View | What it is for | How it presents features |
+| View | Status | Purpose and presentation |
 |---|---|---|
-| **Operator Console** | Dense control and keyboard navigation | The current three-side canvas: stack, active frame and dock. |
-| **Calm Workspace** | Quiet everyday work | A large active frame with feature/recent navigation on the left and useful context on the right. |
-| **Immersive Focus** | One thing at a time | A central timer or active frame, compact feature dock, latest-opened stack and top-right music control. |
-| **Daily Overview** | Planning and reviewing | Read-only summary tiles for focus, todos, habits, reminders, notes, music and bookmarks; each tile opens the real feature. |
+| **Operator Console** | **Current production adapter** | Dense keyboard navigation on the current three-side canvas: stack, active frame and dock. |
+| **Calm Workspace** | Planned | A quieter everyday workspace: a large active frame with feature/recent navigation on the left and useful context on the right. |
+| **Immersive Focus** | Planned | One thing at a time: a central timer or active frame, compact feature dock, latest-opened stack and top-right music control. |
+| **Daily Overview** | Planned | Planning and reviewing through read-only summary tiles for focus, todos, habits, reminders, notes, music and bookmarks; each tile opens the real feature. |
 
-The approved mock layouts are prototypes. The production versions use the real stores and actions described below, not sample data or local preview state.
+The approved mock layouts remain available through the development-only `?variant=` prototype route. They are not production adapters and do not establish feature parity. The planned production versions will use the real stores and actions described below, not sample data or local preview state.
+
+In every **Presentation** section below, Operator Console describes current behavior. Descriptions of the other three views are planned behavior.
 
 ## Global keyboard behaviour
 
-These shortcuts belong to the workspace and remain consistent across views:
+These shortcuts belong to the current workspace. Preserving their meanings is a requirement for every planned adapter:
 
 | Key | Behaviour |
 |---|---|
@@ -59,14 +61,14 @@ Feature-specific shortcuts are listed below. Compact views may move the controls
 
 ### Persistence and continuity
 
-The selected duration and alert settings persist. The timer store is app-wide, so switching frames or views does not create a second timer.
+The selected duration and alert settings persist. The timer store is app-wide, so switching frames does not create a second timer. Planned adapters must subscribe to this same store so future view switches cannot create one either.
 
-### View treatment
+### Presentation: current and planned
 
-- **Operator Console:** the active Pomodoro frame contains the dial, controls and Focus Log.
-- **Calm Workspace:** the timer sits in a calm central focus card; current intention and priorities sit beside it.
-- **Immersive Focus:** the circular timer is the primary visual object.
-- **Daily Overview:** a timer tile shows current state and opens or promotes the Pomodoro frame for full controls.
+- **Operator Console (current):** the active Pomodoro frame contains the dial, controls and Focus Log.
+- **Calm Workspace (planned):** the timer sits in a calm central focus card; current intention and priorities sit beside it.
+- **Immersive Focus (planned):** the circular timer is the primary visual object.
+- **Daily Overview (planned):** a timer tile shows current state and opens or promotes the Pomodoro frame for full controls.
 
 ## Todo List
 
@@ -105,9 +107,12 @@ Prepare design review !high @tomorrow ~9:30
 - Recently deleted is available from ⌘K when it contains entries.
 - Per-list order, nesting, sort and filter choices persist.
 
-### View treatment
+### Presentation: current and planned
 
-The active Todo frame is the editing surface in Operator Console, Calm Workspace and Immersive Focus. Calm also uses open todos for its priorities context. Daily Overview shows a read-only priority summary and opens the real list for edits.
+- **Operator Console (current):** the active Todo frame is the editing surface.
+- **Calm Workspace (planned):** the active Todo frame remains the editing surface, with open todos also feeding the priorities context.
+- **Immersive Focus (planned):** the active Todo frame remains the editing surface.
+- **Daily Overview (planned):** a read-only priority summary opens the real list for edits.
 
 ## Habits
 
@@ -122,9 +127,11 @@ The active Todo frame is the editing surface in Operator Console, Calm Workspace
 - An optional daily nudge alerts only while the habit is not yet done that day.
 - Habits can be archived, restored or deleted from the archived section.
 
-### View treatment
+### Presentation: current and planned
 
-The active Habits frame owns editing and history. Immersive Focus uses a compact weekly rhythm; Daily Overview summarizes the same habit data without maintaining a separate streak calculation.
+- **Operator Console (current):** the active Habits frame owns editing and history.
+- **Immersive Focus (planned):** a compact weekly rhythm presents the same data.
+- **Daily Overview (planned):** a summary uses the same habit data without maintaining a separate streak calculation.
 
 ## Reminders
 
@@ -152,9 +159,12 @@ It also accepts `!high`, `!medium`, `!low` and `@` date tokens. The preview show
 - The frame groups items as Overdue, Today, Tomorrow, This week and Later, with Done collapsed.
 - Todo reminders follow their item's text, priority and time. Habit nudges appear as overdue prompts when missed.
 
-### View treatment
+### Presentation: current and planned
 
-The active Reminders frame owns editing, snoozing and done history. Calm Workspace and Daily Overview show upcoming reminders as context. Immersive Focus presents a compact reminder list without changing scheduler behaviour.
+- **Operator Console (current):** the active Reminders frame owns editing, snoozing and done history.
+- **Calm Workspace (planned):** upcoming reminders appear as context.
+- **Immersive Focus (planned):** a compact reminder list uses the same scheduler behaviour.
+- **Daily Overview (planned):** upcoming reminders appear as summary context.
 
 ## Notes
 
@@ -168,9 +178,11 @@ The active Reminders frame owns editing, snoozing and done history. Calm Workspa
 
 Notes are not currently in the visible dock feature list, but existing note frames remain available through search and the stack.
 
-### View treatment
+### Presentation: current and planned
 
-Notes use the active frame as the editing surface. Latest Opened in Immersive Focus can promote a Notes frame. Daily Overview shows a recent excerpt and opens the real editor rather than embedding a second editor in a tile.
+- **Operator Console (current):** the active Notes frame is the editing surface.
+- **Immersive Focus (planned):** Latest Opened can promote a Notes frame into the same editing role.
+- **Daily Overview (planned):** a recent excerpt opens the real editor rather than embedding a second editor in a tile.
 
 ## Focus Music and Now Playing
 
@@ -184,14 +196,14 @@ Notes use the active frame as the editing surface. Latest Opened in Immersive Fo
 
 ### Persistence and continuity
 
-Sound choices, track choice, loop and volumes persist. Playback itself starts paused after reload. The player is app-wide, so audio continues when the active frame or workspace view changes.
+Track choice, loop and volumes persist. Playback itself starts paused after reload. The player is app-wide, so audio continues when the active frame changes. Planned adapters must reuse this player so future view switches do not interrupt playback.
 
-### View treatment
+### Presentation: current and planned
 
-- **Operator Console:** Now Playing sits in the dock.
-- **Calm Workspace:** a compact soundscape control sits in the context area.
-- **Immersive Focus:** Now Playing sits in the top-right beside Settings, leaving the bottom-left for Latest Opened.
-- **Daily Overview:** a music tile shows the current track and opens playback options.
+- **Operator Console (current):** Now Playing sits in the dock.
+- **Calm Workspace (planned):** a compact soundscape control sits in the context area.
+- **Immersive Focus (planned):** Now Playing sits in the top-right beside Settings, leaving the bottom-left for Latest Opened.
+- **Daily Overview (planned):** a music tile shows the current track and opens playback options.
 
 ## Bookmarks
 
@@ -212,14 +224,16 @@ Sound choices, track choice, loop and volumes persist. Playback itself starts pa
 - Trash keeps deleted bookmarks for seven days; entries can be restored before purging.
 - Settings provides bookmark import/export.
 
-### View treatment
+### Presentation: current and planned
 
-The Bookmarks frame owns the full library. Immersive Focus shows a compact library view; Daily Overview should show a small recent/favourite summary and open the full frame for organization or bulk actions.
+- **Operator Console (current):** the Bookmarks frame owns the full library.
+- **Immersive Focus (planned):** a compact library view presents the same bookmarks.
+- **Daily Overview (planned):** a small recent/favourite summary opens the full frame for organization or bulk actions.
 
 ## Settings and supporting controls
 
-- **Workspace view:** chooses Operator Console, Calm Workspace, Immersive Focus or Daily Overview; persists independently of appearance.
-- **Appearance:** dark/light theme; the four views use their own accent tokens with shared contrast rules.
+- **Workspace view:** Settings currently shows a four-choice picker. The selection persists under `focus-space-workspace-view`, independently of appearance, with Operator Console as the default. Only Operator Console is wired to a production adapter today; choosing another option saves and restores its ID but still renders Operator Console until that adapter is implemented.
+- **Appearance:** dark/light theme is a separate current setting. Planned views will use their own accent tokens with shared contrast rules.
 - **Temperature:** chooses Celsius or Fahrenheit for the weather readout.
 - **Timer alert:** chooses sound and volume, with a preview action.
 - **Bookmark data:** import and export from Settings.
@@ -228,6 +242,6 @@ Weather, bookmark metadata and radio search may make network requests. Feature d
 
 ## Design and implementation rule
 
-If a control looks different in another view, it should still call the same underlying action. A view may summarize or reposition a feature, but it must not fork its data, timer, scheduler, parser, persistence or keyboard semantics.
+This is the rule for the planned adapters: if a control looks different in another view, it must still call the same underlying action. A view may summarize or reposition a feature, but it must not fork its data, timer, scheduler, parser, persistence or keyboard semantics.
 
 For the implementation sequence and acceptance criteria, see [the rollout plan](design-rollout-plan.md).
