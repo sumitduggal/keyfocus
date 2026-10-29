@@ -16,7 +16,7 @@ Three DOM regions over a fixed-viewport canvas (`.stage` / `.canvas`):
 | overlay | feature flyout aside (`404`) | Lists the frames of one feature. |
 | overlay | command palette (`427`–`442`) | The ⌘K command input and menu. |
 
-`src/main.tsx` mounts `App` in `StrictMode`.
+`src/main.tsx` mounts `App` in `StrictMode`. During development, `?variant=A`, `B`, or `C` mounts the throwaway `DesignPrototype` instead; production always mounts `App`.
 
 ## Domain types
 
