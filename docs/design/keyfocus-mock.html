@@ -1,0 +1,297 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>KeyFocus mock</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  /* Palette from the reference images: slate-teal ground, pale grey type, olive-gold lines, mint highlight. */
+  :root {
+    --bg: #0f181d;
+    --bg-glow: #15232a;
+    --panel: rgba(28, 43, 51, 0.9);
+    --surface: #1d2f37;
+    --border: rgba(214, 226, 230, 0.1);
+    --border-strong: rgba(214, 226, 230, 0.22);
+    --text: #e8eff1;
+    --text-muted: #a3b5bd;
+    --text-faint: #6f8790;
+    --gold: #d6cc8c;
+    --gold-soft: rgba(214, 204, 140, 0.14);
+    --mint: #3fe0a8;
+    --mint-soft: rgba(63, 224, 168, 0.14);
+    /* One rounded geometric sans, as in the reference, for labels, numbers and titles. */
+    --font: Outfit, "Helvetica Neue", Arial, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  body {
+    background: radial-gradient(120% 80% at 70% 0%, var(--bg-glow), var(--bg) 60%);
+    color: var(--text);
+    font: 14px/1.45 var(--font);
+    overflow: hidden;
+  }
+
+  /* Side panels are a fixed 220px; the middle takes the rest. */
+  .app {
+    display: grid;
+    grid-template-columns: 220px minmax(0, 1fr) 220px;
+    grid-template-rows: auto minmax(0, 1fr);
+    gap: 20px;
+    height: 100vh;
+    padding: 20px 24px;
+  }
+
+  /* Top bar: brand, centred tabs, icon buttons. */
+  .topbar { grid-column: 1 / -1; display: grid; grid-template-columns: 220px 1fr 220px; align-items: center; gap: 20px; }
+  .brand { font: 700 18px var(--font); letter-spacing: 0.22em; color: var(--text); }
+  .brand span { color: var(--gold); }
+  .tabs {
+    justify-self: center;
+    display: flex;
+    gap: 4px;
+    padding: 6px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.03);
+  }
+  .tabs a {
+    padding: 8px 18px;
+    border-radius: 8px;
+    color: var(--text-muted);
+    text-decoration: none;
+    font-weight: 500;
+  }
+  .tabs a.on { background: var(--surface); color: var(--text); }
+  .icons { justify-self: end; display: flex; gap: 8px; }
+  .icon {
+    width: 36px; height: 36px; display: grid; place-items: center;
+    border: 1px solid var(--border); border-radius: 10px;
+    background: rgba(255, 255, 255, 0.03); color: var(--text-muted);
+  }
+
+  /* Left: frames stacked, all the same width and spacing. */
+  .stack { position: relative; min-height: 0; }
+  .card {
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 150px;
+    padding: 12px 14px;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    background: linear-gradient(160deg, rgba(40, 60, 70, 0.9), var(--panel));
+    box-shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
+  }
+  .card h3 { margin: 0 0 4px; font: 600 18px var(--font); }
+  .card p { margin: 0; color: var(--text-muted); font-size: 13px; }
+  .card.front { top: 0; }
+  .card.back-1 { top: 170px; }
+  .card.back-2 { top: 340px; }
+  .card .line-art { position: absolute; right: 12px; bottom: 12px; }
+
+  /* Middle: the active frame, plus a status strip under it. */
+  .center { display: flex; flex-direction: column; gap: 14px; min-width: 0; min-height: 0; }
+  .main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    padding: 22px 26px;
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    background: linear-gradient(180deg, rgba(34, 52, 61, 0.7), rgba(16, 26, 31, 0.9));
+  }
+  .eyebrow { font: 500 11px var(--font); letter-spacing: 0.16em; color: var(--text-faint); text-transform: uppercase; }
+  .title { font: 600 32px/1.1 var(--font); margin: 6px 0 4px; }
+  .sub { color: var(--text-muted); margin: 0 0 18px; }
+  .progress { height: 4px; border-radius: 4px; background: var(--border); overflow: hidden; margin-bottom: 18px; }
+  .progress span { display: block; height: 100%; width: 56%; background: linear-gradient(90deg, var(--gold), var(--mint)); }
+  .row {
+    display: grid;
+    grid-template-columns: 22px 1fr auto;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 14px;
+    margin-bottom: 8px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.02);
+  }
+  .row.active { border-color: rgba(63, 224, 168, 0.45); background: var(--mint-soft); }
+  .check {
+    width: 18px; height: 18px; border-radius: 50%;
+    border: 1.5px solid var(--border-strong);
+    display: grid; place-items: center; font-size: 11px; color: var(--mint);
+  }
+  .check.done { border-color: var(--mint); background: var(--mint-soft); }
+  .tag { color: var(--gold); font-size: 12px; font-weight: 500; }
+  .meta { color: var(--text-faint); font-size: 12px; }
+  .timer { flex: 1; display: grid; place-items: center; text-align: center; min-height: 0; }
+  .timer .clock { font: 600 64px var(--font); letter-spacing: 0.02em; margin-top: -40px; }
+  .timer .label { color: var(--text-muted); font-size: 12px; letter-spacing: 0.2em; text-transform: uppercase; }
+
+  /* Status strip: three tiles with a percentage and a thin bar. */
+  .strip { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  .stat { padding: 12px 14px; border: 1px solid var(--border); border-radius: 12px; background: rgba(255, 255, 255, 0.025); }
+  .stat .top { display: flex; justify-content: space-between; color: var(--text-muted); font-size: 12px; margin-bottom: 8px; }
+  .stat .top b { color: var(--text); font-weight: 600; }
+  .stat .bar { height: 3px; background: var(--border); border-radius: 3px; overflow: hidden; }
+  .stat .bar span { display: block; height: 100%; background: var(--gold); }
+  .stat .bar span.mint { background: var(--mint); }
+
+  /* Right: control dock. */
+  .dock {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-height: 0;
+    padding: 12px;
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    background: var(--panel);
+  }
+  .dock-head { font: 500 11px var(--font); letter-spacing: 0.16em; color: var(--text-faint); text-transform: uppercase; margin-bottom: 6px; }
+  .profile { display: flex; align-items: center; gap: 10px; padding: 8px; border-radius: 10px; background: var(--surface); }
+  .avatar { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; font: 600 12px var(--font); background: var(--gold-soft); color: var(--gold); border: 1px solid rgba(214, 204, 140, 0.35); }
+  .profile b { display: block; font-weight: 600; }
+  .profile small, .item small { color: var(--text-faint); font-size: 12px; }
+  .item {
+    display: grid;
+    grid-template-columns: 26px 1fr auto;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 6px;
+    border-radius: 10px;
+    border: 1px solid transparent;
+  }
+  .item.active { border-color: rgba(63, 224, 168, 0.4); background: var(--mint-soft); }
+  .item .glyph { color: var(--gold); font-size: 16px; text-align: center; }
+  .item b { display: block; font-weight: 600; }
+  .item .chev { color: var(--text-faint); }
+  .section { font: 500 11px var(--font); letter-spacing: 0.14em; color: var(--text-faint); margin: 12px 4px 4px; text-transform: uppercase; }
+
+  .now {
+    margin-top: 8px;
+    padding: 10px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.025);
+  }
+  .now .track { font-size: 13px; font-weight: 500; white-space: nowrap; overflow: hidden; margin-bottom: 8px; }
+  .now .controls { display: flex; gap: 6px; align-items: center; }
+  .btn {
+    width: 30px; height: 30px; display: grid; place-items: center;
+    border: 1px solid var(--border-strong); border-radius: 8px;
+    background: transparent; color: var(--text-muted); font: 12px var(--font);
+  }
+  .btn.play { border-color: var(--mint); color: var(--mint); background: var(--mint-soft); }
+  .wave { display: flex; align-items: flex-end; gap: 2px; height: 14px; margin-left: auto; }
+  .wave i { width: 3px; background: var(--gold); border-radius: 2px; }
+
+  .foot { margin-top: auto; border-top: 1px solid var(--border); padding-top: 10px; }
+
+  @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- Top bar -->
+  <header class="topbar">
+    <div class="brand">KEY<span>FOCUS</span></div>
+    <nav class="tabs" aria-label="Sections">
+      <a class="on" href="#">Focus</a>
+      <a href="#">Todo</a>
+      <a href="#">Music</a>
+      <a href="#">Notes</a>
+    </nav>
+    <div class="icons">
+      <span class="icon" aria-hidden="true">◉</span>
+      <span class="icon" aria-hidden="true">▣</span>
+      <span class="icon" aria-hidden="true">➤</span>
+      <span class="icon" aria-hidden="true">⚙</span>
+    </div>
+  </header>
+
+  <!-- Left: stacked frames -->
+  <section class="stack" aria-label="Frames">
+    <div class="card front">
+      <div class="eyebrow">Pomodoro · 01</div>
+      <h3 style="margin-top:6px">Deep work</h3>
+      <p>25:00 work · 4 rounds</p>
+      <svg class="line-art" width="110" height="76" viewBox="0 0 120 90" fill="none" stroke="#d6cc8c" stroke-opacity="0.7" stroke-width="1">
+        <ellipse cx="60" cy="45" rx="50" ry="22" transform="rotate(-18 60 45)" />
+        <ellipse cx="60" cy="45" rx="38" ry="30" transform="rotate(24 60 45)" />
+        <ellipse cx="60" cy="45" rx="26" ry="14" transform="rotate(-40 60 45)" />
+        <circle cx="92" cy="30" r="2.5" fill="#3fe0a8" stroke="none" />
+        <circle cx="60" cy="45" r="3" fill="#e8eff1" stroke="none" />
+      </svg>
+    </div>
+    <div class="card back-1"><h3>Reminders</h3><p>Call Alex · Today</p></div>
+    <div class="card back-2"><h3>Notes</h3><p>Launch idea</p></div>
+  </section>
+
+  <!-- Middle: active frame and status strip -->
+  <div class="center">
+    <main class="main" aria-label="Todo list">
+      <div class="eyebrow">Todo list · 2 open · 1 overdue</div>
+      <h1 class="title">Launch checklist</h1>
+      <p class="sub">A focused list for the next few things worth finishing.</p>
+      <div class="progress" role="progressbar" aria-valuenow="56" aria-valuemin="0" aria-valuemax="100"><span></span></div>
+
+      <div class="row active"><span class="check done">✓</span><span>Draft the outline</span><span class="tag">high · Fri</span></div>
+      <div class="row"><span class="check"></span><span>Review the numbers</span><span class="tag" style="color:#f2b45c">med · overdue</span></div>
+      <div class="row"><span class="check"></span><span>&nbsp;&nbsp;↳ Pick the photos</span><span class="meta">step</span></div>
+      <div class="row"><span class="check"></span><span>Share the update</span><span class="meta">Mon</span></div>
+
+      <div class="timer" aria-hidden="true">
+        <svg width="240" height="170" viewBox="0 0 260 200" fill="none" stroke="#d6cc8c" stroke-opacity="0.55" stroke-width="1">
+          <ellipse cx="130" cy="100" rx="120" ry="58" transform="rotate(-8 130 100)" />
+          <ellipse cx="130" cy="100" rx="96" ry="72" transform="rotate(16 130 100)" />
+          <ellipse cx="130" cy="100" rx="70" ry="40" transform="rotate(-28 130 100)" />
+          <circle cx="192" cy="60" r="3" fill="#3fe0a8" stroke="none" />
+          <circle cx="130" cy="100" r="4" fill="#e8eff1" stroke="none" />
+        </svg>
+        <div class="clock">18:42</div>
+        <div class="label">focus · round 2 of 4</div>
+      </div>
+    </main>
+
+    <div class="strip" aria-label="Status">
+      <div class="stat"><div class="top"><span>Tasks done</span><b>56%</b></div><div class="bar"><span style="width:56%"></span></div></div>
+      <div class="stat"><div class="top"><span>Focus today</span><b>74%</b></div><div class="bar"><span class="mint" style="width:74%"></span></div></div>
+      <div class="stat"><div class="top"><span>Round progress</span><b>48%</b></div><div class="bar"><span style="width:48%"></span></div></div>
+    </div>
+  </div>
+
+  <!-- Right: control dock -->
+  <aside class="dock" aria-label="Control">
+    <div class="dock-head">Control</div>
+    <div class="profile"><span class="avatar">OP</span><span><b>Operator</b><small>Local session</small></span></div>
+
+    <div class="section">Features · 02</div>
+    <div class="item"><span class="glyph">◉</span><span><b>Pomodoro</b><small>Open timer</small></span><span class="chev">›</span></div>
+    <div class="item active"><span class="glyph">☑</span><span><b>Todo List</b><small>3 open · 1 overdue</small></span><span class="chev">›</span></div>
+
+    <div class="now" aria-label="Now playing">
+      <div class="track">Chill study desk focus</div>
+      <div class="controls">
+        <button class="btn" aria-label="Previous">‹</button>
+        <button class="btn play" aria-label="Pause">❚❚</button>
+        <button class="btn" aria-label="Next">›</button>
+        <span class="wave" aria-hidden="true"><i style="height:6px"></i><i style="height:12px"></i><i style="height:8px"></i><i style="height:14px"></i><i style="height:5px"></i></span>
+      </div>
+    </div>
+
+    <div class="foot">
+      <div class="item"><span class="glyph">☾</span><span><b>Appearance</b><small>Dark theme · ⌘⇧L</small></span><span class="chev">›</span></div>
+      <div class="item"><span class="glyph">↪</span><span><b>Log out</b><small>End session</small></span><span class="chev">›</span></div>
+    </div>
+  </aside>
+
+</div>
+</body>
+</html>

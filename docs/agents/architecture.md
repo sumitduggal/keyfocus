@@ -2,11 +2,11 @@
 
 Keyfocus is a **keyboard-first focus workspace**: a React + Vite single-page app with one active frame, a recency-ordered stack and shared feature state. Workspace data is stored locally in the browser; there is no account, cloud sync or router. Optional network integrations include bookmark metadata through `/api/og`, weather and radio search. Vocabulary for the domain terms used here is in `CONTEXT.md`.
 
-The Phase 1 extraction is in place. `src/App.tsx` is now a one-line re-export of `src/workspace/WorkspaceApp.tsx`; the application is split between workspace orchestration, a view adapter, shared components and feature modules.
+The workspace-view seam and all four production adapters are in place. `src/App.tsx` is a one-line re-export of `src/workspace/WorkspaceApp.tsx`; the application is split between workspace orchestration, view adapters, shared components and feature modules.
 
 ## Entry points and workspace views
 
-`src/main.tsx` runs saved-state migration and mounts `App` in `StrictMode`. In development only, any URL with a `?variant=` parameter mounts `DesignPrototype` instead. This is still the throwaway prototype route for the approved mock directions, not a production view adapter. Production ignores `?variant=` and mounts the real app.
+`src/main.tsx` runs saved-state migration and always mounts `App` in `StrictMode`; a `?variant=` parameter has no special routing behavior. The original prototype implementations remain available for historical comparison on `archive/workspace-design-prototypes`. `DesignPrototype` and its development-only route were removed from the main branch to prevent the prototype's global CSS from leaking into the production application.
 
 The current production path is:
 
@@ -16,15 +16,19 @@ src/main.tsx
         └── src/workspace/WorkspaceApp.tsx
               state, actions, persistence and global keyboard orchestration
               └── WorkspaceView snapshot/actions interface
-                    └── src/workspace/views/OperatorConsole.tsx
+                    ├── src/workspace/views/OperatorConsole.tsx
+                    ├── src/workspace/views/CalmWorkspace.tsx       (lazy)
+                    ├── src/workspace/views/ImmersiveFocus.tsx      (lazy)
+                    └── src/workspace/views/DailyOverview.tsx       (lazy)
 ```
 
 - `WorkspaceApp.tsx` owns frames, active-frame selection, focus state, settings, todo and habit state, trash, persistence and commands. It also subscribes to the app-wide Pomodoro, reminders and bookmark stores, assembles the `WorkspaceView` value and installs the global keyboard listener.
-- The `WorkspaceView` interface is currently exported from `WorkspaceApp.tsx`. It is the snapshot-and-actions seam between orchestration and presentation: adapters receive derived data, refs, registration callbacks and event actions rather than owning feature state or persistence.
-- `OperatorConsole.tsx` is the only production adapter. It renders the existing three-side design through `Mainframe`, `Stack`, `Dock`, `FeaturePanel`, `SettingsPanel`, `CommandPalette` and the reminder/music components.
-- `src/workspace/view.ts` defines `WorkspaceViewId` (`operator`, `calm`, `immersive`, `overview`), the operator default and picker metadata. `src/workspace/view-setting.ts` loads and saves the selection. Missing, unknown, damaged or inaccessible stored values fall back to `operator`.
+- `src/workspace/view.ts` exports the `WorkspaceView` snapshot-and-actions interface. Adapters receive derived data, refs, registration callbacks and event actions rather than owning feature state or persistence.
+- `src/workspace/WorkspaceParts.tsx` supplies the shared `ActiveFrame`, `WorkspaceCommandPalette` and `WorkspaceOverlays` compositions. These keep the real `Mainframe`, command palette, Settings, feature panel, reminder banner, Undo toast and overdue actions consistent across adapters.
+- Operator Console renders the original three-side design. Calm Workspace, Immersive Focus and Daily Overview provide their own layouts over the same workspace value; the three non-default adapters load through `React.lazy` and a shared `Suspense` fallback.
+- `src/workspace/view.ts` also defines `WorkspaceViewId` (`operator`, `calm`, `immersive`, `overview`), the operator default and picker metadata. `src/workspace/view-setting.ts` loads and saves the selection. Missing, unknown, damaged or inaccessible stored values fall back to `operator`.
 
-Settings presents all four view choices. The choice persists under **`focus-space-workspace-view`**, independently of appearance, and is restored on reload. However, `WorkspaceApp` currently returns `<OperatorConsole workspace={workspace} />` unconditionally: choosing Calm Workspace, Immersive Focus or Daily Overview saves the ID but does not yet change the rendered layout. Those adapters are planned, not shipped.
+Settings presents all four view choices and switches the rendered adapter immediately. The choice persists under **`focus-space-workspace-view`**, independently of appearance, and is restored on reload.
 
 ## Operator Console layout
 
@@ -85,24 +89,20 @@ Feature panels, Settings, text inputs, the command input and editable feature co
 ## Styling
 
 - `src/index.css` contains global font/reset basics.
-- `src/App.css` contains the current application and Operator Console layout styles.
-- `src/components.css` contains shared component and feature styles.
-- `src/components/DesignPrototype.css` belongs only to the development prototype.
+- `src/App.css` contains the application and Operator Console layout styles.
+- `src/components.css` contains shared component/feature styles and the shared view/theme tokens selected by `data-workspace-view` and `data-theme`.
+- `src/workspace/views/CalmWorkspace.css`, `ImmersiveFocus.css` and `DailyOverview.css` contain their adapter-specific layouts.
 
-The planned design-system phase will separate view-owned accents/structure from dark/light neutral tokens and split these styles into scoped base, chrome, feature and view files. That token and file split has not landed yet.
+View-owned accents and dark/light tokens are in place, and the non-default views have scoped stylesheets. Prototype-only global styles are not part of the main application; the historical prototypes and their styling remain on `archive/workspace-design-prototypes`. The broader split of shared base, chrome and feature styles remains cleanup work.
 
 ## Tests and checks
 
-The project has both unit and browser coverage; it is not a no-test prototype. `npm test` runs Vitest (excluding `e2e/`) and then Playwright. Feature tests cover stores, parsing, migrations, timers, habits, reminders, bookmarks, music and other behavior; `src/workspace/view-setting.test.ts` covers workspace-view loading and saving. Browser specifications under `e2e/` exercise the real app, including keyboard and feature flows.
+The project has both unit and browser coverage; it is not a no-test prototype. `npm test` runs Vitest (excluding `e2e/`) and then Playwright. Feature tests cover stores, parsing, migrations, timers, habits, reminders, bookmarks, music and other behavior; `src/workspace/view-setting.test.ts` covers workspace-view loading and saving. Browser specifications under `e2e/` exercise the real app, including keyboard and feature flows; `e2e/workspace-views.spec.ts` covers the four-view seam, shared state, commands and view persistence.
 
-Use `npm run build` for the production TypeScript/Vite build and `npm run lint` for Oxlint. `npm run e2e` runs Playwright alone.
+Use `npm run build` for the production TypeScript/Vite build and `npm run lint` for Oxlint. `npm run e2e` runs Playwright alone. Final cross-view, responsive and full-suite verification is still pending; adapter presence and a successful build do not establish rollout acceptance.
 
 ## Rollout status and approved next steps
 
-Phase 1 established the seam without replacing the current design. The remaining approved work is:
+Phases 0–1 established the baseline, seam, picker and persistence. Phase 2 added shared tokens, configurable command-bar placement, per-view styles and the cross-view smoke-test scaffold. Phases 3–5 added the Calm Workspace, Immersive Focus and Daily Overview production adapters, all reusing `WorkspaceView`, shared `WorkspaceParts`, real frames, stores and actions. Phase 6 prototype retirement removed the development-only `?variant=` gate, `DesignPrototype` and its global styles from the main application.
 
-1. **Phase 2:** add shared view/theme tokens, scoped styles, configurable palette placement and cross-view smoke tests; preserve the existing keyboard semantics.
-2. **Phases 3–5:** implement Calm Workspace, Immersive Focus and Daily Overview as real adapters over `WorkspaceView`, reusing shared frames, stores and actions. Non-default adapters are planned to be lazy-loaded.
-3. **Phase 6:** after feature parity, remove the development-only `?variant=` gate and `DesignPrototype`, finish design documentation and record the shared-state/four-adapter decision.
-
-Until those phases land, do not describe the picker as a working four-layout switch or the prototype variants as production views. See `docs/design/design-rollout-plan.md` for acceptance criteria and `docs/design/feature-guide.md` for current feature behavior and planned presentation.
+The remaining rollout gate is final cross-view, responsive and full-suite verification, including resolution of any failures against the acceptance criteria. Broader shared-stylesheet consolidation remains cleanup work. The original prototypes remain only on `archive/workspace-design-prototypes` and are not production adapters. See `docs/design/design-rollout-plan.md` for acceptance criteria and `docs/design/feature-guide.md` for current feature behavior.

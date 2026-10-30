@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
-import type { KeyboardEvent, RefObject } from "react";
+import { lazy, Suspense, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import type { KeyboardEvent } from "react";
 import { useAnimate, useReducedMotion } from "motion/react";
 import type { Command, Feature, Side, Theme, WorkspaceFrame } from "../types";
 import {
@@ -20,7 +20,6 @@ import type { Settings } from "../settings";
 import { loadHabits, saveHabits, toggleDay, type Habit } from "../habits";
 import { loadFrames, loadNoteBodies, loadTheme } from "../saved-state";
 import { formatClock, getPomodoroState, subscribePomodoro } from "../pomodoro";
-import type { PomodoroState } from "../pomodoro";
 import type { FrameData } from "../frame-summary";
 import { isParked, markStacked, unstamped } from "../stack-expiry";
 import { getLibrary, subscribeLibrary } from "../bookmarks-store";
@@ -53,102 +52,21 @@ import {
   saveTrash,
   type TrashEntry,
 } from "../todo-trash";
-import type { WorkspaceViewId } from "./view";
+import type { WorkspaceView, WorkspaceViewId } from "./view";
 import { loadWorkspaceView, saveWorkspaceView } from "./view-setting";
 import { OperatorConsole } from "./views/OperatorConsole";
 import "../App.css";
 import "../components.css";
 
-export interface WorkspaceView {
-  frames: WorkspaceFrame[];
-  activeFrame: WorkspaceFrame;
-  stackedFrames: WorkspaceFrame[];
-  featureEntries: WorkspaceFrame[];
-  featureMenuEntries: WorkspaceFrame[];
-  searchResults: WorkspaceFrame[];
-  visibleCommands: Command[];
-  trashRows: { id: string; title: string; hint: string }[];
-  pomodoro: PomodoroState;
-  settings: Settings;
-  theme: Theme;
-  workspaceView: WorkspaceViewId;
-  frameData: FrameData;
-  noteBodies: Record<string, string>;
-  todoLists: Record<string, TodoItem[]>;
-  habitLists: Record<string, Habit[]>;
-  todoViews: Record<string, TodoViewState>;
-  framesCountByFeature: Record<Feature, number>;
-  todoOpenCount: number;
-  todoOverdueCount: number;
-  overdueLists: { frame: WorkspaceFrame; count: number }[];
-  overdueBannerOpen: boolean;
-  focusedSide: Side;
-  withinSide: boolean;
-  stackFocusIndex: number;
-  rightFocusIndex: number;
-  entryFocusIndex: number;
-  menuFocusIndex: number;
-  activeMenuId: string | undefined;
-  settingsOpen: boolean;
-  settingsAnchorY: number | null;
-  menuOpen: boolean;
-  query: string;
-  featureMenu: Feature | null;
-  trashMenu: boolean;
-  searchMode: boolean;
-  showTrashRow: boolean;
-  dockCollapsed: boolean;
-  stackCollapsed: boolean;
-  barHost: HTMLElement | null;
-  barActive: boolean;
-  featurePanel: Feature | null;
-  featureAnchorY: number | null;
-  undo: { message: string; restore: () => void } | null;
-  reduceMotion: boolean;
-  actionInputRef: RefObject<HTMLInputElement | null>;
-  featureAsideRef: RefObject<HTMLElement | null>;
-  frameScope: RefObject<HTMLDivElement | null>;
-  registerItem: (id: string, node: HTMLButtonElement | null) => void;
-  registerEntry: (id: string, node: HTMLButtonElement | null) => void;
-  registerStack: (id: string, node: HTMLElement | null) => void;
-  registerSide: (side: Side, node: HTMLElement | null) => void;
-  registerFrame: (id: string, node: HTMLElement | null) => void;
-  getEntry: (id: string) => HTMLButtonElement | null;
-  setBarHost: (node: HTMLElement | null) => void;
-  onToggleStack: () => void;
-  onToggleDock: () => void;
-  onStackSelect: (index: number) => void;
-  onPromoteStackFrame: (index: number) => void;
-  onMainFocus: () => void;
-  onOpenFeatureDirectly: (feature: Feature) => void;
-  onOpenSettings: () => void;
-  onWorkspaceViewChange: (view: WorkspaceViewId) => void;
-  onSettingsChange: (patch: Partial<Settings>) => void;
-  onSettingsClose: (restoreFocus: boolean) => void;
-  onToggleTheme: () => void;
-  onFeaturePress: (feature: Feature) => void;
-  onFeaturePanelClose: () => void;
-  onFeaturePanelCreate: (feature: Feature) => void;
-  onFeaturePanelEntryClick: (frame: WorkspaceFrame) => void;
-  onRestoreTrash: (id: string) => void;
-  onOpenTrash: () => void;
-  onCommandPaletteQueryChange: (value: string) => void;
-  onCommandPaletteFocus: () => void;
-  onCommandKeyDown: (event: KeyboardEvent<HTMLInputElement>) => void;
-  onChooseCommand: (command: Command) => void;
-  onRunCommand: (feature: Feature) => void;
-  onShowFrame: (id: string) => void;
-  onSideSelect: (side: Side) => void;
-  onUndo: () => void;
-  onDismissOverdue: () => void;
-  onHabitsChange: (habits: Habit[]) => void;
-  onDeleteActiveFrame: () => void;
-  onTodoViewChange: (view: TodoViewState) => void;
-  onTitleChange: (title: string) => void;
-  onTodoChange: (items: TodoItem[]) => void;
-  onNoteChange: (value: string) => void;
-  onRightFocus: (index: number) => void;
-}
+const CalmWorkspace = lazy(() =>
+  import("./views/CalmWorkspace").then((module) => ({ default: module.CalmWorkspace })),
+);
+const ImmersiveFocus = lazy(() =>
+  import("./views/ImmersiveFocus").then((module) => ({ default: module.ImmersiveFocus })),
+);
+const DailyOverview = lazy(() =>
+  import("./views/DailyOverview").then((module) => ({ default: module.DailyOverview })),
+);
 
 const promoteFrames = (
   current: WorkspaceFrame[],
@@ -274,7 +192,7 @@ function WorkspaceApp() {
   const focusActiveFrame = useCallback(() => {
     const frame = frameRefs.current[activeFrame.id];
     if (frame?.contains(document.activeElement)) return;
-    (frame?.querySelector<HTMLElement>("[data-autofocus]") ?? frame)?.focus();
+    (frame?.querySelector<HTMLElement>("[data-autofocus]") ?? frame)?.focus({ preventScroll: true });
   }, [activeFrame.id]);
   const [stackNow, setStackNow] = useState(() => Date.now());
   useEffect(() => {
@@ -712,7 +630,7 @@ function WorkspaceApp() {
   useEffect(() => {
     if (withinSide) return;
     if (focusedSide === "main") focusActiveFrame();
-    else sideRefs.current[focusedSide]?.focus();
+    else sideRefs.current[focusedSide]?.focus({ preventScroll: true });
   }, [focusActiveFrame, focusedSide, withinSide]);
   useEffect(() => {
     if (keepBarFocus.current) {
@@ -824,7 +742,7 @@ function WorkspaceApp() {
 
   useEffect(() => {
     if (menuOpen) actionInputRef.current?.focus();
-  }, [menuOpen]);
+  }, [barHost, menuOpen]);
 
   useLayoutEffect(() => {
     const rightItemId = (index: number) => {
@@ -1199,7 +1117,25 @@ function WorkspaceApp() {
     onRightFocus: setRightFocusIndex,
   };
 
-  return <OperatorConsole workspace={workspace} />;
+  if (workspaceView === "operator") return <OperatorConsole workspace={workspace} />;
+
+  return (
+    <Suspense
+      fallback={
+        <main className="app" data-workspace-view={workspaceView} aria-busy="true">
+          <p role="status">Loading workspace…</p>
+        </main>
+      }
+    >
+      {workspaceView === "calm" ? (
+        <CalmWorkspace workspace={workspace} />
+      ) : workspaceView === "immersive" ? (
+        <ImmersiveFocus workspace={workspace} />
+      ) : (
+        <DailyOverview workspace={workspace} />
+      )}
+    </Suspense>
+  );
 }
 
 export default WorkspaceApp;

@@ -3,7 +3,7 @@ import { FeaturePanel } from "../components/FeaturePanel";
 import { Mainframe } from "../components/Mainframe";
 import { ReminderBanner } from "../components/ReminderBanner";
 import { SettingsPanel } from "../components/SettingsPanel";
-import type { WorkspaceView } from "./WorkspaceApp";
+import type { WorkspaceView } from "./view";
 
 export function ActiveFrame({ workspace }: { workspace: WorkspaceView }) {
   const {

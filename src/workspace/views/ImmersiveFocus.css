@@ -1,0 +1,991 @@
+.immersive-shell {
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  width: 100%;
+  height: 100svh;
+  min-height: 640px;
+  grid-template-rows: 82px minmax(0, 1fr) 106px;
+  overflow: hidden;
+  background: var(--bg-deep);
+  color: var(--text);
+  font-family: var(--font-ui);
+}
+
+.immersive-ambient {
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 50% 42%, color-mix(in srgb, var(--accent) 10%, transparent), transparent 38%),
+    radial-gradient(circle at 8% 0%, color-mix(in srgb, var(--accent) 6%, transparent), transparent 32%);
+}
+
+.immersive-ambient::after {
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(color-mix(in srgb, var(--text) 18%, transparent) 0.6px, transparent 0.6px);
+  background-size: 24px 24px;
+  content: "";
+  opacity: 0.16;
+}
+
+.immersive-topbar {
+  position: relative;
+  z-index: 4;
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  justify-content: space-between;
+  margin: 0 32px;
+  border-bottom: 1px solid var(--border);
+  pointer-events: none;
+}
+
+.immersive-brand {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  color: var(--text);
+  font-size: 18px;
+  font-weight: 650;
+  letter-spacing: -0.04em;
+}
+
+.immersive-brand-mark {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  grid-template-columns: repeat(2, 5px);
+  grid-template-rows: repeat(2, 5px);
+  place-content: center;
+  gap: 3px;
+  border-radius: 10px;
+  background: var(--accent);
+  color: var(--accent-contrast);
+}
+
+.immersive-brand-mark i {
+  width: 5px;
+  height: 5px;
+  border-radius: 1px;
+  background: currentColor;
+}
+
+.immersive-mode {
+  position: absolute;
+  left: 50%;
+  display: flex;
+  max-width: min(38vw, 360px);
+  align-items: center;
+  gap: 8px;
+  overflow: hidden;
+  color: var(--text-muted);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  text-overflow: ellipsis;
+  transform: translateX(-50%);
+  white-space: nowrap;
+}
+
+.immersive-mode i {
+  width: 6px;
+  height: 6px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 12px var(--accent-soft);
+}
+
+.immersive-main {
+  position: relative;
+  z-index: 1;
+  min-width: 0;
+  min-height: 0;
+  padding: 24px;
+  overflow: auto;
+  outline: 0;
+  scrollbar-color: var(--border-strong) transparent;
+  scrollbar-width: thin;
+}
+
+.immersive-main.side-focused {
+  box-shadow: inset 0 0 0 1px var(--accent-soft);
+}
+
+.immersive-active {
+  display: flex;
+  width: min(100%, 920px);
+  min-height: 100%;
+  margin: 0 auto;
+  align-items: center;
+}
+
+.immersive-active .main-frame-position {
+  min-width: 0;
+}
+
+.immersive-active:not(.is-pomodoro) .main-frame-position {
+  min-height: 0;
+}
+
+.immersive-active:not(.is-pomodoro) .workspace-frame {
+  overflow: hidden;
+  padding: clamp(20px, 3vw, 32px);
+  border-color: var(--border);
+  border-radius: 20px;
+  background: color-mix(in srgb, var(--surface) 88%, transparent);
+  box-shadow: var(--shadow-card);
+}
+
+.immersive-active:not(.is-pomodoro) .workspace-frame h1,
+.immersive-active.is-pomodoro .workspace-frame h1 {
+  font-family: var(--font-ui);
+  letter-spacing: -0.025em;
+  text-transform: none;
+}
+
+.immersive-active:not(.is-pomodoro) .workspace-frame h1 input {
+  font-family: inherit;
+  letter-spacing: inherit;
+  text-transform: none;
+}
+
+.immersive-active:not(.is-pomodoro) .frame-corner,
+.immersive-active.is-pomodoro .frame-corner {
+  display: none;
+}
+
+.immersive-active.is-pomodoro .main-frame-position {
+  align-items: center;
+}
+
+.immersive-active.is-pomodoro .workspace-frame {
+  max-width: 620px;
+  margin: auto;
+  padding: 16px 28px 24px;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+}
+
+.immersive-active.is-pomodoro .workspace-frame::before,
+.immersive-active.is-pomodoro .frame-status,
+.immersive-active.is-pomodoro .frame-code {
+  display: none;
+}
+
+.immersive-active.is-pomodoro .frame-head {
+  justify-content: center;
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border: 0;
+  text-align: center;
+}
+
+.immersive-active.is-pomodoro .frame-head > div {
+  width: 100%;
+}
+
+.immersive-active.is-pomodoro .frame-eyebrow {
+  justify-content: center;
+  margin-bottom: 10px;
+  font-family: var(--font-ui);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.15em;
+}
+
+.immersive-active.is-pomodoro .workspace-frame h1 input {
+  width: 100%;
+  color: var(--text-muted);
+  font-size: clamp(18px, 2vw, 24px);
+  font-weight: 450;
+  text-align: center;
+}
+
+.immersive-active.is-pomodoro .pomodoro-dial {
+  width: clamp(220px, 25vw, 292px);
+  margin: 24px auto 28px;
+  background: conic-gradient(var(--accent) var(--progress), var(--accent-soft) 0);
+  box-shadow: 0 0 70px color-mix(in srgb, var(--accent) 8%, transparent);
+}
+
+.immersive-active.is-pomodoro .pomodoro-dial::before {
+  inset: 7px;
+  border-color: var(--border);
+  background: var(--bg-deep);
+}
+
+.immersive-active.is-pomodoro .pomodoro-dial::after {
+  inset: -26px;
+  border-style: solid;
+  border-color: var(--border);
+  opacity: 0.45;
+}
+
+.immersive-active.is-pomodoro .pomodoro-clock {
+  color: var(--text);
+  font-size: clamp(48px, 6vw, 72px);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.08em;
+}
+
+.immersive-active.is-pomodoro .pomodoro-dial-label {
+  color: var(--accent-text);
+  font-family: var(--font-ui);
+  font-size: 10px;
+  letter-spacing: 0.15em;
+}
+
+.immersive-active.is-pomodoro .pomodoro-status {
+  color: var(--text-muted);
+  font-family: var(--font-ui);
+  letter-spacing: 0.08em;
+}
+
+.immersive-active.is-pomodoro .pomodoro-presets button,
+.immersive-active.is-pomodoro .pomodoro-presets label {
+  border-color: transparent;
+  border-radius: 9px;
+  background: transparent;
+  font-family: var(--font-ui);
+  font-size: 11px;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.immersive-active.is-pomodoro .pomodoro-presets .selected {
+  border-color: transparent;
+  background: var(--accent-soft);
+  color: var(--accent-text);
+}
+
+.immersive-active.is-pomodoro .pomodoro-actions {
+  margin-top: 16px;
+}
+
+.immersive-active.is-pomodoro .pomodoro-actions button {
+  min-height: 46px;
+  padding: 10px 24px;
+  border-radius: 24px;
+  font-family: var(--font-ui);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.immersive-recents-wrap {
+  position: absolute;
+  z-index: 8;
+  bottom: 22px;
+  left: 32px;
+  width: 216px;
+  outline: 0;
+}
+
+.immersive-recents-wrap.side-focused .immersive-recents {
+  color: var(--accent-text);
+}
+
+.immersive-recents {
+  display: flex;
+  width: 100%;
+  min-height: 52px;
+  align-items: center;
+  gap: 10px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--text);
+  text-align: left;
+}
+
+.immersive-stack-preview {
+  position: relative;
+  display: grid;
+  width: 44px;
+  height: 44px;
+  flex: 0 0 auto;
+  place-items: center;
+}
+
+.immersive-stack-preview > i {
+  position: absolute;
+  width: 29px;
+  height: 35px;
+  border: 1px solid var(--border-strong);
+  border-radius: 8px;
+  background: var(--surface);
+  box-shadow: var(--shadow-card);
+}
+
+.immersive-stack-preview > i:first-child {
+  transform: translate(-5px, -2px) rotate(-8deg);
+}
+
+.immersive-stack-preview > i:nth-child(2) {
+  background: var(--surface-2);
+  transform: translate(4px, -1px) rotate(7deg);
+}
+
+.immersive-stack-preview > span {
+  position: relative;
+  z-index: 1;
+  color: var(--accent-text);
+  font-size: 17px;
+}
+
+.immersive-recents-copy {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.immersive-recents-copy small,
+.immersive-recent-popover header small {
+  color: var(--text-faint);
+  font-size: 10px;
+}
+
+.immersive-recents-copy strong {
+  overflow: hidden;
+  font-size: 11px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.immersive-recents-chevron {
+  color: var(--text-faint);
+  font-size: 18px;
+  transition: transform 160ms ease;
+}
+
+.immersive-recents-chevron.is-open {
+  transform: rotate(-90deg);
+}
+
+.immersive-recent-popover {
+  position: absolute;
+  bottom: 64px;
+  left: 0;
+  width: min(320px, calc(100vw - 32px));
+  max-height: min(55svh, 460px);
+  padding: 8px;
+  overflow-y: auto;
+  border: 1px solid var(--border-strong);
+  border-radius: 16px;
+  background: var(--panel);
+  box-shadow: var(--shadow-menu);
+  backdrop-filter: blur(18px);
+  scrollbar-color: var(--border-strong) transparent;
+  scrollbar-width: thin;
+}
+
+.immersive-recent-popover > header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 9px 12px;
+}
+
+.immersive-recent-popover > header strong {
+  font-size: 12px;
+}
+
+.immersive-recent-list {
+  display: grid;
+  gap: 3px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.immersive-recent-list button {
+  display: grid;
+  width: 100%;
+  min-height: 62px;
+  grid-template-columns: 38px minmax(0, 1fr) 14px;
+  align-items: center;
+  gap: 10px;
+  padding: 8px;
+  border: 1px solid transparent;
+  border-radius: 11px;
+  background: transparent;
+  color: var(--text);
+  text-align: left;
+}
+
+.immersive-recent-list button:hover,
+.immersive-recent-list button.is-previewed {
+  border-color: var(--border);
+  background: var(--accent-soft);
+}
+
+.immersive-recent-icon {
+  display: grid;
+  width: 38px;
+  height: 40px;
+  place-items: center;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  background: var(--surface);
+  color: var(--accent-text);
+  font-size: 17px;
+}
+
+.immersive-recent-copy {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.immersive-recent-copy strong,
+.immersive-recent-copy small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.immersive-recent-copy strong {
+  font-size: 12px;
+}
+
+.immersive-recent-copy small {
+  color: var(--text-faint);
+  font-size: 10px;
+}
+
+.immersive-recent-open {
+  color: var(--text-faint);
+  font-size: 18px;
+}
+
+.immersive-recents-empty {
+  padding: 8px 10px 14px;
+}
+
+.immersive-recents-empty strong {
+  display: block;
+  color: var(--text-muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.immersive-recents-empty p {
+  margin: 7px 0 0;
+  color: var(--text-faint);
+  font-size: 11px;
+  line-height: 1.55;
+}
+
+.immersive-right {
+  position: absolute;
+  z-index: 5;
+  inset: 0;
+  outline: 0;
+  pointer-events: none;
+}
+
+.immersive-header-actions {
+  position: absolute;
+  top: 17px;
+  right: 32px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  pointer-events: auto;
+}
+
+.immersive-header-actions .now-playing {
+  width: 216px;
+  margin: 0;
+  padding: 5px 7px;
+  gap: 5px;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--surface) 76%, transparent);
+}
+
+.immersive-header-actions .now-playing-marquee {
+  min-height: 20px;
+}
+
+.immersive-header-actions .now-playing-row {
+  gap: 4px;
+}
+
+.immersive-header-actions .now-playing-row button {
+  min-width: 40px;
+  height: 40px;
+  border-color: transparent;
+}
+
+.immersive-header-actions .now-playing-row .now-playing-play {
+  border-color: var(--accent);
+}
+
+.immersive-header-actions .now-playing-popup {
+  top: 82px;
+  right: 32px;
+  bottom: auto;
+  width: min(320px, calc(100vw - 32px));
+  max-height: calc(100svh - 104px);
+  border-radius: 14px;
+  background: var(--panel);
+}
+
+.immersive-settings {
+  display: grid;
+  width: 44px;
+  height: 44px;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--surface) 55%, transparent);
+  color: var(--text-muted);
+  font-size: 18px;
+}
+
+.immersive-settings:hover {
+  border-color: var(--border-strong);
+  color: var(--accent-text);
+}
+
+.immersive-dock {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--surface) 76%, transparent);
+  box-shadow: var(--shadow-card);
+  transform: translateX(-50%);
+  backdrop-filter: blur(16px);
+  pointer-events: auto;
+}
+
+.immersive-dock button {
+  position: relative;
+  display: flex;
+  min-width: 70px;
+  min-height: 56px;
+  align-items: center;
+  flex-direction: column;
+  justify-content: center;
+  gap: 5px;
+  padding: 5px 9px;
+  border: 1px solid transparent;
+  border-radius: 11px;
+  background: transparent;
+  color: var(--text-faint);
+  font-size: 9px;
+}
+
+.immersive-dock button:hover {
+  background: var(--accent-soft);
+  color: var(--text);
+}
+
+.immersive-dock button.is-active {
+  border-color: color-mix(in srgb, var(--accent) 20%, transparent);
+  background: var(--accent-soft);
+  color: var(--accent-text);
+}
+
+.immersive-dock-glyph {
+  color: currentColor;
+  font-size: 19px;
+  line-height: 1;
+}
+
+.immersive-dock button small {
+  position: absolute;
+  top: 4px;
+  right: 5px;
+  max-width: calc(100% - 10px);
+  overflow: hidden;
+  color: var(--text-muted);
+  font-size: 8px;
+  font-variant-numeric: tabular-nums;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.immersive-right.side-focused .immersive-dock,
+.immersive-right.side-focused .immersive-header-actions .now-playing,
+.immersive-right.side-focused .immersive-settings {
+  border-color: color-mix(in srgb, var(--accent) 48%, var(--border));
+}
+
+.immersive-footer {
+  position: relative;
+  z-index: 4;
+  margin: 0 32px;
+  border-top: 1px solid var(--border);
+  pointer-events: none;
+}
+
+.immersive-command-slot {
+  position: absolute;
+  right: 0;
+  bottom: 27px;
+  width: 216px;
+  height: 46px;
+  pointer-events: auto;
+}
+
+.immersive-command-slot .command-wrap {
+  inset: 0;
+  width: 100%;
+  min-height: 46px;
+  translate: none;
+  border-radius: 11px;
+  box-shadow: none;
+}
+
+.immersive-command-slot .command-wrap::before {
+  display: none;
+}
+
+.immersive-command-slot .command-wrap input {
+  font-family: var(--font-ui);
+  font-size: 10px;
+}
+
+.immersive-shell > .menu-layer {
+  position: absolute;
+  z-index: 12;
+  inset: 0 0 100px;
+}
+
+.immersive-shell > .menu-layer .menu {
+  bottom: 12px;
+  border-radius: 14px;
+}
+
+.immersive-shell > .feature-aside {
+  z-index: 14;
+  top: 50% !important;
+  right: 32px;
+  width: min(340px, calc(100vw - 32px));
+  max-height: calc(100svh - 48px);
+  border-radius: 16px;
+}
+
+.immersive-shell > .undo-toast,
+.immersive-shell > .overdue-banner {
+  z-index: 18;
+}
+
+@media (max-width: 1100px) {
+  .immersive-recents-wrap {
+    width: 56px;
+  }
+
+  .immersive-recents-copy,
+  .immersive-recents-chevron,
+  .immersive-command-slot kbd {
+    display: none;
+  }
+
+  .immersive-command-slot {
+    width: 150px;
+  }
+
+  .immersive-dock button {
+    min-width: 58px;
+  }
+}
+
+@media (max-width: 860px) {
+  .immersive-shell {
+    grid-template-rows: 76px minmax(0, 1fr) 100px;
+  }
+
+  .immersive-topbar,
+  .immersive-footer {
+    margin-right: 20px;
+    margin-left: 20px;
+  }
+
+  .immersive-header-actions {
+    right: 20px;
+  }
+
+  .immersive-header-actions .now-playing {
+    width: 204px;
+  }
+
+  .immersive-header-actions .now-playing-popup {
+    right: 20px;
+  }
+
+  .immersive-mode {
+    display: none;
+  }
+
+  .immersive-main {
+    padding: 20px;
+  }
+
+  .immersive-recents-wrap {
+    left: 20px;
+  }
+
+  .immersive-dock button {
+    min-width: 52px;
+    padding-right: 7px;
+    padding-left: 7px;
+  }
+
+  .immersive-dock button > span:not(.immersive-dock-glyph) {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+
+  .immersive-command-slot {
+    width: 132px;
+  }
+
+  .immersive-shell > .feature-aside {
+    right: 20px;
+  }
+}
+
+@media (max-width: 759px) {
+  .immersive-shell {
+    min-height: 720px;
+    grid-template-rows: 70px minmax(0, 1fr) 204px;
+  }
+
+  .immersive-shell .immersive-recents-wrap.side-region:not(.side-focused),
+  .immersive-shell .immersive-right.side-region:not(.side-focused) {
+    display: block;
+  }
+
+  .immersive-topbar,
+  .immersive-footer {
+    margin-right: 16px;
+    margin-left: 16px;
+  }
+
+  .immersive-header-actions {
+    top: 13px;
+    right: 16px;
+    gap: 6px;
+  }
+
+  .immersive-header-actions .now-playing {
+    width: 204px;
+  }
+
+  .immersive-header-actions .now-playing-popup {
+    top: 70px;
+    right: 16px;
+    max-height: calc(100svh - 88px);
+  }
+
+  .immersive-main {
+    padding: 18px 14px;
+  }
+
+  .immersive-active.is-pomodoro .workspace-frame {
+    padding-right: 8px;
+    padding-left: 8px;
+  }
+
+  .immersive-active.is-pomodoro .pomodoro-dial {
+    width: min(245px, 66vw);
+  }
+
+  .immersive-active.is-pomodoro .pomodoro-clock {
+    font-size: clamp(44px, 14vw, 60px);
+  }
+
+  .immersive-active.is-pomodoro .pomodoro-presets {
+    flex-wrap: wrap;
+  }
+
+  .immersive-recents-wrap {
+    bottom: 88px;
+    left: 16px;
+    width: min(216px, calc(100vw - 32px));
+  }
+
+  .immersive-recents-copy,
+  .immersive-recents-chevron {
+    display: flex;
+  }
+
+  .immersive-recent-popover {
+    bottom: 60px;
+    max-height: min(48svh, 360px);
+  }
+
+  .immersive-dock {
+    bottom: 14px;
+    max-width: calc(100vw - 24px);
+  }
+
+  .immersive-dock button {
+    min-width: 50px;
+    min-height: 56px;
+    padding-right: 5px;
+    padding-left: 5px;
+  }
+
+  .immersive-command-slot {
+    display: none;
+  }
+
+  .immersive-shell > .command-wrap {
+    position: absolute;
+    z-index: 10;
+    right: 16px;
+    bottom: 148px;
+    left: 16px;
+    width: auto;
+    min-height: 44px;
+    translate: none;
+    border-radius: 11px;
+    box-shadow: none;
+  }
+
+  .immersive-shell > .command-wrap::before {
+    display: none;
+  }
+
+  .immersive-shell > .menu-layer {
+    inset: 0 0 196px;
+  }
+
+  .immersive-shell > .menu-layer .menu {
+    bottom: 8px;
+  }
+
+  .immersive-shell > .feature-aside {
+    right: 16px;
+    width: calc(100vw - 32px);
+    max-height: calc(100svh - 32px);
+  }
+}
+
+@media (max-width: 480px) {
+  .immersive-brand > span:last-child {
+    display: none;
+  }
+
+  .immersive-brand-mark {
+    width: 40px;
+    height: 40px;
+  }
+
+  .immersive-header-actions .now-playing {
+    width: 112px;
+  }
+
+  .immersive-header-actions .now-playing-step {
+    display: none;
+  }
+
+  .immersive-active:not(.is-pomodoro) .workspace-frame {
+    padding: 18px 14px;
+    border-radius: 16px;
+  }
+
+  .immersive-active .frame-head {
+    gap: 10px;
+  }
+
+  .immersive-active .frame-status {
+    display: none;
+  }
+
+  .immersive-active .workspace-frame h1 {
+    font-size: 23px;
+  }
+
+  .immersive-recents-copy small {
+    font-size: 9px;
+  }
+
+  .immersive-dock {
+    gap: 1px;
+    padding: 4px;
+  }
+
+  .immersive-dock button {
+    min-width: 46px;
+  }
+}
+
+@media (max-width: 360px) {
+  .immersive-dock button {
+    min-width: 43px;
+    padding-right: 3px;
+    padding-left: 3px;
+  }
+}
+
+@media (max-height: 760px) and (min-width: 760px) {
+  .immersive-shell {
+    min-height: 560px;
+    grid-template-rows: 72px minmax(0, 1fr) 94px;
+  }
+
+  .immersive-header-actions {
+    top: 13px;
+  }
+
+  .immersive-main {
+    padding-top: 16px;
+    padding-bottom: 16px;
+  }
+
+  .immersive-active.is-pomodoro .pomodoro-dial {
+    width: 210px;
+    margin-top: 16px;
+    margin-bottom: 20px;
+  }
+
+  .immersive-active.is-pomodoro .pomodoro-clock {
+    font-size: 48px;
+  }
+
+  .immersive-dock {
+    bottom: 14px;
+  }
+
+  .immersive-recents-wrap {
+    bottom: 16px;
+  }
+
+  .immersive-command-slot {
+    bottom: 21px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .immersive-recents-chevron {
+    transition: none;
+  }
+}
