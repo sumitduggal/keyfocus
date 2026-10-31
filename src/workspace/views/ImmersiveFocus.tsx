@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { NowPlaying } from "../../components/NowPlaying";
+import { Weather } from "../../components/Weather";
 import { featureMeta, visibleFeatures } from "../../constants";
 import { frameSummary } from "../../frame-summary";
 import { formatClock } from "../../pomodoro";
@@ -48,6 +49,7 @@ export function ImmersiveFocus({ workspace }: { workspace: WorkspaceView }) {
             <i /><i /><i /><i />
           </span>
           <span>keyfocus</span>
+          <div className="immersive-weather"><Weather unit={workspace.settings.temperatureUnit} /></div>
         </div>
         <span className="immersive-mode">
           <i aria-hidden="true" />
@@ -176,11 +178,11 @@ export function ImmersiveFocus({ workspace }: { workspace: WorkspaceView }) {
                   if (event.key !== "Enter") return;
                   event.preventDefault();
                   event.stopPropagation();
-                  onFeaturePress(feature);
+                  onFeaturePress(feature, event.currentTarget);
                   onRightFocus(index);
                 }}
-                onClick={() => {
-                  onFeaturePress(feature);
+                onClick={(event) => {
+                  onFeaturePress(feature, event.currentTarget);
                   onRightFocus(index);
                 }}
               >

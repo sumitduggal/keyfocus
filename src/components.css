@@ -857,8 +857,8 @@
   border-radius: 6px;
 }
 
-.menu-label {
-  margin: 0 20px 8px;
+.menu .menu-label {
+  margin: 0 20px 6px 50px;
   color: var(--text-faint);
   font: 9px/1 var(--font-mono-stack);
   letter-spacing: 0.02em;

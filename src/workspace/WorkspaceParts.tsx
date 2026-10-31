@@ -120,10 +120,10 @@ export function WorkspaceOverlays({ workspace }: { workspace: WorkspaceView }) {
     theme,
     settings,
     workspaceView,
-    settingsAnchorY,
+    settingsAnchor,
     featurePanel,
     featureEntries,
-    featureAnchorY,
+    featureAnchor,
     entryFocusIndex,
     featureAsideRef,
     undo,
@@ -151,7 +151,7 @@ export function WorkspaceOverlays({ workspace }: { workspace: WorkspaceView }) {
           theme={theme}
           settings={settings}
           workspaceView={workspaceView}
-          anchorY={settingsAnchorY}
+          anchor={settingsAnchor}
           onToggleTheme={onToggleTheme}
           onWorkspaceViewChange={onWorkspaceViewChange}
           onChange={onSettingsChange}
@@ -163,7 +163,7 @@ export function WorkspaceOverlays({ workspace }: { workspace: WorkspaceView }) {
         <FeaturePanel
           featurePanel={featurePanel}
           featureEntries={featureEntries}
-          featureAnchorY={featureAnchorY}
+          featureAnchor={featureAnchor}
           entryFocusIndex={entryFocusIndex}
           featureAsideRef={featureAsideRef}
           registerEntry={registerEntry}

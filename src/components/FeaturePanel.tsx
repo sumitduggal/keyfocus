@@ -1,4 +1,4 @@
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useLayoutEffect } from "react";
 import { motion, useReducedMotion } from "motion/react";
 import type { Feature, WorkspaceFrame } from "../types";
 import { featureMeta } from "../constants";
@@ -6,7 +6,7 @@ import { featureMeta } from "../constants";
 interface FeaturePanelProps {
   featurePanel: Feature;
   featureEntries: WorkspaceFrame[];
-  featureAnchorY: number | null;
+  featureAnchor: HTMLElement | null;
   entryFocusIndex: number;
   featureAsideRef: React.RefObject<HTMLElement | null>;
   registerEntry: (id: string, node: HTMLButtonElement | null) => void;
@@ -19,7 +19,7 @@ interface FeaturePanelProps {
 export function FeaturePanel({
   featurePanel,
   featureEntries,
-  featureAnchorY,
+  featureAnchor,
   entryFocusIndex,
   featureAsideRef,
   registerEntry,
@@ -29,6 +29,27 @@ export function FeaturePanel({
   onEntryClick,
 }: FeaturePanelProps) {
   const reduceMotion = useReducedMotion();
+  useLayoutEffect(() => {
+    const panel = featureAsideRef.current;
+    if (!panel) return;
+
+    const placePanel = () => {
+      const margin = 12;
+      panel.style.maxHeight = `${Math.max(0, window.innerHeight - margin * 2)}px`;
+      const halfHeight = panel.offsetHeight / 2;
+      const anchor = featureAnchor?.isConnected ? featureAnchor.getBoundingClientRect() : null;
+      const center = anchor ? anchor.top + anchor.height / 2 : window.innerHeight / 2;
+      panel.style.top = `${Math.max(margin + halfHeight, Math.min(window.innerHeight - margin - halfHeight, center))}px`;
+    };
+
+    placePanel();
+    window.addEventListener("resize", placePanel);
+    window.addEventListener("scroll", placePanel, true);
+    return () => {
+      window.removeEventListener("resize", placePanel);
+      window.removeEventListener("scroll", placePanel, true);
+    };
+  }, [featureAnchor, featureAsideRef, featureEntries.length]);
   useEffect(() => {
     const closeWhenFocusLeaves = (event: FocusEvent) => {
       if (featureAsideRef.current && !featureAsideRef.current.contains(event.target as Node)) {
@@ -78,11 +99,26 @@ export function FeaturePanel({
     [featureEntries, entryFocusIndex, getEntry, onClose],
   );
 
+  const anchorRect = featureAnchor?.getBoundingClientRect();
+  const panelWidth = Math.min(280, window.innerWidth - 24);
+  const left = anchorRect
+    ? Math.min(
+        Math.max(12, anchorRect.left < window.innerWidth / 2 ? anchorRect.right + 12 : anchorRect.left - panelWidth - 12),
+        window.innerWidth - panelWidth - 12,
+      )
+    : undefined;
+
   return (
     <motion.aside
       ref={featureAsideRef}
       className="feature-aside"
-      style={{ top: featureAnchorY ?? "50%" }}
+      style={{
+        position: "fixed",
+        top: anchorRect ? anchorRect.top + anchorRect.height / 2 : "50%",
+        left,
+        right: left === undefined ? 262 : "auto",
+        width: panelWidth,
+      }}
       initial={reduceMotion ? false : { opacity: 0, x: 14, y: "-50%" }}
       animate={{ opacity: 1, x: 0, y: "-50%" }}
       transition={{ type: "spring", stiffness: 520, damping: 36 }}

@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
-import type { CSSProperties, ReactNode } from "react";
+import type { CSSProperties, MouseEvent as ReactMouseEvent, ReactNode } from "react";
 import { domainOf } from "../../bookmarks";
 import { NowPlaying } from "../../components/NowPlaying";
+import { Weather } from "../../components/Weather";
 import { formatDuration, totals } from "../../focus-log";
 import { getFocusLog, subscribeFocusLog } from "../../focus-log-store";
 import {
@@ -52,7 +53,7 @@ function TileHeader({ eyebrow, title, aside }: { eyebrow: string; title: string;
   );
 }
 
-function OpenButton({ children, onClick }: { children: ReactNode; onClick: () => void }) {
+function OpenButton({ children, onClick }: { children: ReactNode; onClick: (event: ReactMouseEvent<HTMLButtonElement>) => void }) {
   return <button type="button" className="overview-open" onClick={onClick}>{children}<Icon name="arrow" size={15} /></button>;
 }
 
@@ -207,16 +208,17 @@ export function DailyOverview({ workspace }: { workspace: WorkspaceView }) {
         </div>
         <nav ref={(node) => registerSide("left", node)} className="overview-nav" aria-label="Workspace features" tabIndex={0}>
           <button type="button" className="is-active" aria-current="page">Overview</button>
-          <button ref={(node) => registerItem("feature-todo list", node)} type="button" onClick={() => todoFrames[0] ? showFrame(todoFrames[0].id) : onFeaturePress("todo list")}>Tasks</button>
+          <button ref={(node) => registerItem("feature-todo list", node)} type="button" onClick={(event) => todoFrames[0] ? showFrame(todoFrames[0].id) : onFeaturePress("todo list", event.currentTarget)}>Tasks</button>
           <button ref={(node) => registerItem("feature-habits", node)} type="button" onClick={() => openFeature("habits")}>Habits</button>
           <button ref={(node) => registerItem("feature-bookmarks", node)} type="button" onClick={() => openFeature("bookmarks")}>Library</button>
         </nav>
         <div ref={(node) => registerSide("right", node)} className="overview-top-actions" tabIndex={0}>
+          <Weather unit={workspace.settings.temperatureUnit} />
           <button type="button" className="overview-icon-button" aria-label="Search or run a command" onClick={() => actionInputRef.current?.focus()}><Icon name="search" /></button>
           <button ref={(node) => registerItem("feature-reminders", node)} type="button" className="overview-icon-button" aria-label={`Open reminders${overdueReminders ? `, ${overdueReminders} overdue` : ""}`} onClick={() => openFeature("reminders")}>
             <Icon name="bell" />{overdueReminders > 0 && <span className="overview-notification" aria-hidden="true" />}
           </button>
-          <button ref={(node) => registerItem("settings", node)} type="button" className="overview-icon-button" aria-label="Open settings" onClick={onOpenSettings}><Icon name="settings" /></button>
+          <button ref={(node) => registerItem("settings", node)} type="button" className="overview-icon-button" aria-label="Open settings" data-settings-toggle onClick={onOpenSettings}><Icon name="settings" /></button>
         </div>
       </header>
 
@@ -253,7 +255,7 @@ export function DailyOverview({ workspace }: { workspace: WorkspaceView }) {
               ))}
               {openTodos.length === 0 && <Empty>{todoEntries.length ? "Everything on your lists is complete." : "No tasks yet. Open a list to plan your next step."}</Empty>}
             </div>
-            <OpenButton onClick={() => onFeaturePress("todo list")}>{todoFrames.length ? "Choose a todo list" : "Open todo lists"}</OpenButton>
+            <OpenButton onClick={(event) => onFeaturePress("todo list", event.currentTarget)}>{todoFrames.length ? "Choose a todo list" : "Open todo lists"}</OpenButton>
           </section>
 
           <section className={`overview-card overview-timer is-${pomodoro.phase}`} aria-label="Pomodoro timer">

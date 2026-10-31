@@ -190,7 +190,8 @@ export function Weather({ unit }: { unit: TemperatureUnit }) {
   if (state.status === "ready") {
     const { code, isDay, unit } = state.current;
     const condition = describe(code, isDay);
-    label = `${condition.glyph} ${place?.name ?? state.current.city} · ${condition.label}`;
+    const city = place?.name === "My location" ? state.current.city : place?.name ?? state.current.city;
+    label = `${condition.glyph} ${city} · ${condition.label}`;
     temperature = `${state.current.temperature}${unit}`;
   } else {
     label = state.status === "loading" ? "Locating…" : state.message;

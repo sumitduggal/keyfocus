@@ -113,6 +113,10 @@
   gap: 6px;
 }
 
+.overview-top-actions .hud-weather span {
+  color: var(--text-muted);
+}
+
 .overview-icon-button {
   position: relative;
   display: grid;

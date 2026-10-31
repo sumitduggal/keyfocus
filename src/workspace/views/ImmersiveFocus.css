@@ -43,6 +43,14 @@
   pointer-events: none;
 }
 
+.immersive-weather {
+  pointer-events: auto;
+}
+
+.immersive-weather .hud-weather-label {
+  max-width: clamp(80px, 13vw, 180px);
+}
+
 .immersive-brand {
   display: flex;
   align-items: center;
@@ -506,29 +514,40 @@
 }
 
 .immersive-header-actions .now-playing {
-  width: 216px;
+  display: flex;
+  width: min(275px, calc(100vw - 86px));
   margin: 0;
-  padding: 5px 7px;
-  gap: 5px;
+  padding: 5px 15px;
+  gap: 8px;
   border-radius: 12px;
   background: color-mix(in srgb, var(--surface) 76%, transparent);
 }
 
 .immersive-header-actions .now-playing-marquee {
+  flex: 0 1 auto;
+  width: auto;
+  min-width: 0;
   min-height: 20px;
 }
 
+.immersive-header-actions .now-playing-track:not(.is-scrolling) span {
+  padding-right: 0;
+}
+
 .immersive-header-actions .now-playing-row {
-  gap: 4px;
+  flex: 0 0 auto;
+  gap: 1px;
 }
 
 .immersive-header-actions .now-playing-row button {
-  min-width: 40px;
-  height: 40px;
+  flex: 0 0 20px;
+  min-width: 20px;
+  height: 28px;
   border-color: transparent;
 }
 
 .immersive-header-actions .now-playing-row .now-playing-play {
+  flex-basis: 26px;
   border-color: var(--accent);
 }
 
@@ -678,7 +697,7 @@
 
 .immersive-shell > .feature-aside {
   z-index: 14;
-  top: 50% !important;
+  top: 50%;
   right: 32px;
   width: min(340px, calc(100vw - 32px));
   max-height: calc(100svh - 48px);

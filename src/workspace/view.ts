@@ -60,7 +60,7 @@ export interface WorkspaceView {
   menuFocusIndex: number;
   activeMenuId: string | undefined;
   settingsOpen: boolean;
-  settingsAnchorY: number | null;
+  settingsAnchor: HTMLElement | null;
   menuOpen: boolean;
   query: string;
   featureMenu: Feature | null;
@@ -72,7 +72,7 @@ export interface WorkspaceView {
   barHost: HTMLElement | null;
   barActive: boolean;
   featurePanel: Feature | null;
-  featureAnchorY: number | null;
+  featureAnchor: HTMLElement | null;
   undo: { message: string; restore: () => void } | null;
   reduceMotion: boolean;
   actionInputRef: RefObject<HTMLInputElement | null>;
@@ -96,7 +96,7 @@ export interface WorkspaceView {
   onSettingsChange: (patch: Partial<Settings>) => void;
   onSettingsClose: (restoreFocus: boolean) => void;
   onToggleTheme: () => void;
-  onFeaturePress: (feature: Feature) => void;
+  onFeaturePress: (feature: Feature, trigger?: HTMLElement) => void;
   onFeaturePanelClose: () => void;
   onFeaturePanelCreate: (feature: Feature) => void;
   onFeaturePanelEntryClick: (frame: WorkspaceFrame) => void;

@@ -88,7 +88,7 @@ function WorkspaceApp() {
   const [withinSide, setWithinSide] = useState(false);
   const [theme, setTheme] = useState<Theme>(() => loadTheme(localStorage));
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const [settingsAnchorY, setSettingsAnchorY] = useState<number | null>(null);
+  const [settingsAnchor, setSettingsAnchor] = useState<HTMLElement | null>(null);
   const [settings, setSettings] = useState<Settings>(loadSettings);
   const [workspaceView, setWorkspaceView] = useState<WorkspaceViewId>(() =>
     loadWorkspaceView(localStorage),
@@ -124,7 +124,7 @@ function WorkspaceApp() {
   }, [stackCollapsed]);
   const focusStackAfterOpen = useRef(false);
   const [featurePanel, setFeaturePanel] = useState<Feature | null>(null);
-  const [featureAnchorY, setFeatureAnchorY] = useState<number | null>(null);
+  const [featureAnchor, setFeatureAnchor] = useState<HTMLElement | null>(null);
   const [entryFocusIndex, setEntryFocusIndex] = useState(0);
   const [noteBodies, setNoteBodies] = useState<Record<string, string>>(() => loadNoteBodies(localStorage));
 
@@ -149,6 +149,7 @@ function WorkspaceApp() {
     right: null,
   });
   const rightItemRefs = useRef<Record<string, HTMLButtonElement | null>>({});
+  const focusSettingsAfterViewChange = useRef(false);
   const actionInputRef = useRef<HTMLInputElement | null>(null);
   const returnTo = useRef<{ side: Side; within: boolean }>({ side: "main", within: false });
   const quietBarFocus = useRef(false);
@@ -158,6 +159,12 @@ function WorkspaceApp() {
   const featureEntryRefs = useRef<Record<string, HTMLButtonElement | null>>({});
   const registerItem = useCallback((id: string, node: HTMLButtonElement | null) => {
     rightItemRefs.current[id] = node;
+    if (id === "settings" && node && focusSettingsAfterViewChange.current) {
+      focusSettingsAfterViewChange.current = false;
+      window.requestAnimationFrame(() => {
+        if (node.isConnected) node.focus({ preventScroll: true });
+      });
+    }
   }, []);
   const registerEntry = useCallback((id: string, node: HTMLButtonElement | null) => {
     featureEntryRefs.current[id] = node;
@@ -314,16 +321,10 @@ function WorkspaceApp() {
     [frames],
   );
 
-  const openFeaturePanel = (feature: Feature) => {
+  const openFeaturePanel = (feature: Feature, trigger?: HTMLElement) => {
     setFeaturePanel(feature);
     setEntryFocusIndex(0);
-    const featureButton = rightItemRefs.current[`feature-${feature}`];
-    if (featureButton) {
-      setFeatureAnchorY(
-        featureButton.getBoundingClientRect().top +
-          featureButton.getBoundingClientRect().height / 2,
-      );
-    }
+    setFeatureAnchor(trigger ?? rightItemRefs.current[`feature-${feature}`] ?? null);
   };
 
   const focusDockItem = useCallback(() => {
@@ -997,7 +998,7 @@ function WorkspaceApp() {
     menuFocusIndex,
     activeMenuId,
     settingsOpen,
-    settingsAnchorY,
+    settingsAnchor,
     menuOpen,
     query,
     featureMenu,
@@ -1009,7 +1010,7 @@ function WorkspaceApp() {
     barHost,
     barActive,
     featurePanel,
-    featureAnchorY,
+    featureAnchor,
     undo,
     reduceMotion,
     actionInputRef,
@@ -1041,21 +1042,29 @@ function WorkspaceApp() {
     onOpenFeatureDirectly: openFeatureDirectly,
     onOpenSettings: () => {
       if (settingsOpen) {
-        setSettingsOpen(false);
+        closeSettings(true);
         return;
       }
-      const rect = rightItemRefs.current.settings?.getBoundingClientRect();
-      setSettingsAnchorY(rect ? rect.top + rect.height / 2 : null);
+      setSettingsAnchor(rightItemRefs.current.settings);
       setFeaturePanel(null);
       setSettingsOpen(true);
     },
-    onWorkspaceViewChange: setWorkspaceView,
+    onWorkspaceViewChange: (view) => {
+      if (view === workspaceView) {
+        closeSettings(true);
+        return;
+      }
+      focusSettingsAfterViewChange.current = true;
+      setSettingsAnchor(null);
+      setSettingsOpen(false);
+      setWorkspaceView(view);
+    },
     onSettingsChange: (patch) => setSettings((current) => ({ ...current, ...patch })),
     onSettingsClose: closeSettings,
     onToggleTheme: toggleTheme,
-    onFeaturePress: (feature) => {
+    onFeaturePress: (feature, trigger) => {
       if (singleFrameFeatures.includes(feature)) openFeatureDirectly(feature);
-      else openFeaturePanel(feature);
+      else openFeaturePanel(feature, trigger);
     },
     onFeaturePanelClose: closeFeaturePanel,
     onFeaturePanelCreate: (feature) => {

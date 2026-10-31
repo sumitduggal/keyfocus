@@ -11,7 +11,7 @@ interface SettingsPanelProps {
   theme: Theme;
   settings: Settings;
   workspaceView: WorkspaceViewId;
-  anchorY: number | null;
+  anchor: HTMLElement | null;
   onToggleTheme: () => void;
   onWorkspaceViewChange: (view: WorkspaceViewId) => void;
   onChange: (patch: Partial<Settings>) => void;
@@ -29,7 +29,7 @@ export function SettingsPanel({
   theme,
   settings,
   workspaceView,
-  anchorY,
+  anchor,
   onToggleTheme,
   onWorkspaceViewChange,
   onChange,
@@ -38,20 +38,54 @@ export function SettingsPanel({
   const reduceMotion = useReducedMotion();
   const panelRef = useRef<HTMLElement | null>(null);
 
-  // Center on the Settings button, then keep the whole panel inside its container.
   useLayoutEffect(() => {
-    const panel = panelRef.current;
-    const container = panel?.offsetParent;
-    if (!panel || !container) return;
-    const margin = 12;
-    const half = panel.offsetHeight / 2;
-    const wanted =
-      anchorY === null
-        ? container.clientHeight / 2
-        : anchorY - container.getBoundingClientRect().top;
-    const max = container.clientHeight - half - margin;
-    panel.style.top = `${Math.max(half + margin, Math.min(max, wanted))}px`;
-  }, [anchorY]);
+    const placePanel = () => {
+      const panel = panelRef.current;
+      if (!panel) return;
+
+      const margin = 12;
+      const gap = 12;
+      const width = panel.offsetWidth;
+      const height = panel.offsetHeight;
+      const viewportWidth = window.innerWidth;
+      const viewportHeight = window.innerHeight;
+      const trigger = anchor?.isConnected ? anchor.getBoundingClientRect() : null;
+      const openRight = trigger ? trigger.left + trigger.right < viewportWidth : false;
+      const fitsRight = trigger !== null && viewportWidth - trigger.right - gap - margin >= width;
+      const fitsLeft = trigger !== null && trigger.left - gap - margin >= width;
+
+      let left = viewportWidth - width - margin;
+      if (trigger && openRight && fitsRight) {
+        left = trigger.right + gap;
+      } else if (trigger && fitsLeft) {
+        left = trigger.left - gap - width;
+      } else if (trigger && fitsRight) {
+        left = trigger.right + gap;
+      } else if (trigger) {
+        left = (viewportWidth - width) / 2;
+      }
+
+      const triggerCenter = trigger ? (trigger.top + trigger.bottom) / 2 : viewportHeight / 2;
+      const top = Math.max(
+        margin,
+        Math.min(viewportHeight - height - margin, triggerCenter - height / 2),
+      );
+
+      panel.style.position = "fixed";
+      panel.style.left = `${Math.max(margin, Math.min(viewportWidth - width - margin, left))}px`;
+      panel.style.right = "auto";
+      panel.style.top = `${top}px`;
+      panel.style.maxHeight = `${Math.max(120, viewportHeight - margin * 2)}px`;
+    };
+
+    placePanel();
+    window.addEventListener("resize", placePanel);
+    window.addEventListener("scroll", placePanel, true);
+    return () => {
+      window.removeEventListener("resize", placePanel);
+      window.removeEventListener("scroll", placePanel, true);
+    };
+  }, [anchor]);
 
   useEffect(() => {
     panelRef.current?.focus();
@@ -70,8 +104,8 @@ export function SettingsPanel({
     <motion.aside
       ref={panelRef}
       className="feature-aside settings-aside"
-      initial={reduceMotion ? false : { opacity: 0, x: 14, y: "-50%" }}
-      animate={{ opacity: 1, x: 0, y: "-50%" }}
+      initial={reduceMotion ? false : { opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
       transition={{ type: "spring", stiffness: 520, damping: 36 }}
       aria-label="Settings"
       tabIndex={-1}
@@ -146,7 +180,7 @@ export function SettingsPanel({
         <div className="settings-row">
           <span>
             <b>Temperature</b>
-            <small>Weather in the header</small>
+            <small>Weather in workspace headers</small>
           </span>
           <button
             type="button"

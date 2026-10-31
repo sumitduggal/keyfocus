@@ -1,5 +1,6 @@
 import type { KeyboardEvent } from "react";
 import { NowPlaying } from "../../components/NowPlaying";
+import { Weather } from "../../components/Weather";
 import { FramePreview } from "../../components/FramePreview";
 import { featureMeta, visibleFeatures } from "../../constants";
 import { formatClock } from "../../pomodoro";
@@ -114,6 +115,7 @@ export function CalmWorkspace({ workspace }: { workspace: WorkspaceView }) {
         <div className="calm-date"><span>Your workspace</span><strong>{today}</strong></div>
         <div className="calm-top-actions">
           <span className="calm-frame-count">{workspace.frames.length} {workspace.frames.length === 1 ? "frame" : "frames"}</span>
+          <Weather unit={workspace.settings.temperatureUnit} />
           <button type="button" className="calm-theme-button" onClick={workspace.onToggleTheme} aria-label={`Switch to ${workspace.theme === "dark" ? "light" : "dark"} theme`}>
             {workspace.theme === "dark" ? "☼" : "☾"}
           </button>
@@ -144,7 +146,7 @@ export function CalmWorkspace({ workspace }: { workspace: WorkspaceView }) {
                 aria-current={activeFrame.feature === feature ? "page" : undefined}
                 title={featureNames[feature]}
                 onFocus={() => onRightFocus(index)}
-                onClick={() => onFeaturePress(feature)}
+                onClick={(event) => onFeaturePress(feature, event.currentTarget)}
               >
                 <span className="calm-nav-glyph" aria-hidden="true">{featureMeta[feature].glyph}</span>
                 <span>{featureNames[feature]}</span>
@@ -252,13 +254,13 @@ export function CalmWorkspace({ workspace }: { workspace: WorkspaceView }) {
                   ))}
                 </ol>
               )}
-              <button type="button" className="calm-text-action" onClick={() => onFeaturePress("todo list")}>{priorities.length ? "Open todo lists" : "Create a todo list"}<span aria-hidden="true">→</span></button>
+              <button type="button" className="calm-text-action" onClick={(event) => onFeaturePress("todo list", event.currentTarget)}>{priorities.length ? "Open todo lists" : "Create a todo list"}<span aria-hidden="true">→</span></button>
             </section>
 
             <section className="calm-upnext" aria-labelledby="calm-upnext-heading">
               <span className="calm-eyebrow" id="calm-upnext-heading">Up next</span>
               {nextReminder && nextReminderAt ? (
-                <button type="button" onClick={() => nextReminderFrame ? onShowFrame(nextReminderFrame.id) : onFeaturePress("reminders")}>
+                <button type="button" onClick={(event) => nextReminderFrame ? onShowFrame(nextReminderFrame.id) : onFeaturePress("reminders", event.currentTarget)}>
                   <span className="calm-calendar" aria-hidden="true"><strong>{toDate(nextReminderAt).getDate()}</strong><small>{toDate(nextReminderAt).toLocaleDateString("en-GB", { month: "short" })}</small></span>
                   <span><strong>{nextReminder.text}</strong><small>{reminderTime(nextReminderAt)}</small></span>
                   <span aria-hidden="true">›</span>
@@ -266,7 +268,7 @@ export function CalmWorkspace({ workspace }: { workspace: WorkspaceView }) {
               ) : (
                 <div className="calm-empty"><strong>No upcoming reminders</strong><p>Your next scheduled reminder will appear here.</p></div>
               )}
-              <button type="button" className="calm-text-action" onClick={() => onFeaturePress("reminders")}>{nextReminder ? "Open reminders" : "Add a reminder"}<span aria-hidden="true">→</span></button>
+              <button type="button" className="calm-text-action" onClick={(event) => onFeaturePress("reminders", event.currentTarget)}>{nextReminder ? "Open reminders" : "Add a reminder"}<span aria-hidden="true">→</span></button>
             </section>
 
             <section className="calm-music" aria-label="Focus music">

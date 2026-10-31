@@ -20,7 +20,7 @@ interface DockProps {
   activeFeature: Feature;
   onOpenSettings: () => void;
   setRightFocusIndex: (index: number) => void;
-  onFeaturePress: (feature: Feature) => void;
+  onFeaturePress: (feature: Feature, trigger?: HTMLElement) => void;
 }
 
 export function Dock({
@@ -59,12 +59,12 @@ export function Dock({
                 if (event.key === "Enter") {
                   event.preventDefault();
                   event.stopPropagation();
-                  onFeaturePress(feature);
+                  onFeaturePress(feature, event.currentTarget);
                   setRightFocusIndex(dockIndex);
                 }
               }}
-              onClick={() => {
-                onFeaturePress(feature);
+              onClick={(event) => {
+                onFeaturePress(feature, event.currentTarget);
                 setRightFocusIndex(dockIndex);
               }}
             >
