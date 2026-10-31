@@ -86,6 +86,8 @@ Feature panels, Settings, text inputs, the command input and editable feature co
 
 `WorkspaceApp` persists frames, note bodies, todos, habits, todo view preferences, trash, settings, theme, collapsed rails and the selected workspace view. Feature modules own additional stores and migrations, including Pomodoro duration, Focus Log, reminders/nudges, bookmarks and music/radio preferences. Storage reads generally tolerate missing or damaged values. Timer, scheduler and playback coordination are app-wide rather than tied to whichever frame is active.
 
+Cloud authentication and local-first sync are not implemented. The agreed direction and rollout are recorded in the [cloud sync plan](../design/cloud-sync-plan.md).
+
 `src/components/Notice.tsx` is the shared message surface for persistent banners, temporary toasts and inline status messages. `presentation`, `placement`, `tone`, `durationMs` and `announcement` configure its appearance, lifetime and assistive-technology behavior. “Alert” describes an assertive announcement (`announcement="assertive"`), not a separate visual component. Dialogs, menus, popovers and disclosures remain distinct interaction surfaces.
 
 ## Styling
