@@ -21,20 +21,17 @@
   background: color-mix(in srgb, var(--bg) 96%, var(--accent));
 }
 
-.calm-workspace button {
+:where(.calm-workspace button) {
   border: 0;
   color: inherit;
   cursor: pointer;
 }
 
-.calm-workspace h1,
-.calm-workspace h2,
-.calm-workspace p,
-.calm-workspace ol {
+:where(.calm-workspace h1, .calm-workspace h2, .calm-workspace p, .calm-workspace ol) {
   margin: 0;
 }
 
-.calm-workspace ol {
+:where(.calm-workspace ol) {
   padding: 0;
   list-style: none;
 }
@@ -461,14 +458,7 @@
 
 .calm-heading .calm-eyebrow {
   color: var(--accent-text);
-}
-
-.calm-heading h1 {
-  margin-top: 8px;
-  font-size: clamp(28px, 2.5vw, 40px);
-  font-weight: 600;
-  letter-spacing: -0.05em;
-  line-height: 1.08;
+  line-height: 1;
 }
 
 .calm-ready {
@@ -521,7 +511,7 @@
   box-shadow: none;
 }
 
-.calm-workspace .workspace-frame h1 {
+.calm-workspace .frame-title {
   font: 600 clamp(24px, 2.2vw, 32px)/1.12 var(--font-ui);
   letter-spacing: -0.035em;
   text-transform: none;
@@ -1262,17 +1252,13 @@
     display: none;
   }
 
-  .calm-heading h1 {
-    font-size: 30px;
-  }
-
   .calm-workspace .workspace-frame {
     min-height: 440px;
     padding: 20px 16px;
     border-radius: 18px;
   }
 
-  .calm-workspace .workspace-frame h1 {
+  .calm-workspace .frame-title {
     font-size: 25px;
   }
 

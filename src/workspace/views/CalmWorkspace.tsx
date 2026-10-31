@@ -23,6 +23,10 @@ const keepNativeButtonEnter = (event: KeyboardEvent<HTMLElement>) => {
   }
 };
 
+function CalmEmpty({ title, description, stack = false }: { title: string; description: string; stack?: boolean }) {
+  return <div className={`calm-empty${stack ? " calm-stack-empty" : ""}`}><strong>{title}</strong><p>{description}</p></div>;
+}
+
 function focusStatus(workspace: WorkspaceView) {
   const { phase, remainingSec } = workspace.pomodoro;
   if (phase === "running") return `Focus in progress · ${formatClock(remainingSec)}`;
@@ -161,10 +165,7 @@ export function CalmWorkspace({ workspace }: { workspace: WorkspaceView }) {
               <span>{stackedFrames.length}</span>
             </div>
             {stackedFrames.length === 0 ? (
-              <div className="calm-empty calm-stack-empty">
-                <strong>No recent frames</strong>
-                <p>Open another feature and it will appear here when you move on.</p>
-              </div>
+              <CalmEmpty stack title="No recent frames" description="Open another feature and it will appear here when you move on." />
             ) : (
               <ol className="calm-stack-list">
                 {stackedFrames.map((frame, index) => (
@@ -216,7 +217,7 @@ export function CalmWorkspace({ workspace }: { workspace: WorkspaceView }) {
           onFocusCapture={onMainFocus}
         >
           <div className="calm-heading">
-            <div><span className="calm-eyebrow">{activeFrame.feature} · Active frame</span><h1>One thing at a time.</h1></div>
+            <div><h1 className="calm-eyebrow">{activeFrame.feature} · Active frame</h1></div>
             <span className={`calm-ready is-${workspace.pomodoro.phase}`}><i />{focusStatus(workspace)}</span>
           </div>
           <div className="calm-active-frame"><ActiveFrame workspace={workspace} /></div>
@@ -240,7 +241,7 @@ export function CalmWorkspace({ workspace }: { workspace: WorkspaceView }) {
             <section className="calm-tasks" aria-labelledby="calm-priorities-heading">
               <header><div><span className="calm-eyebrow">Open todos</span><h2 id="calm-priorities-heading">Your priorities</h2></div><span>{todoOpenCount}{todoOverdueCount > 0 ? ` · ${todoOverdueCount} overdue` : ""}</span></header>
               {priorities.length === 0 ? (
-                <div className="calm-empty"><strong>Nothing open</strong><p>Your open todo items will appear here.</p></div>
+                <CalmEmpty title="Nothing open" description="Your open todo items will appear here." />
               ) : (
                 <ol className="calm-priority-list">
                   {priorities.slice(0, 5).map(({ frame, item }: { frame: WorkspaceFrame; item: TodoItem }) => (
@@ -266,7 +267,7 @@ export function CalmWorkspace({ workspace }: { workspace: WorkspaceView }) {
                   <span aria-hidden="true">›</span>
                 </button>
               ) : (
-                <div className="calm-empty"><strong>No upcoming reminders</strong><p>Your next scheduled reminder will appear here.</p></div>
+                <CalmEmpty title="No upcoming reminders" description="Your next scheduled reminder will appear here." />
               )}
               <button type="button" className="calm-text-action" onClick={(event) => onFeaturePress("reminders", event.currentTarget)}>{nextReminder ? "Open reminders" : "Add a reminder"}<span aria-hidden="true">→</span></button>
             </section>

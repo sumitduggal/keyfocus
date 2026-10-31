@@ -41,6 +41,20 @@ async function expectNoHorizontalOverflow(page: Page) {
   ).toBe(true)
 }
 
+test('shared list styles override workspace defaults', async ({ page }) => {
+  await openWorkspace(page, 'calm')
+  await page.keyboard.press('Control+k')
+  await page.getByRole('menuitem', { name: /Todo List/ }).click()
+  await page.getByRole('menuitem', { name: /New Todo List/ }).click()
+
+  await expect(page.getByRole('button', { name: 'Delete list' })).toHaveCSS('border-top-width', '1px')
+  await expect(page.locator('.frame-foot', { hasText: '0 open' })).toHaveCSS('margin-top', '22px')
+
+  await switchWorkspace(page, 'overview')
+  await page.getByRole('button', { name: 'Tasks', exact: true }).click()
+  await expect(page.getByRole('dialog').getByRole('button', { name: 'Delete list' })).toHaveCSS('border-top-width', '1px')
+})
+
 for (const view of views) {
   test(`${view.label} renders its adapter and persists after reload`, async ({ page }) => {
     await openWorkspace(page, view.id)

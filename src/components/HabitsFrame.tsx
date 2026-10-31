@@ -1,3 +1,4 @@
+import { DeleteListControl } from "./DeleteListControl";
 import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { usePopup } from "../motion";
@@ -48,7 +49,6 @@ export function HabitsFrame({ habits, onChange, onDeleteList }: HabitsFrameProps
   const popup = usePopup("top right");
   const reduceMotion = useReducedMotion();
   const moreRefs = useRef<Record<string, HTMLButtonElement | null>>({});
-  const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [confirmingHabit, setConfirmingHabit] = useState<string | null>(null);
   // The last deleted habit and where it was, kept for a few seconds so it can be put back.
   const [undo, setUndo] = useState<{ habit: Habit; index: number } | null>(null);
@@ -377,24 +377,7 @@ export function HabitsFrame({ habits, onChange, onDeleteList }: HabitsFrameProps
         </>
       )}
 
-      {onDeleteList &&
-        (confirmingDelete ? (
-          <div className="todo-confirm" role="alertdialog" aria-label="Confirm delete habit list">
-            <p>Delete this habit list and its {habits.length} habits? You can undo for a few seconds.</p>
-            <div>
-              <button type="button" className="todo-danger" onClick={onDeleteList}>
-                Delete habit list
-              </button>
-              <button type="button" onClick={() => setConfirmingDelete(false)}>
-                Cancel
-              </button>
-            </div>
-          </div>
-        ) : (
-          <button type="button" className="todo-delete-list" onClick={() => setConfirmingDelete(true)}>
-            Delete habit list
-          </button>
-        ))}
+      {onDeleteList && <DeleteListControl label="Delete habit list" dialogLabel="Confirm delete habit list" description={`Delete this habit list and its ${habits.length} habits? You can undo for a few seconds.`} onDelete={onDeleteList} />}
     </>
   );
 }

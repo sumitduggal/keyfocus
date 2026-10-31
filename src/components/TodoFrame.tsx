@@ -1,3 +1,4 @@
+import { DeleteListControl } from "./DeleteListControl";
 import { useRef, useState } from "react";
 import type { CSSProperties, DragEvent, KeyboardEvent } from "react";
 import {
@@ -61,7 +62,6 @@ export function TodoFrame({
   const [draft, setDraft] = useState("");
   const [activeSuggestion, setActiveSuggestion] = useState(0);
   const [dismissedToken, setDismissedToken] = useState<string | null>(null);
-  const [confirmingDelete, setConfirmingDelete] = useState(false);
   // The item whose reminder time is being edited.
   const [remindingId, setRemindingId] = useState<string | null>(null);
   const { filter, sort } = view;
@@ -403,24 +403,7 @@ export function TodoFrame({
         </button>
       )}
 
-      {onDeleteList &&
-        (confirmingDelete ? (
-          <div className="todo-confirm" role="alertdialog" aria-label="Confirm delete list">
-            <p>Delete this list and its {items.length} items? You can undo for a few seconds.</p>
-            <div>
-              <button type="button" className="todo-danger" onClick={onDeleteList}>
-                Delete list
-              </button>
-              <button type="button" onClick={() => setConfirmingDelete(false)}>
-                Cancel
-              </button>
-            </div>
-          </div>
-        ) : (
-          <button type="button" className="todo-delete-list" onClick={() => setConfirmingDelete(true)}>
-            Delete list
-          </button>
-        ))}
+      {onDeleteList && <DeleteListControl label="Delete list" dialogLabel="Confirm delete list" description={`Delete this list and its ${items.length} items? You can undo for a few seconds.`} onDelete={onDeleteList} />}
     </>
   );
 }

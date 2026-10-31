@@ -121,7 +121,7 @@
   letter-spacing: 0.14em;
 }
 
-.workspace-frame h1 {
+.frame-title {
   margin: 0;
   color: var(--text);
   font: 700 28px/1.1 var(--font-display);
@@ -1645,7 +1645,7 @@
     padding: 16px 16px 18px;
   }
 
-  .workspace-frame h1 {
+  .frame-title {
     font-size: 18px;
     letter-spacing: 0.1em;
   }

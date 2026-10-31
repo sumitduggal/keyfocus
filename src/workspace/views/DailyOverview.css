@@ -16,7 +16,7 @@
   box-sizing: border-box;
 }
 
-.daily-overview button {
+:where(.daily-overview button) {
   border: 0;
   cursor: pointer;
 }

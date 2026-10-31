@@ -2,6 +2,7 @@ import { useRef, useState } from "react";
 import { countDuplicates, detectFormat, exportAs, mergeImport, parseImport, type Format, type ImportedBookmark } from "../bookmarks-io";
 import { getLibrary, updateLibrary } from "../bookmarks-store";
 import { Notice } from "./Notice";
+import { SettingsLabel } from "./SettingsLabel";
 
 // Import and export for the bookmarks library, shown inside the Settings panel.
 export function BookmarksSettings() {
@@ -43,10 +44,7 @@ export function BookmarksSettings() {
   return (
     <>
       <div className="settings-row">
-        <span>
-          <b>Bookmarks import</b>
-          <small>Browser HTML, CSV or JSON</small>
-        </span>
+        <SettingsLabel title="Bookmarks import" description="Browser HTML, CSV or JSON" />
         <button type="button" onClick={() => fileRef.current?.click()}>
           Import
         </button>
@@ -64,10 +62,7 @@ export function BookmarksSettings() {
       </div>
       {pending && (
         <div className="settings-row settings-note" role="alertdialog" aria-label="Duplicates found">
-          <span>
-            <b>{pending.duplicates} of {pending.rows.length} already saved</b>
-            <small>Skip them, or import everything?</small>
-          </span>
+          <SettingsLabel title={`${pending.duplicates} of ${pending.rows.length} already saved`} description="Skip them, or import everything?" />
           <span className="settings-controls">
             <button type="button" onClick={() => finish(pending.rows, true)}>Skip</button>
             <button type="button" onClick={() => finish(pending.rows, false)}>Import all</button>
@@ -76,10 +71,7 @@ export function BookmarksSettings() {
         </div>
       )}
       <div className="settings-row">
-        <span>
-          <b>Bookmarks export</b>
-          <small>Backup or move to another app</small>
-        </span>
+        <SettingsLabel title="Bookmarks export" description="Backup or move to another app" />
         <span className="settings-controls">
           {(["html", "csv", "json"] as Format[]).map((format) => (
             <button key={format} type="button" onClick={() => download(format)}>

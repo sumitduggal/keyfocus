@@ -2,6 +2,7 @@ import { useCallback, useEffect, useLayoutEffect } from "react";
 import { motion, useReducedMotion } from "motion/react";
 import type { Feature, WorkspaceFrame } from "../types";
 import { featureMeta } from "../constants";
+import { PanelHeading } from "./PanelHeading";
 
 interface FeaturePanelProps {
   featurePanel: Feature;
@@ -126,13 +127,7 @@ export function FeaturePanel({
       tabIndex={-1}
       onKeyDown={handleKeyDown}
     >
-      <div className="feature-aside-heading">
-        <span>{featureMeta[featurePanel].glyph}</span>
-        <b>{featureMeta[featurePanel].frame.title}</b>
-        <button type="button" aria-label="Close feature entries" onClick={onClose}>
-          ×
-        </button>
-      </div>
+      <PanelHeading glyph={featureMeta[featurePanel].glyph} title={featureMeta[featurePanel].frame.title} closeLabel="Close feature entries" onClose={onClose} />
       <div className="feature-entry-list">
         {onCreate && (
           <button type="button" className="feature-new" onClick={onCreate}>

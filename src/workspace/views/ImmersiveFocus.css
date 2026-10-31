@@ -147,14 +147,14 @@
   box-shadow: var(--shadow-card);
 }
 
-.immersive-active:not(.is-pomodoro) .workspace-frame h1,
-.immersive-active.is-pomodoro .workspace-frame h1 {
+.immersive-active:not(.is-pomodoro) .frame-title,
+.immersive-active.is-pomodoro .frame-title {
   font-family: var(--font-ui);
   letter-spacing: -0.025em;
   text-transform: none;
 }
 
-.immersive-active:not(.is-pomodoro) .workspace-frame h1 input {
+.immersive-active:not(.is-pomodoro) .frame-title-input {
   font-family: inherit;
   letter-spacing: inherit;
   text-transform: none;
@@ -206,7 +206,7 @@
   letter-spacing: 0.15em;
 }
 
-.immersive-active.is-pomodoro .workspace-frame h1 input {
+.immersive-active.is-pomodoro .frame-title-input {
   width: 100%;
   color: var(--text-muted);
   font-size: clamp(18px, 2vw, 24px);
@@ -939,7 +939,7 @@
     display: none;
   }
 
-  .immersive-active .workspace-frame h1 {
+  .immersive-active .frame-title {
     font-size: 23px;
   }
 

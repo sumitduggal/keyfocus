@@ -6,6 +6,8 @@ import type { Settings } from "../settings";
 import type { WorkspaceViewId } from "../workspace/view";
 import { workspaceViewMeta } from "../workspace/view";
 import { BookmarksSettings } from "./BookmarksSettings";
+import { SettingsLabel } from "./SettingsLabel";
+import { PanelHeading } from "./PanelHeading";
 
 interface SettingsPanelProps {
   theme: Theme;
@@ -117,17 +119,7 @@ export function SettingsPanel({
         onClose(true);
       }}
     >
-      <div className="feature-aside-heading">
-        <span aria-hidden="true">⚙</span>
-        <b>Settings</b>
-        <button
-          type="button"
-          aria-label="Close settings"
-          onClick={() => onClose(true)}
-        >
-          ×
-        </button>
-      </div>
+      <PanelHeading glyph="⚙" title="Settings" closeLabel="Close settings" onClose={() => onClose(true)} />
 
       <section
         className="settings-workspace-view"
@@ -168,20 +160,14 @@ export function SettingsPanel({
 
       <div className="settings-pair">
         <div className="settings-row">
-          <span>
-            <b>Appearance</b>
-            <small>Shortcut ⌘⇧L</small>
-          </span>
+          <SettingsLabel title="Appearance" description="Shortcut ⌘⇧L" />
           <button type="button" onClick={onToggleTheme}>
             {theme === "dark" ? "☾ Dark" : "☀ Light"}
           </button>
         </div>
 
         <div className="settings-row">
-          <span>
-            <b>Temperature</b>
-            <small>Weather in workspace headers</small>
-          </span>
+          <SettingsLabel title="Temperature" description="Weather in workspace headers" />
           <button
             type="button"
             aria-label={`Temperature unit: ${settings.temperatureUnit}. Switch`}
@@ -200,10 +186,7 @@ export function SettingsPanel({
       </div>
 
       <div className="settings-row">
-        <span>
-          <b>Timer alert</b>
-          <small>Plays when a session ends</small>
-        </span>
+        <SettingsLabel title="Timer alert" description="Plays when a session ends" />
         <span className="settings-controls">
           <select
             aria-label="Timer alert sound"

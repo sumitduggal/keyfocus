@@ -1,3 +1,4 @@
+import { DeleteListControl } from "./DeleteListControl";
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { usePopup, usePress } from "../motion";
@@ -54,7 +55,6 @@ export function RemindersFrame({ frameId, onDeleteList }: RemindersFrameProps) {
   const [text, setText] = useState("");
   const [panel, setPanel] = useState<Panel>(null);
   const [showDone, setShowDone] = useState(false);
-  const [confirmingDelete, setConfirmingDelete] = useState(false);
   const popupRef = useRef<HTMLDivElement | null>(null);
   const [activeSuggestion, setActiveSuggestion] = useState(0);
   const [dismissedToken, setDismissedToken] = useState<string | null>(null);
@@ -249,24 +249,7 @@ export function RemindersFrame({ frameId, onDeleteList }: RemindersFrameProps) {
         </>
       )}
 
-      {onDeleteList &&
-        (confirmingDelete ? (
-          <div className="todo-confirm" role="alertdialog" aria-label="Confirm delete reminder list">
-            <p>Delete this reminder list and its {data.reminders.length} reminders? You can undo for a few seconds.</p>
-            <div>
-              <button type="button" className="todo-danger" onClick={onDeleteList}>
-                Delete reminder list
-              </button>
-              <button type="button" onClick={() => setConfirmingDelete(false)}>
-                Cancel
-              </button>
-            </div>
-          </div>
-        ) : (
-          <button type="button" className="todo-delete-list" onClick={() => setConfirmingDelete(true)}>
-            Delete reminder list
-          </button>
-        ))}
+      {onDeleteList && <DeleteListControl label="Delete reminder list" dialogLabel="Confirm delete reminder list" description={`Delete this reminder list and its ${data.reminders.length} reminders? You can undo for a few seconds.`} onDelete={onDeleteList} />}
     </>
   );
 }

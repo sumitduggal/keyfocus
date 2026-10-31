@@ -199,7 +199,7 @@ export function Mainframe({
             {frame.eyebrow}
             <span className="frame-code">// frm-{frame.feature.slice(0, 3).toUpperCase()}</span>
           </p>
-          <h1>
+          <h1 className="frame-title">
             <input
               className="frame-title-input"
               aria-label="List name"
