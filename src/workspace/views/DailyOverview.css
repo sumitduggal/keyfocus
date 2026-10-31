@@ -839,9 +839,13 @@
   border-radius: 14px;
 }
 
-.daily-overview .undo-toast,
-.daily-overview .overdue-banner {
+.daily-overview .notice--toast,
+.daily-overview .notice--banner.notice--header {
   position: fixed;
+  z-index: 70;
+}
+
+.daily-overview > .notice-stack {
   z-index: 70;
 }
 

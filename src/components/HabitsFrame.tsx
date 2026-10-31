@@ -4,6 +4,7 @@ import { usePopup } from "../motion";
 import type { FormEvent } from "react";
 import { DEFAULT_HABIT_ICON } from "../icons";
 import { IconPicker } from "./IconPicker";
+import { Notice } from "./Notice";
 import { requestNotificationPermission } from "../reminders-store";
 import {
   MAX_TARGET,
@@ -57,12 +58,6 @@ export function HabitsFrame({ habits, onChange, onDeleteList }: HabitsFrameProps
     const timer = window.setInterval(() => setToday(new Date()), 60_000);
     return () => window.clearInterval(timer);
   }, []);
-
-  useEffect(() => {
-    if (!undo) return;
-    const timer = window.setTimeout(() => setUndo(null), 5000);
-    return () => window.clearTimeout(timer);
-  }, [undo]);
 
   // Closes the options popup. Escape passes the habit so focus goes back to its More button.
   const closePopup = (returnFocusTo?: string) => {
@@ -328,10 +323,19 @@ export function HabitsFrame({ habits, onChange, onDeleteList }: HabitsFrameProps
       </ul>
 
       {undo && (
-        <p className="frame-foot habit-undo" role="status">
+        <Notice
+          presentation="inline"
+          tone="neutral"
+          announcement="polite"
+          durationMs={5000}
+          timeoutKey={undo}
+          onDismiss={() => setUndo(null)}
+          className="frame-foot habit-undo"
+        >
           Deleted "{undo.habit.name}"{" "}
           <button
             type="button"
+            className="notice-action"
             onClick={() => {
               const restored = [...habits];
               restored.splice(Math.min(undo.index, restored.length), 0, undo.habit);
@@ -341,7 +345,7 @@ export function HabitsFrame({ habits, onChange, onDeleteList }: HabitsFrameProps
           >
             Undo
           </button>
-        </p>
+        </Notice>
       )}
 
       {active.length === 0 && <p className="frame-foot">No habits yet. Add one above.</p>}

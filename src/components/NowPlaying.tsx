@@ -2,6 +2,7 @@ import { useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore } fr
 import type { KeyboardEvent } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { useFadeUp, usePopup, usePress } from "../motion";
+import { Notice } from "./Notice";
 import { groupByCountry, isFavourite, loadFavourites, saveFavourites, toggleFavourite } from "../radio-favourites";
 import { BUILT_IN_SOUNDS, type SoundId } from "../music";
 import {
@@ -334,7 +335,7 @@ export function NowPlaying() {
               </svg>
             </button>
           </form>
-          {radioStatus && <p className="now-playing-label" role="status">{radioStatus}</p>}
+          {radioStatus && <Notice presentation="inline" announcement="polite" className="now-playing-label">{radioStatus}</Notice>}
           {stations.length > 0 && (
             <>
               <p className="now-playing-label">Results</p>

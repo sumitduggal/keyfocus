@@ -1,0 +1,225 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Keyfocus UI terminology — draft</title>
+  <style>
+    :root { color-scheme: dark; --bg:#111315; --surface:#1b1e21; --surface2:#23272b; --line:#363c42; --text:#edf0f2; --muted:#a8b0b7; --accent:#70d4ff; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:var(--bg); color:var(--text); font:15px/1.55 Inter,ui-sans-serif,system-ui,sans-serif; }
+    main { width:min(1440px, calc(100% - 40px)); margin:0 auto; padding:48px 0 80px; }
+    h1,h2,h3,p { margin-top:0; }
+    h1 { max-width:900px; margin-bottom:12px; font-size:clamp(34px,5vw,60px); line-height:1.02; letter-spacing:-.045em; }
+    h2 { margin:52px 0 16px; font-size:28px; letter-spacing:-.03em; }
+    h3 { margin-bottom:8px; font-size:19px; }
+    p,li { color:var(--muted); }
+    strong { color:var(--text); }
+    code { color:var(--accent); font-size:.92em; }
+    .eyebrow { color:var(--accent); font:11px ui-monospace,monospace; letter-spacing:.13em; text-transform:uppercase; }
+    .intro { max-width:800px; color:var(--muted); font-size:18px; }
+    .meta { display:flex; flex-wrap:wrap; gap:8px; margin:22px 0 34px; }
+    .meta span { padding:6px 10px; border:1px solid var(--line); border-radius:999px; color:var(--muted); font-size:12px; }
+    .note { padding:14px 16px; border-left:3px solid var(--accent); background:var(--surface); color:var(--muted); }
+    .view { margin:36px 0 54px; padding:22px; border:1px solid var(--line); border-radius:18px; background:var(--surface); }
+    .view-head { display:flex; justify-content:space-between; align-items:end; gap:16px; }
+    .view-head p { margin-bottom:0; }
+    .screen { position:relative; margin:18px 0; overflow:hidden; border:1px solid var(--line); border-radius:10px; background:#0d0f11; }
+    .screen img { display:block; width:100%; height:auto; }
+    .pin { position:absolute; display:grid; width:28px; height:28px; place-items:center; border:2px solid white; border-radius:50%; background:#0b8ec4; box-shadow:0 2px 12px #000b; color:white; font:bold 13px/1 ui-monospace,monospace; transform:translate(-50%,-50%); }
+    .legend { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px 24px; margin:0; padding:0; list-style:none; }
+    .legend li { display:grid; grid-template-columns:28px 1fr; gap:9px; align-items:start; padding:8px 0; border-bottom:1px solid #ffffff12; }
+    .num { display:grid; width:24px; height:24px; place-items:center; border-radius:50%; background:#0b8ec4; color:white; font:bold 12px ui-monospace,monospace; }
+    .term { color:var(--text); font-weight:650; }
+    .sub { display:block; color:var(--muted); font-size:13px; }
+    .grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; }
+    .tile { padding:14px; border:1px solid var(--line); border-radius:12px; background:var(--surface2); }
+    .tile img { display:block; width:100%; height:auto; border:1px solid var(--line); border-radius:7px; }
+    .tile h3 { margin:12px 0 3px; font-size:16px; }
+    .tile p { margin:0; font-size:13px; }
+    .table-wrap { overflow-x:auto; border:1px solid var(--line); border-radius:12px; }
+    table { width:100%; border-collapse:collapse; min-width:720px; }
+    th,td { padding:12px 14px; border-bottom:1px solid var(--line); text-align:left; vertical-align:top; }
+    th { color:var(--text); background:var(--surface2); font-size:12px; letter-spacing:.06em; text-transform:uppercase; }
+    td { color:var(--muted); }
+    td:first-child { color:var(--text); font-weight:650; }
+    details { margin:12px 0; padding:15px 17px; border:1px solid var(--line); border-radius:12px; background:var(--surface); }
+    summary { cursor:pointer; color:var(--text); font-weight:650; }
+    .small { font-size:13px; }
+    footer { margin-top:48px; padding-top:18px; border-top:1px solid var(--line); color:var(--muted); font-size:13px; }
+    @media(max-width:760px) { main { width:calc(100% - 24px); padding-top:28px; } .view { padding:14px; } .legend,.grid { grid-template-columns:1fr; } .view-head { display:block; } h2 { margin-top:38px; } }
+  </style>
+</head>
+<body>
+<main>
+  <p class="eyebrow">Keyfocus · terminology draft 01</p>
+  <h1>A shared map of the interface</h1>
+  <p class="intro">A visual inventory of the four workspace views and the common controls around them. The numbers on each screenshot point to the matching names below.</p>
+  <div class="meta"><span>Captured 31 October 2026</span><span>Dark appearance</span><span>Pomodoro frame active</span><span>Local data shown was empty</span></div>
+  <p class="note"><strong>Scope:</strong> these screenshots show the four views plus Settings, Music Options and the command palette. No reminder was due during capture, so reminder notices and undo notices are named in the shared glossary but are not shown in a fabricated state. The same <strong>Notice</strong> component supports persistent and temporary presentation, placement, tone, dismissal behavior and accessibility announcements.</p>
+
+  <h2>1. The four workspace views</h2>
+  <section class="view">
+    <div class="view-head"><div><p class="eyebrow">View 01</p><h3>Operator Console</h3></div><p>Dense three-side workspace</p></div>
+    <div class="screen">
+      <img src="operator.png" alt="Operator Console: stack at left, active Pomodoro frame in the centre, feature dock at right">
+      <span class="pin" style="left:8%;top:5%">1</span><span class="pin" style="left:51%;top:5%">2</span><span class="pin" style="left:8%;top:48%">3</span><span class="pin" style="left:52%;top:49%">4</span><span class="pin" style="left:91%;top:38%">5</span><span class="pin" style="left:91%;top:82%">6</span><span class="pin" style="left:50%;top:96%">7</span>
+    </div>
+    <ol class="legend">
+      <li><span class="num">1</span><span><span class="term">Workspace header</span><span class="sub">Brand, mode, frame count, active feature, weather and clock.</span></span></li>
+      <li><span class="num">2</span><span><span class="term">Status readouts</span><span class="sub">Compact global state: focus mode, number of frames, active feature.</span></span></li>
+      <li><span class="num">3</span><span><span class="term">Stack</span><span class="sub">Recent non-active frames. Empty state appears here when no frames are stacked.</span></span></li>
+      <li><span class="num">4</span><span><span class="term">Active Frame</span><span class="sub">The one feature frame currently in focus; here it is the Pomodoro frame.</span></span></li>
+      <li><span class="num">5</span><span><span class="term">Feature Dock</span><span class="sub">Feature navigation and Settings.</span></span></li>
+      <li><span class="num">6</span><span><span class="term">Now Playing mini-player</span><span class="sub">Global playback controls that stay available across frames.</span></span></li>
+      <li><span class="num">7</span><span><span class="term">Command Bar</span><span class="sub">Text entry trigger for the shared command/search menu; ⌘K opens it too.</span></span></li>
+    </ol>
+  </section>
+
+  <section class="view">
+    <div class="view-head"><div><p class="eyebrow">View 02</p><h3>Calm Workspace</h3></div><p>Navigation, active work and context</p></div>
+    <div class="screen">
+      <img src="calm.png" alt="Calm Workspace with feature navigation, active Pomodoro frame and context panel">
+      <span class="pin" style="left:7%;top:4%">1</span><span class="pin" style="left:8%;top:23%">2</span><span class="pin" style="left:9%;top:51%">3</span><span class="pin" style="left:48%;top:17%">4</span><span class="pin" style="left:48%;top:52%">5</span><span class="pin" style="left:89%;top:40%">6</span><span class="pin" style="left:90%;top:81%">7</span><span class="pin" style="left:51%;top:96%">8</span>
+    </div>
+    <ol class="legend">
+      <li><span class="num">1</span><span><span class="term">Top Bar</span><span class="sub">Brand, date, frame count and appearance control.</span></span></li>
+      <li><span class="num">2</span><span><span class="term">Feature Navigation</span><span class="sub">Open or promote a feature frame.</span></span></li>
+      <li><span class="num">3</span><span><span class="term">Recent Frames</span><span class="sub">Stack items shown as a readable list.</span></span></li>
+      <li><span class="num">4</span><span><span class="term">Active Frame Heading</span><span class="sub">Feature name, active-frame label and current focus status.</span></span></li>
+      <li><span class="num">5</span><span><span class="term">Active Frame Surface</span><span class="sub">The shared feature implementation and controls.</span></span></li>
+      <li><span class="num">6</span><span><span class="term">Context Panel</span><span class="sub">Derived priorities, next reminder and playback context.</span></span></li>
+      <li><span class="num">7</span><span><span class="term">Context Card</span><span class="sub">A focused block inside the Context Panel, such as “Up next.”</span></span></li>
+      <li><span class="num">8</span><span><span class="term">Command Bar</span><span class="sub">Shared command and search entry point.</span></span></li>
+    </ol>
+  </section>
+
+  <section class="view">
+    <div class="view-head"><div><p class="eyebrow">View 03</p><h3>Immersive Focus</h3></div><p>Central session with compact navigation</p></div>
+    <div class="screen">
+      <img src="immersive.png" alt="Immersive Focus with central timer, bottom feature dock and latest opened control">
+      <span class="pin" style="left:7%;top:4%">1</span><span class="pin" style="left:51%;top:4%">2</span><span class="pin" style="left:88%;top:5%">3</span><span class="pin" style="left:50%;top:42%">4</span><span class="pin" style="left:50%;top:95%">5</span><span class="pin" style="left:9%;top:95%">6</span><span class="pin" style="left:92%;top:95%">7</span>
+    </div>
+    <ol class="legend">
+      <li><span class="num">1</span><span><span class="term">Workspace Brand</span><span class="sub">Compact route back to the workspace identity.</span></span></li>
+      <li><span class="num">2</span><span><span class="term">Focus Status</span><span class="sub">Current mode or session state.</span></span></li>
+      <li><span class="num">3</span><span><span class="term">Player and Settings Controls</span><span class="sub">Global playback controls and Settings entry.</span></span></li>
+      <li><span class="num">4</span><span><span class="term">Focus Surface</span><span class="sub">The active frame, visually centred; timer and its controls are primary here.</span></span></li>
+      <li><span class="num">5</span><span><span class="term">Feature Dock</span><span class="sub">Compact feature navigation at the bottom.</span></span></li>
+      <li><span class="num">6</span><span><span class="term">Latest Opened</span><span class="sub">Control that reveals the Stack and lets a frame be promoted.</span></span></li>
+      <li><span class="num">7</span><span><span class="term">Command Bar</span><span class="sub">Shared command and search entry point.</span></span></li>
+    </ol>
+  </section>
+
+  <section class="view">
+    <div class="view-head"><div><p class="eyebrow">View 04</p><h3>Daily Overview</h3></div><p>Planning dashboard of real feature summaries</p></div>
+    <div class="screen">
+      <img src="overview.png" alt="Daily Overview with header navigation and a grid of feature summary cards">
+      <span class="pin" style="left:50%;top:3%">1</span><span class="pin" style="left:94%;top:3%">2</span><span class="pin" style="left:18%;top:12%">3</span><span class="pin" style="left:83%;top:15%">4</span><span class="pin" style="left:21%;top:34%">5</span><span class="pin" style="left:58%;top:35%">6</span><span class="pin" style="left:88%;top:35%">7</span><span class="pin" style="left:20%;top:61%">8</span><span class="pin" style="left:58%;top:61%">9</span><span class="pin" style="left:87%;top:61%">10</span><span class="pin" style="left:50%;top:97%">11</span>
+    </div>
+    <ol class="legend">
+      <li><span class="num">1</span><span><span class="term">Overview Navigation</span><span class="sub">Top-level Overview, Tasks, Habits and Library routes.</span></span></li>
+      <li><span class="num">2</span><span><span class="term">Header Actions</span><span class="sub">Search/commands, reminders and Settings.</span></span></li>
+      <li><span class="num">3</span><span><span class="term">Daily Heading</span><span class="sub">Date, page title and short orientation copy.</span></span></li>
+      <li><span class="num">4</span><span><span class="term">Focus Metrics</span><span class="sub">Completed focus, sessions and partial focus totals.</span></span></li>
+      <li><span class="num">5</span><span><span class="term">Open Priorities Card</span><span class="sub">Read-only summary of unfinished todo items.</span></span></li>
+      <li><span class="num">6</span><span><span class="term">Pomodoro Timer Card</span><span class="sub">Read-only timer summary with a route to the active timer frame.</span></span></li>
+      <li><span class="num">7</span><span><span class="term">Upcoming Reminders Card</span><span class="sub">Summary of the next scheduled reminders.</span></span></li>
+      <li><span class="num">8</span><span><span class="term">Habit Rhythm Card</span><span class="sub">Today’s habit progress summary.</span></span></li>
+      <li><span class="num">9</span><span><span class="term">Notes Card</span><span class="sub">Recent notes summary and route to Notes.</span></span></li>
+      <li><span class="num">10</span><span><span class="term">Now Playing Card</span><span class="sub">Global music controls presented inside the overview grid.</span></span></li>
+      <li><span class="num">11</span><span><span class="term">Command Bar</span><span class="sub">Shared command and search entry point.</span></span></li>
+      <li><span class="num">—</span><span><span class="term">Bookmarks Card</span><span class="sub">Full-width library summary below the six-card row.</span></span></li>
+    </ol>
+  </section>
+
+  <h2>2. Shared frame vocabulary</h2>
+  <p>The app keeps the same underlying workspace as the presentation changes. These names can be used in future design notes and issues.</p>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Term</th><th>Use it for</th><th>Current labels you may see</th></tr></thead>
+    <tbody>
+      <tr><td>Workspace</td><td>The whole Keyfocus working environment: frames, navigation, command access and global controls.</td><td>“Your workspace”, “Focus space”</td></tr>
+      <tr><td>Workspace View</td><td>One of the four layouts applied to the same workspace state.</td><td>Operator Console, Calm Workspace, Immersive Focus, Daily Overview</td></tr>
+      <tr><td>Feature</td><td>A tool category that can have a frame, such as Pomodoro, Todo List, Habits, Reminders, Bookmarks or Notes.</td><td>“Features”, “Tasks”, “Library”</td></tr>
+      <tr><td>Frame</td><td>A persistent instance of a feature. It keeps its title and feature data when it leaves the active position.</td><td>“Frame”, “Recent frame”, “Latest opened”</td></tr>
+      <tr><td>Active Frame</td><td>The single frame currently shown as the main editing surface.</td><td>“Active”, “Active frame”, “Focus surface”</td></tr>
+      <tr><td>Stack</td><td>The recency-ordered frames behind the active frame. Choosing one promotes it.</td><td>“Latest frames”, “Recent frames”, “Latest opened”</td></tr>
+      <tr><td>Feature Navigation</td><td>Controls that open or promote feature frames. Use this general term across layouts.</td><td>Feature Dock, Calm sidebar, Overview Navigation</td></tr>
+      <tr><td>Context Panel</td><td>Calm Workspace’s derived priorities, reminders and playback information.</td><td>“Context”, “Your priorities”, “Up next”</td></tr>
+      <tr><td>Overview Card</td><td>A read-only summary tile in Daily Overview, with a route to the real feature.</td><td>Open priorities, Pomodoro timer, Habit rhythm, Notes, Now playing, Bookmarks</td></tr>
+      <tr><td>Command Bar</td><td>The persistent text/button control that opens commands and search.</td><td>“Run a command or search…”</td></tr>
+      <tr><td>Command Palette</td><td>The menu opened by the Command Bar or ⌘K; it offers create/open/search actions.</td><td>“Create or search”, command rows</td></tr>
+      <tr><td>Workspace Settings Panel</td><td>The panel for workspace view, appearance, timer alert and bookmark import/export preferences.</td><td>“Settings”</td></tr>
+      <tr><td>Notice</td><td>The shared component for short messages with optional actions. Props configure presentation, placement, tone, lifetime, dismissal and screen-reader announcement.</td><td>Reminder notice, undo notice, overdue notice</td></tr>
+      <tr><td>Empty State</td><td>Explanatory content shown when a stack, list, summary or history has no entries.</td><td>“No recent frames”, “No tasks yet”, “No sessions yet”</td></tr>
+    </tbody>
+  </table></div>
+
+  <h2>3. Popups, menus and notices</h2>
+  <p>Use the component term as the umbrella name; use the specific label for the named UI piece.</p>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Shared component / surface</th><th>Configuration / item</th><th>Purpose / distinction</th></tr></thead>
+    <tbody>
+      <tr><td>Notice</td><td>Persistent reminder notice</td><td><code>presentation="banner"</code>, no auto-dismiss duration, top placement, actions for Done/Snooze/Dismiss, assertive announcement.</td></tr>
+      <tr><td>Notice</td><td>Undo notice</td><td><code>presentation="toast"</code>, five-second duration, bottom placement, polite announcement and an Undo action.</td></tr>
+      <tr><td>Notice</td><td>Overdue notice</td><td><code>presentation="banner"</code>, persistent until dismissed, below-header placement, warning tone and polite announcement.</td></tr>
+      <tr><td>Notice</td><td>Inline habit undo notice</td><td><code>presentation="inline"</code>, five-second duration, polite announcement and an Undo action.</td></tr>
+      <tr><td>Notice announcement</td><td>Polite or assertive</td><td>Accessibility behavior configured separately from how the notice looks. “Alert” is the assertive announcement setting, not a separate visual component.</td></tr>
+      <tr><td>Popover</td><td>Music Options; Focus Log Chart</td><td>Anchored floating panel for music controls, or a chart and heat map from Focus Log.</td></tr>
+      <tr><td>Menu</td><td>Command Palette</td><td>Keyboard-navigable command/search choices; keep “palette” as its product name.</td></tr>
+      <tr><td>Selection Panel</td><td>Feature / Frame Picker</td><td>Offers existing frames or creation when a feature supports multiple frames.</td></tr>
+      <tr><td>Settings Panel</td><td>Workspace Settings</td><td>View choice and global preferences. It is a tall panel, distinct from a small popover.</td></tr>
+      <tr><td>Dialog</td><td>Feature dialogs / confirmation surfaces</td><td>Focused interaction that temporarily takes precedence over the workspace.</td></tr>
+      <tr><td>Disclosure</td><td>Latest Opened, collapsed rails, grouped content</td><td>Expands or collapses content in place without opening a separate floating surface.</td></tr>
+    </tbody>
+  </table></div>
+
+  <h2>4. Overlay screenshots</h2>
+  <p>These show how shared controls are placed in each view. Select a view to expand its screenshots.</p>
+  <details><summary>Operator Console</summary><div class="grid">
+    <article class="tile"><img src="operator-settings.png" alt="Operator Console Settings panel"><h3>Settings Panel</h3><p>View picker and global preferences.</p></article>
+    <article class="tile"><img src="operator-music-options.png" alt="Operator Console Music Options popover"><h3>Music Options Popover</h3><p>Player track, radio and sound controls.</p></article>
+    <article class="tile"><img src="operator-command-palette.png" alt="Operator Console command palette"><h3>Command Palette</h3><p>Keyboard command and search menu.</p></article>
+  </div></details>
+  <details><summary>Calm Workspace</summary><div class="grid">
+    <article class="tile"><img src="calm-settings.png" alt="Calm Workspace Settings panel"><h3>Settings Panel</h3><p>View picker and global preferences.</p></article>
+    <article class="tile"><img src="calm-music-options.png" alt="Calm Workspace Music Options popover"><h3>Music Options Popover</h3><p>Anchored near the context panel’s player.</p></article>
+    <article class="tile"><img src="calm-command-palette.png" alt="Calm Workspace command palette"><h3>Command Palette</h3><p>Keyboard command and search menu.</p></article>
+  </div></details>
+  <details><summary>Immersive Focus</summary><div class="grid">
+    <article class="tile"><img src="immersive-settings.png" alt="Immersive Focus Settings panel"><h3>Settings Panel</h3><p>View picker and global preferences.</p></article>
+    <article class="tile"><img src="immersive-music-options.png" alt="Immersive Focus Music Options popover"><h3>Music Options Popover</h3><p>Anchored in the compact top-right player area.</p></article>
+    <article class="tile"><img src="immersive-command-palette.png" alt="Immersive Focus command palette"><h3>Command Palette</h3><p>Keyboard command and search menu.</p></article>
+  </div></details>
+  <details><summary>Daily Overview</summary><div class="grid">
+    <article class="tile"><img src="overview-settings.png" alt="Daily Overview Settings panel"><h3>Settings Panel</h3><p>View picker and global preferences.</p></article>
+    <article class="tile"><img src="overview-music-options.png" alt="Daily Overview Music Options popover"><h3>Music Options Popover</h3><p>Anchored to the Now Playing overview card.</p></article>
+    <article class="tile"><img src="overview-command-palette.png" alt="Daily Overview command palette"><h3>Command Palette</h3><p>Keyboard command and search menu.</p></article>
+  </div></details>
+
+  <h2>5. Feature frame internals</h2>
+  <p>These names apply to the active frame in all layouts. The screenshot set uses Pomodoro as the active frame; each other feature supplies its own controls inside the same frame boundary.</p>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Feature frame</th><th>Items inside the frame</th></tr></thead>
+    <tbody>
+      <tr><td>Pomodoro</td><td>Frame Header, frame title, active status, Timer Dial, timer state, duration presets, custom duration field, primary action, reset action, break hint, Focus Log and Focus Log Chart.</td></tr>
+      <tr><td>Todo List</td><td>List Header, quick-add field, task rows, priority and due-date markers, filters, sort controls, completion progress and list actions.</td></tr>
+      <tr><td>Habits</td><td>Habit list, weekly target/progress, day check-ins, archive controls and history/heat map.</td></tr>
+      <tr><td>Reminders</td><td>Quick-add field and interpreted preview, reminder groups, reminder row, repeat details, snooze actions and Done history.</td></tr>
+      <tr><td>Bookmarks</td><td>Bookmark list, saved-link row, add/import/export controls and metadata.</td></tr>
+      <tr><td>Notes</td><td>Note title/frame header, block editor, block tools and local autosave hint.</td></tr>
+      <tr><td>Focus Music</td><td>Global player controls and Music Options; playback stays global when the active frame or workspace view changes.</td></tr>
+    </tbody>
+  </table></div>
+
+  <h2>6. Names to standardize first</h2>
+  <ol>
+    <li><strong>Use “Stack” as the common name</strong> for the same recency list called Latest Frames, Recent Frames and Latest Opened in different layouts.</li>
+    <li><strong>Use “Feature Navigation” as the umbrella name</strong> for the Operator/Immersive dock, Calm sidebar and Daily Overview top navigation. Keep the layout-specific names where we need precision.</li>
+    <li><strong>Keep “Active Frame” and “Overview Card” distinct:</strong> the frame owns editing; a card is a read-only summary route.</li>
+    <li><strong>Use “Notice” for the shared message component.</strong> Configure a persistent banner, temporary toast or inline message with props. Use <code>announcement="assertive"</code> when it must be announced as an alert.</li>
+  </ol>
+  <footer>Draft terminology for discussion. Captured against the local Keyfocus app; screenshots show the Pomodoro frame and empty local data.</footer>
+</main>
+</body>
+</html>

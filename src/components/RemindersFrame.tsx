@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { usePopup, usePress } from "../motion";
+import { Notice } from "./Notice";
 import type { FormEvent, KeyboardEvent } from "react";
 import {
   EMPTY_REMINDERS,
@@ -426,9 +427,9 @@ function EditPanel({
         />
       </label>
       {error && (
-        <p className="todo-hint" role="alert">
+        <Notice presentation="inline" tone="warning" announcement="assertive" className="todo-hint">
           {error}
-        </p>
+        </Notice>
       )}
       <div className="habit-actions">
         <button type="button" disabled={!text.trim() || !due} onClick={save}>

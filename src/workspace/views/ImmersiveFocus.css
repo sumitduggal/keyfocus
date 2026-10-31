@@ -685,9 +685,9 @@
   border-radius: 16px;
 }
 
-.immersive-shell > .undo-toast,
-.immersive-shell > .overdue-banner {
-  z-index: 18;
+.immersive-shell > .notice--toast,
+.immersive-shell > .notice--banner.notice--header {
+  z-index: 40;
 }
 
 @media (max-width: 1100px) {

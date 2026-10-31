@@ -3,7 +3,7 @@ import type { CSSProperties } from "react";
 import { Stack } from "../../components/Stack";
 import { Dock } from "../../components/Dock";
 import { Weather } from "../../components/Weather";
-import { HudReminders } from "../../components/ReminderBanner";
+import { HudReminders } from "../../components/ReminderNotice";
 import { formatClock } from "../../pomodoro";
 import type { Side } from "../../types";
 import type { WorkspaceView } from "../view";

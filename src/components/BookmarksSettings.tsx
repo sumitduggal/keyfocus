@@ -1,6 +1,7 @@
 import { useRef, useState } from "react";
 import { countDuplicates, detectFormat, exportAs, mergeImport, parseImport, type Format, type ImportedBookmark } from "../bookmarks-io";
 import { getLibrary, updateLibrary } from "../bookmarks-store";
+import { Notice } from "./Notice";
 
 // Import and export for the bookmarks library, shown inside the Settings panel.
 export function BookmarksSettings() {
@@ -88,9 +89,9 @@ export function BookmarksSettings() {
         </span>
       </div>
       {message && (
-        <p className="settings-message" role="status">
+        <Notice presentation="inline" tone="neutral" announcement="polite" className="settings-message">
           {message}
-        </p>
+        </Notice>
       )}
     </>
   );

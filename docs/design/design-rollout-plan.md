@@ -63,7 +63,7 @@ The interface exposes snapshots plus actions, including:
 - Shared actions for promotion, feature/frame opening, commands, Settings and feature data updates.
 - The existing two-level focus model, side/item registration callbacks and command-bar host registration.
 
-Adapters render and route input; they do not own feature state or persistence. `src/workspace/WorkspaceParts.tsx` shares the active `Mainframe`, command palette, Settings/feature overlays, reminder banner and transient workspace actions.
+Adapters render and route input; they do not own feature state or persistence. `src/workspace/WorkspaceParts.tsx` shares the active `Mainframe`, command palette, Settings/feature overlays, persistent Reminder Notice and temporary workspace Notices.
 
 ## Current file structure
 

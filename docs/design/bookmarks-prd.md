@@ -2,7 +2,7 @@
 
 Status: built. Differences from the plan below:
 - Trash is a `trashedAt` flag inside the bookmarks library (purged after 7 days), not the todo-typed `TRASH_KEY`.
-- Reminders do not use the reminders banner. A bookmark's `remindAt` shows in a Reminders view, highlights when due, and fires a browser notification if allowed.
+- Bookmark reminders do not use the persistent Reminder Notice. A bookmark's `remindAt` shows in a Reminders view, highlights when due, and fires a browser notification if allowed.
 - BFF lives in `api/_og.ts` (Vercel wrapper `api/og.ts`, Vite middleware in `vite.config.ts`).
 
 ## Goal
@@ -16,7 +16,7 @@ A **bookmarks** feature: a new frame kind (Dock + command palette, like todo/hab
 | Organization | Nested collections + free-form tags |
 | Views | List, grid, headlines, masonry |
 | Highlights | Manual quote snippets attached to a bookmark |
-| Extras | Favorites, trash (reuse `TRASH_KEY`), bookmark reminders (reuse reminders banner), duplicate detection, broken-link check, bulk select/move/tag |
+| Extras | Favorites, trash (reuse `TRASH_KEY`), bookmark reminders (Reminders view and browser notification), duplicate detection, broken-link check, bulk select/move/tag |
 | Search | Free text over title/url/note/tags plus Raindrop operators: `#tag`, `type:`, `created:`, favorite filter |
 | Storage | localStorage, same pattern as other frames |
 | Import | Browser HTML (Netscape), CSV (Raindrop columns), JSON (lossless own format) |

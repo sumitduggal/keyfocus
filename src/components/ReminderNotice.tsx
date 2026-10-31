@@ -8,13 +8,13 @@ import {
   subscribeReminders,
   tickNudge,
 } from "../reminders-store";
-import { DEFAULT_HABIT_ICON } from "../icons";
-import { DEFAULT_REMINDER_ICON } from "../icons";
+import { DEFAULT_HABIT_ICON, DEFAULT_REMINDER_ICON } from "../icons";
 import { SNOOZE_CHOICES, snoozeTime, summarise, toDate } from "../reminders";
+import { Notice } from "./Notice";
 
 // One stacked banner for everything that has just fired. It stays until each reminder is
 // answered or dismissed. Dismissing leaves the reminder in the Overdue list.
-export function ReminderBanner() {
+export function ReminderNotice() {
   const { lists, banner, nudges } = useSyncExternalStore(subscribeReminders, getRemindersState);
   const habitNudges = banner.flatMap((item) => {
     const nudge = nudges.find((open) => open.habitId === item.id && open.day === item.day);
@@ -25,56 +25,69 @@ export function ReminderBanner() {
     const reminder = lists[item.frameId]?.reminders.find((candidate) => candidate.id === item.id);
     return reminder ? [{ ...item, reminder }] : [];
   });
-  const reduceMotion = useReducedMotion();
-  // Each banner slides down from the top edge and back up when answered.
-  const slide = {
-    layout: reduceMotion ? false : ("position" as const),
-    initial: reduceMotion ? false : { opacity: 0, y: -24, scale: 0.97 },
-    animate: { opacity: 1, y: 0, scale: 1 },
-    exit: reduceMotion ? { opacity: 0 } : { opacity: 0, y: -16 },
-    transition: reduceMotion ? { duration: 0 } : ({ type: "spring", stiffness: 420, damping: 32 } as const),
-  };
-
   return (
-    <div className="reminder-banner" role="alert" aria-label="Reminders due">
+    <Notice
+      presentation="banner"
+      tone="accent"
+      placement="top"
+      announcement="assertive"
+      ariaLabel="Reminders due"
+      className="notice-stack"
+    >
       <AnimatePresence initial={false}>
-      {habitNudges.map((nudge) => (
-        <motion.div {...slide} key={`habit:${nudge.habitId}:${nudge.day}`} className="reminder-banner-item">
-          <b>
-            {nudge.icon ?? DEFAULT_HABIT_ICON} {nudge.name}
-          </b>
-          <div className="reminder-banner-actions">
-            <button type="button" onClick={() => tickNudge(nudge)}>
-              Done today
-            </button>
-            <button type="button" aria-label="Dismiss" onClick={() => dismissBanner(nudge.frameId, nudge.habitId, true, nudge.day)}>
-              ×
-            </button>
-          </div>
-        </motion.div>
-      ))}
-      {items.map(({ frameId, id, reminder }) => (
-        <motion.div {...slide} key={`${frameId}:${id}`} className="reminder-banner-item">
-          <b>
-            {reminder.icon ?? DEFAULT_REMINDER_ICON} {reminder.text}
-          </b>
-          <div className="reminder-banner-actions">
-            <button type="button" onClick={() => finishReminder(frameId, id)}>
-              Done
-            </button>
-            {SNOOZE_CHOICES.map(({ choice, label }) => (
-              <button key={choice} type="button" onClick={() => snoozeUntil(frameId, id, snoozeTime(choice, new Date()))}>
-                {label}
+        {habitNudges.map((nudge) => (
+          <Notice
+            key={`habit:${nudge.habitId}:${nudge.day}`}
+            presentation="banner"
+            tone="accent"
+            placement="top"
+            announcement="off"
+            animate
+            className="reminder-notice-item"
+          >
+            <b>
+              {nudge.icon ?? DEFAULT_HABIT_ICON} {nudge.name}
+            </b>
+            <div className="reminder-notice-actions">
+              <button type="button" onClick={() => tickNudge(nudge)}>
+                Done today
               </button>
-            ))}
-            <button type="button" aria-label="Dismiss" onClick={() => dismissBanner(frameId, id)}>
-              ×
-            </button>
-          </div>
-        </motion.div>
-      ))}
+              <button type="button" aria-label="Dismiss" onClick={() => dismissBanner(nudge.frameId, nudge.habitId, true, nudge.day)}>
+                ×
+              </button>
+            </div>
+          </Notice>
+        ))}
+        {items.map(({ frameId, id, reminder }) => (
+          <Notice
+            key={`${frameId}:${id}`}
+            presentation="banner"
+            tone="accent"
+            placement="top"
+            announcement="off"
+            animate
+            className="reminder-notice-item"
+          >
+            <b>
+              {reminder.icon ?? DEFAULT_REMINDER_ICON} {reminder.text}
+            </b>
+            <div className="reminder-notice-actions">
+              <button type="button" onClick={() => finishReminder(frameId, id)}>
+                Done
+              </button>
+              {SNOOZE_CHOICES.map(({ choice, label }) => (
+                <button key={choice} type="button" onClick={() => snoozeUntil(frameId, id, snoozeTime(choice, new Date()))}>
+                  {label}
+                </button>
+              ))}
+              <button type="button" aria-label="Dismiss" onClick={() => dismissBanner(frameId, id)}>
+                ×
+              </button>
+            </div>
+          </Notice>
+        ))}
       </AnimatePresence>
-    </div>
+    </Notice>
   );
 }
 

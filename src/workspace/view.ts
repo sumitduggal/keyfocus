@@ -51,7 +51,7 @@ export interface WorkspaceView {
   todoOpenCount: number;
   todoOverdueCount: number;
   overdueLists: { frame: WorkspaceFrame; count: number }[];
-  overdueBannerOpen: boolean;
+  overdueNoticeOpen: boolean;
   focusedSide: Side;
   withinSide: boolean;
   stackFocusIndex: number;
@@ -110,7 +110,8 @@ export interface WorkspaceView {
   onShowFrame: (id: string) => void;
   onSideSelect: (side: Side) => void;
   onUndo: () => void;
-  onDismissOverdue: () => void;
+  onUndoDismiss: () => void;
+  onDismissOverdueNotice: () => void;
   onHabitsChange: (habits: Habit[]) => void;
   onDeleteActiveFrame: () => void;
   onTodoViewChange: (view: TodoViewState) => void;

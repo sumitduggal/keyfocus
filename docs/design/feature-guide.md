@@ -104,7 +104,7 @@ Prepare design review !high @tomorrow ~9:30
 
 ### Delete and recovery
 
-- Deleting an item, clearing completed items or deleting a list shows a five-second Undo toast.
+- Deleting an item, clearing completed items or deleting a list shows a temporary Undo Notice for five seconds.
 - Deleted items and lists also enter Recently deleted and are restorable for seven days.
 - Recently deleted is available from ⌘K when it contains entries.
 - Per-list order, nesting, sort and filter choices persist.
@@ -153,7 +153,7 @@ It also accepts `!high`, `!medium`, `!low` and `@` date tokens. The preview show
 
 - Repeat daily, weekly on chosen days, monthly by date or nth weekday, and yearly, with intervals where supported.
 - One scheduler handles alerts whichever frame is open.
-- A due reminder can show a banner, play a sound and use a browser notification when permission is granted.
+- A due reminder shows a persistent Reminder Notice with Done and snooze actions, can play a sound and can use a browser notification when permission is granted. Its screen-reader announcement uses the assertive Notice setting.
 - Repeating reminders advance to their next occurrence; missed repeats collapse to the latest missed occurrence.
 - Snooze choices are 15 minutes, 30 minutes, 4 hours, tomorrow at 9:00, or a custom time.
 - Overdue reminders stay visible until answered; completing one logs it in Done.

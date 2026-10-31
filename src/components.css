@@ -933,10 +933,11 @@
   letter-spacing: 0.02em;
 }
 
+/* Shared order: menu 5, command bar 6, tabs 8, panels 9 and notices 40. View adapters may raise local layers; native dialogs use the browser top layer. */
 /* ===== FEATURE PANEL ===== */
 .feature-aside {
   position: absolute;
-  z-index: 7;
+  z-index: 9;
   top: 50%;
   right: 262px;
   width: 280px;
@@ -945,10 +946,9 @@
   padding: 12px;
   overflow-y: auto;
   border: 1px solid var(--border-strong);
-  background: color-mix(in srgb, var(--panel) 96%, transparent);
+  background: var(--surface);
   box-shadow: var(--shadow-menu);
   transform: translateY(-50%);
-  backdrop-filter: blur(12px);
   scrollbar-width: thin;
   scrollbar-color: var(--border-strong) transparent;
   border-radius: 6px;
@@ -2188,20 +2188,45 @@
   margin-top: 14px;
 }
 
-/* Undo toast, bottom centre, for five seconds. */
-.undo-toast {
-  position: absolute;
-  z-index: 9;
-  bottom: 72px;
-  left: 50%;
+/* Shared Notice presentations. Lifetime and announcement behavior live in Notice props. */
+.notice--inline {
   display: flex;
   align-items: center;
+  gap: 8px;
+}
+
+.notice--neutral {
+  --notice-accent: var(--border-strong);
+}
+
+.notice--accent {
+  --notice-accent: var(--accent);
+}
+
+.notice--warning {
+  --notice-accent: var(--warm);
+}
+
+.notice--inline.notice--warning {
+  color: var(--notice-accent);
+}
+
+.notice--toast.notice--bottom {
+  position: absolute;
+  z-index: 40;
+  bottom: 72px;
+  right: 16px;
+  left: 16px;
+  display: flex;
+  align-items: center;
+  width: max-content;
+  max-width: calc(100vw - 32px);
+  margin-inline: auto;
   gap: 14px;
   padding: 10px 14px;
-  transform: translateX(-50%);
   border: 1px solid var(--border-strong);
   border-radius: 6px;
-  background: var(--panel);
+  background: var(--surface);
   box-shadow: var(--shadow-menu);
   color: var(--text);
   font: 11px/1 var(--font-mono-stack);
@@ -2209,7 +2234,7 @@
   white-space: nowrap;
 }
 
-.undo-toast button {
+.notice--toast .notice-action {
   min-height: 32px;
   padding: 0 10px;
   border: 1px solid var(--accent);
@@ -2222,10 +2247,10 @@
   cursor: pointer;
 }
 
-/* Overdue banner, under the header; dismissed for this visit. */
-.overdue-banner {
+/* Persistent overdue notice, under the header; dismissed for this visit. */
+.notice--banner.notice--header {
   position: absolute;
-  z-index: 8;
+  z-index: 40;
   top: calc(var(--edge) + var(--top-h) + 10px);
   left: 50%;
   display: flex;
@@ -2236,20 +2261,20 @@
   max-width: calc(100% - 32px);
   padding: 8px 12px;
   transform: translateX(-50%);
-  border: 1px solid var(--warm);
+  border: 1px solid var(--notice-accent);
   border-radius: 6px;
-  background: var(--panel);
+  background: var(--surface);
   color: var(--text);
   font: 10px/1 var(--font-mono-stack);
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
 
-.overdue-banner > span {
-  color: var(--warm);
+.notice--banner.notice--header .notice-message {
+  color: var(--notice-accent);
 }
 
-.overdue-banner button {
+.notice--banner.notice--header button {
   min-height: 32px;
   padding: 0 10px;
   border: 1px solid var(--border-strong);
@@ -2260,8 +2285,55 @@
   cursor: pointer;
 }
 
-.overdue-banner .overdue-dismiss {
+.notice--banner.notice--header .notice-dismiss {
   color: var(--text-faint);
+}
+
+.notice-stack {
+  position: fixed;
+  z-index: 40;
+  top: 16px;
+  left: 50%;
+  display: flex;
+  width: min(420px, calc(100vw - 32px));
+  flex-direction: column;
+  gap: 8px;
+  transform: translateX(-50%);
+}
+
+.reminder-notice-item {
+  padding: 10px 12px;
+  border: 1px solid var(--notice-accent);
+  border-radius: 6px;
+  background: var(--surface);
+  box-shadow: var(--shadow-menu);
+  color: var(--text);
+  font: 12px/1.3 var(--font-mono-stack);
+}
+
+.reminder-notice-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.reminder-notice-actions button {
+  min-height: 32px;
+  padding: 4px 8px;
+  border: 1px solid var(--border-strong);
+  border-radius: 3px;
+  background: none;
+  color: var(--text-faint);
+  font: 9px/1 var(--font-mono-stack);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.reminder-notice-actions button:first-child {
+  border-color: var(--accent);
+  color: var(--accent);
 }
 
 /* Due date on each row: a native date field, cleared to remove the date. */
@@ -3044,53 +3116,6 @@
   cursor: default;
 }
 
-/* Everything that just fired, stacked in one banner above the page. */
-.reminder-banner {
-  position: fixed;
-  z-index: 40;
-  top: 16px;
-  left: 50%;
-  display: flex;
-  width: min(420px, calc(100vw - 32px));
-  flex-direction: column;
-  gap: 8px;
-  transform: translateX(-50%);
-}
-
-.reminder-banner-item {
-  padding: 10px 12px;
-  border: 1px solid var(--accent);
-  border-radius: 6px;
-  background: var(--surface);
-  box-shadow: var(--shadow-menu);
-  color: var(--text);
-  font: 12px/1.3 var(--font-mono-stack);
-}
-
-.reminder-banner-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-top: 8px;
-}
-
-.reminder-banner-actions button {
-  padding: 4px 8px;
-  border: 1px solid var(--border-strong);
-  border-radius: 3px;
-  background: none;
-  color: var(--text-faint);
-  font: 9px/1 var(--font-mono-stack);
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  cursor: pointer;
-}
-
-.reminder-banner-actions button:first-child {
-  border-color: var(--accent);
-  color: var(--accent);
-}
-
 /* ===== ICONS ===== */
 .icon-button {
   flex: none;
@@ -3471,7 +3496,7 @@
 .bm-export::before { content: ""; }
 .bm-export { padding-left: 4px; }
 .bm-export button { text-transform: uppercase; font-size: 11px; letter-spacing: .04em; }
-.bm-notice { margin: 0; padding: 8px 12px; border: 1px solid var(--border-strong); background: var(--accent-soft); border-radius: 8px; font-size: 13px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.bm-notice { margin: 0; padding: 8px 12px; border: 1px solid var(--notice-accent); background: var(--accent-soft); border-radius: 8px; font-size: 13px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
 .bm-body { display: flex; gap: 18px; min-height: 0; flex: 1; }
 .bm-side { width: 210px; flex: none; overflow-y: auto; font-size: 13px; padding-right: 14px; border-right: 1px solid var(--border); scrollbar-width: thin; }
 .bm-side ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }

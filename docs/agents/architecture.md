@@ -24,7 +24,7 @@ src/main.tsx
 
 - `WorkspaceApp.tsx` owns frames, active-frame selection, focus state, settings, todo and habit state, trash, persistence and commands. It also subscribes to the app-wide Pomodoro, reminders and bookmark stores, assembles the `WorkspaceView` value and installs the global keyboard listener.
 - `src/workspace/view.ts` exports the `WorkspaceView` snapshot-and-actions interface. Adapters receive derived data, refs, registration callbacks and event actions rather than owning feature state or persistence.
-- `src/workspace/WorkspaceParts.tsx` supplies the shared `ActiveFrame`, `WorkspaceCommandPalette` and `WorkspaceOverlays` compositions. These keep the real `Mainframe`, command palette, Settings, feature panel, reminder banner, Undo toast and overdue actions consistent across adapters.
+- `src/workspace/WorkspaceParts.tsx` supplies the shared `ActiveFrame`, `WorkspaceCommandPalette` and `WorkspaceOverlays` compositions. These keep the real `Mainframe`, command palette, Settings, feature panel and workspace Notices consistent across adapters.
 - Operator Console renders the original three-side design. Calm Workspace, Immersive Focus and Daily Overview provide their own layouts over the same workspace value; the three non-default adapters load through `React.lazy` and a shared `Suspense` fallback.
 - `src/workspace/view.ts` also defines `WorkspaceViewId` (`operator`, `calm`, `immersive`, `overview`), the operator default and picker metadata. `src/workspace/view-setting.ts` loads and saves the selection. Missing, unknown, damaged or inaccessible stored values fall back to `operator`.
 
@@ -40,7 +40,7 @@ The adapter renders a fixed-viewport `.stage` / `.canvas` with these regions:
 | main | `Mainframe` inside `.main-side` | The active feature editing surface. |
 | right | `Dock` inside `.right-side` | Visible feature navigation, Now Playing and Settings; can collapse to a rail. |
 | overlays | `FeaturePanel`, `SettingsPanel`, `CommandPalette` | Frame selection/creation, preferences, commands, search and Recently deleted. |
-| status | header, footer, `ReminderBanner`, overdue and Undo banners | Timer/weather/reminder status, keyboard hints and transient actions. |
+| status | header, footer, `ReminderNotice`, overdue and Undo Notices | Timer/weather/reminder status, keyboard hints and transient actions. |
 
 `visibleFeatures` in `src/constants.ts` controls the dock and command list. Notes and Focus Music remain valid frame types but are not currently visible dock features. Existing Notes frames remain available through the stack and search. Focus Music playback lives in the dock's app-wide `NowPlaying` control.
 
@@ -85,6 +85,8 @@ Feature panels, Settings, text inputs, the command input and editable feature co
 `CommandPalette` supports feature commands, frame search and Recently deleted. Single-frame features open or create their one frame directly; multi-instance features use a frame-selection/create menu or `FeaturePanel`. The adapter supplies the command bar host, while `WorkspaceApp` owns query, menu mode, highlighted row and selection actions.
 
 `WorkspaceApp` persists frames, note bodies, todos, habits, todo view preferences, trash, settings, theme, collapsed rails and the selected workspace view. Feature modules own additional stores and migrations, including Pomodoro duration, Focus Log, reminders/nudges, bookmarks and music/radio preferences. Storage reads generally tolerate missing or damaged values. Timer, scheduler and playback coordination are app-wide rather than tied to whichever frame is active.
+
+`src/components/Notice.tsx` is the shared message surface for persistent banners, temporary toasts and inline status messages. `presentation`, `placement`, `tone`, `durationMs` and `announcement` configure its appearance, lifetime and assistive-technology behavior. “Alert” describes an assertive announcement (`announcement="assertive"`), not a separate visual component. Dialogs, menus, popovers and disclosures remain distinct interaction surfaces.
 
 ## Styling
 

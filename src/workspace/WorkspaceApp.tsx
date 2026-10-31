@@ -289,7 +289,7 @@ function WorkspaceApp() {
     .map((frame) => ({ frame, count: overdueCount(todoLists[frame.id] ?? [], todayForOverdue) }))
     .filter((entry) => entry.count > 0);
   const todoOverdueCount = overdueLists.reduce((total, entry) => total + entry.count, 0);
-  const [overdueBannerOpen, setOverdueBannerOpen] = useState(true);
+  const [overdueNoticeOpen, setOverdueNoticeOpen] = useState(true);
 
   const framesCountByFeature = Object.fromEntries(
     visibleFeatures.map((feature) => [
@@ -563,11 +563,6 @@ function WorkspaceApp() {
     if (visibleCommands[menuFocusIndex]) chooseCommand(visibleCommands[menuFocusIndex]);
   };
 
-  useEffect(() => {
-    if (!undo) return;
-    const timer = window.setTimeout(() => setUndo(null), 5000);
-    return () => window.clearTimeout(timer);
-  }, [undo]);
   useEffect(() => {
     setStored(FRAMES_KEY, JSON.stringify(frames));
   }, [frames]);
@@ -993,7 +988,7 @@ function WorkspaceApp() {
     todoOpenCount,
     todoOverdueCount,
     overdueLists,
-    overdueBannerOpen,
+    overdueNoticeOpen,
     focusedSide,
     withinSide,
     stackFocusIndex,
@@ -1101,7 +1096,8 @@ function WorkspaceApp() {
       undo?.restore();
       setUndo(null);
     },
-    onDismissOverdue: () => setOverdueBannerOpen(false),
+    onUndoDismiss: () => setUndo(null),
+    onDismissOverdueNotice: () => setOverdueNoticeOpen(false),
     onHabitsChange: (habits) =>
       setHabitLists((current) => ({ ...current, [activeFrame.id]: habits })),
     onDeleteActiveFrame: () => deleteFrame(activeFrame.id),

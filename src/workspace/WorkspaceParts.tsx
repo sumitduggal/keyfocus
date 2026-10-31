@@ -1,7 +1,8 @@
 import { CommandPalette } from "../components/CommandPalette";
 import { FeaturePanel } from "../components/FeaturePanel";
 import { Mainframe } from "../components/Mainframe";
-import { ReminderBanner } from "../components/ReminderBanner";
+import { Notice } from "../components/Notice";
+import { ReminderNotice } from "../components/ReminderNotice";
 import { SettingsPanel } from "../components/SettingsPanel";
 import type { WorkspaceView } from "./view";
 
@@ -126,7 +127,7 @@ export function WorkspaceOverlays({ workspace }: { workspace: WorkspaceView }) {
     entryFocusIndex,
     featureAsideRef,
     undo,
-    overdueBannerOpen,
+    overdueNoticeOpen,
     overdueLists,
     onToggleTheme,
     onWorkspaceViewChange,
@@ -138,8 +139,9 @@ export function WorkspaceOverlays({ workspace }: { workspace: WorkspaceView }) {
     onFeaturePanelCreate,
     onFeaturePanelEntryClick,
     onUndo,
+    onUndoDismiss,
     onShowFrame,
-    onDismissOverdue,
+    onDismissOverdueNotice,
   } = workspace;
 
   return (
@@ -172,29 +174,42 @@ export function WorkspaceOverlays({ workspace }: { workspace: WorkspaceView }) {
         />
       )}
 
-      <ReminderBanner />
+      <ReminderNotice />
 
       {undo && (
-        <div className="undo-toast" role="status">
+        <Notice
+          presentation="toast"
+          tone="neutral"
+          placement="bottom"
+          announcement="polite"
+          durationMs={5000}
+          timeoutKey={undo}
+          onDismiss={onUndoDismiss}
+        >
           <span>{undo.message}</span>
-          <button type="button" onClick={onUndo}>
+          <button type="button" className="notice-action" onClick={onUndo}>
             Undo
           </button>
-        </div>
+        </Notice>
       )}
 
-      {overdueBannerOpen && overdueLists.length > 0 && (
-        <div className="overdue-banner" role="status">
-          <span>Overdue:</span>
+      {overdueNoticeOpen && overdueLists.length > 0 && (
+        <Notice
+          presentation="banner"
+          tone="warning"
+          placement="header"
+          announcement="polite"
+        >
+          <span className="notice-message">Overdue:</span>
           {overdueLists.map(({ frame, count }) => (
-            <button key={frame.id} type="button" onClick={() => onShowFrame(frame.id)}>
+            <button key={frame.id} type="button" className="notice-link" onClick={() => onShowFrame(frame.id)}>
               {frame.title} · {count}
             </button>
           ))}
-          <button type="button" className="overdue-dismiss" onClick={onDismissOverdue}>
+          <button type="button" className="notice-dismiss" onClick={onDismissOverdueNotice}>
             Dismiss
           </button>
-        </div>
+        </Notice>
       )}
     </>
   );

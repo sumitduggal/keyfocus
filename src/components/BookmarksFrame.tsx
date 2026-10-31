@@ -25,6 +25,7 @@ import {
   type Scope,
 } from "../bookmarks";
 import { getLibrary, subscribeLibrary, updateLibrary } from "../bookmarks-store";
+import { Notice } from "./Notice";
 
 type View = "list" | "grid" | "headlines" | "masonry";
 const VIEWS: View[] = ["list", "grid", "headlines", "masonry"];
@@ -273,9 +274,9 @@ export function BookmarksFrame() {
       </div>
 
       {notice && (
-        <p className="bm-notice" role="status">
+        <Notice presentation="inline" tone="accent" announcement="polite" className="bm-notice">
           {notice}
-        </p>
+        </Notice>
       )}
 
       <div className="bm-body">

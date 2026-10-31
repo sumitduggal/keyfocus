@@ -60,3 +60,9 @@ All views work at desktop, tablet and phone widths without horizontal page scrol
 - **Overview:** reduce the bento grid to fewer columns and then one column; preserve summary reading order and primary routes.
 
 Content may scroll within its intended region. Controls must remain reachable at zoom, with long titles wrapping or truncating accessibly rather than forcing overflow.
+
+## Notices and announcements
+
+Use the shared `Notice` component for short messages across the workspace. Configure `presentation` as `banner`, `toast` or `inline`; use `durationMs={null}` for a persistent notice and a finite duration with `onDismiss` for a temporary notice that fades away. Set `placement` and `tone` for its position and visual status. Set `announcement` to `polite` or `assertive` when assistive technology should announce it; an assertive announcement maps to the alert role. “Alert” names announcement urgency, while banner, toast and inline name the notice presentation. Dialogs, menus, popovers and disclosures remain separate interaction patterns.
+
+See the [annotated Keyfocus terminology guide](terminology/index.html) for screenshots and the current component vocabulary.
