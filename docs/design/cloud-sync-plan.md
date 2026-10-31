@@ -10,7 +10,7 @@ Keep Keyfocus usable as a local-first app while giving each person a private acc
 
 ## Decisions
 
-- **Accounts:** one private account per person. Allow local guest use before sign-in. Offer email magic links and Google sign-in through Supabase Auth. Link sign-in methods that belong to the same account rather than creating duplicate workspaces. [Supabase Auth](https://supabase.com/docs/guides/auth), [email magic links](https://supabase.com/docs/guides/auth/auth-email-passwordless), [identity linking](https://supabase.com/docs/guides/auth/auth-identity-linking)
+- **Accounts:** one private account per person, with Clerk managing identity and email/Google sign-in. Allow local guest use before sign-in. Use Clerk's Supabase integration so Supabase accepts Clerk session tokens and applies RLS using the authenticated user identity. Link sign-in methods that belong to the same Clerk account rather than creating duplicate workspaces. [Clerk authentication](https://clerk.com/docs/authentication/overview), [Clerk and Supabase](https://clerk.com/docs/integrations/databases/supabase)
 - **Region:** Supabase project in Sydney (`ap-southeast-2`). Supabase lists Sydney as a specific project region. [Available regions](https://supabase.com/docs/guides/platform/regions)
 - **What syncs:** all durable content and preferences: frames, notes, todos, habits, reminders and completion history, bookmarks and collections, focus log, trash, theme, workspace view, timer duration, music/radio preferences, weather location, and collapsed-rail preferences. The running Pomodoro timer, current playback state, and browser notification permissions stay on the device.
 - **Local behavior:** save locally first. Sync discrete changes promptly; debounce text edits for two seconds. Persist unsent work in a durable local outbox and retry on reconnect, app open, and foreground. Keep the app usable offline.
@@ -25,7 +25,7 @@ Keep Keyfocus usable as a local-first app while giving each person a private acc
 
 The app is a static Vite SPA. The simplest fit appears to be Cloudflare Pages with Pages Functions for `/api/og` and the authenticated sync API. Pages Functions use a root `functions/` directory to define routes. [Cloudflare Pages Functions](https://developers.cloudflare.com/pages/functions/get-started/)
 
-Routine data reads and writes go through Cloudflare Functions. Each request carries the signed-in user's Supabase access token; the function forwards that user identity to Supabase so row-level security (RLS) still checks ownership. Do not put a Supabase service-role key in browser code. Use RLS on every exposed data table and test that one account cannot read or write another account's rows. [Supabase RLS](https://supabase.com/docs/guides/database/postgres/row-level-security)
+Routine data reads and writes go through Cloudflare Functions. Each request carries a Clerk session token configured for the Supabase integration; the function validates the token and forwards the user identity to Supabase so row-level security (RLS) checks ownership. Map the Clerk user ID consistently to the database ownership field and RLS policy. Do not put a Supabase service-role key in browser code. Use RLS on every exposed data table and test that one account cannot read or write another account's rows. [Clerk and Supabase](https://clerk.com/docs/integrations/databases/supabase), [Supabase RLS](https://supabase.com/docs/guides/database/postgres/row-level-security)
 
 The current bookmark preview handler at `api/_og.ts` uses Node APIs (`node:http`, `node:net`, and `node:dns/promises`). Port it to the Cloudflare runtime while preserving its private-address and redirect protections; do not assume it can be deployed unchanged.
 
@@ -49,17 +49,17 @@ Use `(user_id, record_type, record_id)` as the unique identity. The exact table 
 ## Rollout
 
 1. **Storage and schema:** inventory every durable local-storage key; add a local repository boundary and durable outbox; create versioned migrations and per-user RLS policies. Preserve the existing storage as the guest cache until migration is verified.
-2. **Cloudflare and auth:** deploy the SPA and port `/api/og`; add Supabase email/Google auth, redirect URLs, and a Cloudflare sync Function that forwards user tokens. Add an account-deletion function for the privileged operation.
+2. **Cloudflare and auth:** deploy the SPA and port `/api/og`; configure Clerk email/Google sign-in, application and redirect URLs, and its Supabase integration. Add a Cloudflare sync Function that validates and forwards Clerk session tokens. Add an account-deletion function for the privileged operation, including Clerk account deletion and Supabase record cleanup.
 3. **Sync engine:** upload queued records, fetch server changes, merge by record ID and timestamps, apply tombstones, retry safely, and send Realtime invalidations. Make retries idempotent so a response lost after a successful write does not duplicate or corrupt data.
 4. **Guest migration and controls:** add sign-in, the local/cloud/merge chooser, sync state, offline queue feedback, safe sign-out, JSON export, and account deletion.
-5. **Release checks:** test guest migration, account isolation, email and Google login, offline edits, two-device edits to different and identical records, deletes/restore/expiry, sign-out with pending work, and account export/deletion. Deploy to a preview domain before production.
+5. **Release checks:** test guest migration, account isolation, Clerk email and Google login, token validation and RLS claims, offline edits, two-device edits to different and identical records, deletes/restore/expiry, sign-out with pending work, and account export/deletion across Clerk and Supabase. Deploy to a preview domain before production.
 
 ## Acceptance checks
 
 - Guests can create and edit data offline as they do today.
 - Signing in does not silently replace either an existing local workspace or cloud workspace.
 - A record created or edited on one device reaches another device; unrelated record edits survive concurrent sync.
-- RLS rejects unauthenticated access and cross-account reads and writes.
+- RLS rejects unauthenticated access and cross-account reads and writes using Clerk user identity claims.
 - A pending outbox survives reload and retries after reconnect.
 - Sign-out never exposes one account's local data to the next account on the same browser.
 - A JSON export can be downloaded before account deletion, and deleted cloud data is removed after the seven-day trash window.

@@ -1,4 +1,4 @@
-import { useSyncExternalStore } from "react";
+import { useLayoutEffect, useRef, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 import { motion } from "motion/react";
 import type { Command, Feature } from "../types";
@@ -77,6 +77,8 @@ export function CommandPalette({
   onCreateFeature,
   onSelectResult,
 }: CommandPaletteProps) {
+  const barRef = useRef<HTMLDivElement | null>(null);
+  const menuRef = useRef<HTMLDivElement | null>(null);
   const activeDomId = activeMenuId
     ? activeMenuId === NEW_ROW_ID
       ? commandDomId(`new-${featureMenu ?? ""}`)
@@ -92,8 +94,54 @@ export function CommandPalette({
       : "Run a command or search…";
 
   const inFooter = useSyncExternalStore(subscribeFooter, footerShown);
+
+  useLayoutEffect(() => {
+    const bar = barRef.current;
+    const menu = menuRef.current;
+    const layer = menu?.parentElement;
+    if (!menuOpen || !bar || !menu || !layer) return;
+
+    const placeMenu = () => {
+      const barRect = bar.getBoundingClientRect();
+      const layerRect = layer.getBoundingClientRect();
+      const gap = 12;
+      menu.style.maxHeight = `${Math.max(0, Math.min(520, window.innerHeight * 0.58, barRect.top - layerRect.top - gap * 2))}px`;
+
+      const menuWidth = menu.offsetWidth;
+      const minLeft = Math.max(12, layerRect.left + 12);
+      const maxLeft = Math.min(window.innerWidth - menuWidth - 12, layerRect.right - menuWidth - 12);
+      const centeredLeft = barRect.left + barRect.width / 2 - menuWidth / 2;
+      const left = Math.max(minLeft, Math.min(maxLeft, centeredLeft));
+
+      menu.style.position = "absolute";
+      menu.style.left = `${left - layerRect.left}px`;
+      menu.style.right = "auto";
+      menu.style.top = `${barRect.top - layerRect.top - gap}px`;
+      menu.style.bottom = "auto";
+      menu.style.translate = "0 -100%";
+    };
+
+    placeMenu();
+    let frame = requestAnimationFrame(() => {
+      placeMenu();
+      frame = requestAnimationFrame(placeMenu);
+    });
+    const observer = new ResizeObserver(placeMenu);
+    observer.observe(bar);
+    observer.observe(menu);
+    window.addEventListener("resize", placeMenu);
+    window.addEventListener("scroll", placeMenu, true);
+    return () => {
+      observer.disconnect();
+      cancelAnimationFrame(frame);
+      window.removeEventListener("resize", placeMenu);
+      window.removeEventListener("scroll", placeMenu, true);
+    };
+  }, [barHost, menuOpen]);
+
   const bar = (
     <motion.div
+      ref={barRef}
       className="command-wrap"
       animate={menuOpen ? { scaleX: 1.04, scaleY: 1.04 } : { scaleX: 1, scaleY: 1 }}
       transition={reduceMotion ? { duration: 0 } : { duration: 0.18, ease: "easeOut" }}
@@ -129,6 +177,7 @@ export function CommandPalette({
           transition={{ duration: reduceMotion ? 0 : 0.12 }}
         >
           <motion.div
+            ref={menuRef}
             className="menu"
             id="action-menu"
             role="menu"
